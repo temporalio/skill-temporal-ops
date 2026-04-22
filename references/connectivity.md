@@ -25,7 +25,7 @@ Out of scope here (link, don't absorb):
 **What it means:** a TCP SYN reached the host but nothing was listening on that port (RST response). This is layer 2 — the host is up and routable; the process you wanted is not.
 
 **Things to check (not attributed causes — verify each one):**
-- **Dev server not running.** The local dev server is `temporal server start-dev` <!-- docs/cli/server.mdx:40 -->, which listens on `localhost:7233` by default <!-- docs/cli/server.mdx:50 --><!-- docs/cli/index.mdx:92 -->.
+- **Dev server not running.** The local dev server is `temporal server start-dev` <!-- docs/cli/server.mdx:40 -->, which listens on `localhost:7233` by default <!-- docs/cli/server.mdx:50 --><!-- docs/cli/index.mdx:121 -->.
 - **Wrong port.** Temporal Cloud's Namespace gRPC endpoint is on port `7233` <!-- docs/cloud/get-started/namespaces.mdx:325 -->. The Cloud Ops / control-plane endpoint `saas-api.tmprl.cloud` is on port `443`, not `7233` <!-- docs/cloud/operation-api.mdx:135 --> — pointing a worker or `temporal` CLI data-plane command at `saas-api.tmprl.cloud:7233` will not connect.
 - **Self-hosted frontend not accepting connections.** Verify from the process/pod perspective that the frontend is listening on the configured port.
 
@@ -73,7 +73,7 @@ Using the wrong endpoint family is one of the most common causes of "cannot conn
 | Cloud Regional Endpoint (explicit region routing; required for API-key connections per the API-keys guide) | `<region>.<cloud_provider>.api.temporal.io` | 7233 | <!-- docs/cloud/get-started/namespaces.mdx:329 --><!-- docs/cloud/get-started/api-keys.mdx:370 --> |
 | Cloud control-plane (Cloud Ops API, `tcld`, Terraform provider) | `saas-api.tmprl.cloud` | 443 | <!-- docs/cloud/operation-api.mdx:135 --><!-- docs/cloud/connectivity/index.mdx:329 --> |
 | Self-hosted frontend | `<your-frontend-host>` | `7233` default <!-- docs/cli/server.mdx:50 --> | deployment-specific |
-| Local dev server | `localhost` | `7233` default <!-- docs/cli/server.mdx:50 --><!-- docs/cli/index.mdx:92 --> | `temporal server start-dev` <!-- docs/cli/server.mdx:40 --> |
+| Local dev server | `localhost` | `7233` default <!-- docs/cli/server.mdx:50 --><!-- docs/cli/index.mdx:121 --> | `temporal server start-dev` <!-- docs/cli/server.mdx:40 --> |
 
 Notes:
 
@@ -86,7 +86,7 @@ See also [skill-temporal-cli → connection-setup](../../skill-temporal-cli/refe
 
 ## Firewall and proxy
 
-**Symptom shape:** `nc -zvw10` hangs for the full `-w` timeout and then reports failure; or the TCP connection completes but no bytes are returned during TLS handshake. Depending on the device, a middlebox may silently drop packets (timeout), send TCP RST (looks like `connection refused` late in the session), or terminate and re-originate TLS (breaks mTLS).
+**Symptom shape:** `nc -zvw10` hangs and then reports failure; or the TCP connection completes but no bytes are returned during TLS handshake. Depending on the device, a middlebox may silently drop packets (timeout), send TCP RST (looks like `connection refused` late in the session), or terminate and re-originate TLS (breaks mTLS).
 
 **Things to check:**
 - **Egress allowlist.** Corporate proxy, AWS security group / NACL, or Kubernetes NetworkPolicy permitting TCP egress to the Temporal endpoint on the correct port. For AWS PrivateLink, the VPC-endpoint security group must accept TCP ingress to port 7233 <!-- docs/cloud/connectivity/aws-connectivity.mdx:68 -->.
@@ -115,7 +115,7 @@ Classification of common layer-1/2 failures after PrivateLink/PSC is supposed to
 
 ```bash
 # AWS VPCE DNS name, or GCP PSC IP
-nc -zv vpce-0123456789abcdef-abc.us-east-1.vpce.amazonaws.com 7233   # man: nc(1)
+nc -zvw10 vpce-0123456789abcdef-abc.us-east-1.vpce.amazonaws.com 7233   # man: nc(1)
 ```
 
 This command form is taken directly from the Cloud connectivity guide <!-- docs/cloud/connectivity/index.mdx:317-319 -->.
@@ -138,7 +138,7 @@ echo "=== DNS resolution ==="
 nslookup "$HOST"                 # man: nslookup(1)
 
 echo "=== TCP reachability ==="
-nc -zvw10 "$HOST" 7233           # man: nc(1)
+nc -zvw10 "$HOST" 7233              # man: nc(1)
 
 echo "=== TLS handshake (see certificates.md for deeper TLS diagnosis) ==="
 openssl s_client -connect "$ADDRESS" \
@@ -173,7 +173,7 @@ echo "=== DNS resolution ==="
 nslookup "$HOST"                 # man: nslookup(1)
 
 echo "=== TCP reachability ==="
-nc -zvw10 "$HOST" 7233           # man: nc(1)
+nc -zvw10 "$HOST" 7233              # man: nc(1)
 
 echo "=== TLS handshake ==="
 openssl s_client -connect "$ADDRESS" \

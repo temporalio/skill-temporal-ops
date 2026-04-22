@@ -50,7 +50,7 @@ temporal workflow show \
     --output json > history.json
 ```
 
-<!-- docs/cli/workflow.mdx:421-440 --> `--output` accepts `table, json, card`; replay requires `json`. <!-- docs/cli/cmd-options.mdx:450 --> `--run-id` is optional; if omitted, `show` targets the most recent run of the given Workflow ID. <!-- docs/cli/workflow.mdx:439 -->
+`--output` accepts `table, json, card`; replay requires `json`. <!-- docs/cli/cmd-options.mdx:450 --> `--run-id` is optional (not required). <!-- docs/cli/workflow.mdx:439 --> If omitted, standard CLI behavior is to target the most recent run of the given Workflow ID; the run id can also be obtained via `temporal workflow describe` (see [workflow-stuck.md](workflow-stuck.md)) or the Web UI.
 
 The docs explicitly document the replayer handoff: "When using JSON output (`--output json`), you may pass the results to an SDK to perform a replay." <!-- docs/cli/workflow.mdx:424-425 -->
 

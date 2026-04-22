@@ -137,7 +137,7 @@ Docs state that describe surfaces "the current state of each pending Activity, i
 
 Things to check on a pending activity:
 
-- **Attempt count.** If retries are climbing and the Activity has a Retry Policy with a finite `Maximum Attempts`, the Activity will eventually be recorded as `ActivityTaskFailed` and the Workflow will proceed (or fail) accordingly. <!-- docs/encyclopedia/workflow/workflow-execution/event.mdx:50 --><!-- docs/encyclopedia/retry-policies.mdx:382-383 --> If Maximum Attempts is unlimited and each attempt is failing for the same reason, the Workflow will loop indefinitely on this Activity.
+- **Attempt count.** If retries are climbing and the Activity has a Retry Policy with a finite `Maximum Attempts`, the Activity will eventually be recorded as `ActivityTaskFailed` and the Workflow will proceed (or fail) accordingly. <!-- docs/encyclopedia/workflow/workflow-execution/event.mdx:50 --><!-- docs/encyclopedia/retry-policies.mdx:193-203 --> If Maximum Attempts is unlimited and each attempt is failing for the same reason, the Workflow will loop indefinitely on this Activity.
 - **Last failure.** The `last_failure` field of `ActivityTaskStarted` carries "Details from the most recent failure Event. Only assigned values if the Task has previously failed and been retried." <!-- docs/references/events.mdx:264 --> The describe output exposes the equivalent information for pending activities.
 - **Scheduled vs. Started.** If the Activity has never been picked up (only `ActivityTaskScheduled` in the history, no retry attempts in the pending block), the problem is almost certainly worker-side — no Worker is polling the Task Queue the Activity was scheduled on, or pollers exist but none match the Build ID routing the Workflow expects. Route to [worker-health.md](worker-health.md).
 - **Timeouts on the scheduling attributes.** The `activityTaskScheduledEventAttributes` record includes `schedule_to_close_timeout`, `schedule_to_start_timeout`, `start_to_close_timeout`, and `heartbeat_timeout`. <!-- docs/references/events.mdx:245-248 --> A long-running Activity without heartbeats and a missing `start_to_close_timeout` or `heartbeat_timeout` can block indefinitely: "The Temporal Server doesn't detect failures when a Worker loses communication with the Server or crashes. Therefore, the Temporal Server relies on the Start-To-Close Timeout to force Activity retries." <!-- docs/encyclopedia/detecting-activity-failures.mdx:100-102 -->
@@ -145,7 +145,7 @@ Things to check on a pending activity:
 
 ### Heartbeating
 
-For long-running activities, heartbeating is the only mechanism by which the server detects a dead worker. A missed heartbeat within the `heartbeat_timeout` results in `ActivityTaskTimedOut` and a retry. <!-- docs/encyclopedia/detecting-activity-failures.mdx:166-171 --> Activities without heartbeating cannot be killed server-side mid-execution; they run until `start_to_close_timeout` (or forever, if neither start-to-close nor schedule-to-close is set).
+For long-running activities, heartbeating is the only mechanism by which the server detects a dead worker. A missed heartbeat within the `heartbeat_timeout` results in `ActivityTaskTimedOut` and a retry. <!-- docs/encyclopedia/detecting-activity-failures.mdx:197 --> Activities without heartbeating cannot be killed server-side mid-execution; they run until `start_to_close_timeout` (or forever, if neither start-to-close nor schedule-to-close is set).
 
 ## Pending child workflows
 
