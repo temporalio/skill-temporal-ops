@@ -83,7 +83,13 @@ The context the investigation needs depends on the category. At minimum:
 - **For a worker health issue:** worker logs (registration errors, auth errors, panics), and the output of `temporal task-queue describe --task-queue <q>`.
 - **For a non-determinism error:** the worker log line containing the error, the workflow type name, and access to the history JSON for replay.
 
-### Step 3: Descend the ladder
+### Step 3: Validate pasted SDK config (if any)
+
+If the user has pasted SDK connection code — even just the address/namespace/auth fields — review it against [sdk-snippet-review.md](references/sdk-snippet-review.md) **before** descending the ladder. Wrong endpoint family, short namespace, or mismatched auth method will make every network-layer probe below look broken when nothing lower actually is.
+
+Skip this step when the user has an established, previously-working config and the symptom is new — the snippet is not the culprit, the environment changed. Otherwise treat snippet validation as Layer 0.
+
+### Step 4: Descend the ladder
 
 Use [diagnostic-ladder.md](references/diagnostic-ladder.md) to pick the right starting layer. As a rule of thumb:
 
@@ -93,14 +99,15 @@ Use [diagnostic-ladder.md](references/diagnostic-ladder.md) to pick the right st
 
 Each layer has a command that proves it healthy and a failure signature that tells you whether the problem lives at that layer or higher.
 
-### Step 4: Fix and verify
+### Step 5: Fix and verify
 
 Prescribe the fix scoped to the root cause. Then verify by re-running the layer's healthy-check command and, if possible, the original user operation. Attach the confidence score to the diagnosis.
 
-If the layer above the fix is still failing, return to step 3 and continue walking upward — the first broken layer is rarely the only one.
+If the layer above the fix is still failing, return to step 4 and continue walking upward — the first broken layer is rarely the only one.
 
 ## Reference files
 
+- [sdk-snippet-review.md](references/sdk-snippet-review.md) — Layer-0 config check for pasted SDK connection snippets: endpoint form per auth method, namespace format, auth / TLS expectations, `TEMPORAL_*` env vars, common misconfigurations. Run before the diagnostic ladder.
 - [diagnostic-ladder.md](references/diagnostic-ladder.md) — the seven-layer bottom-up model, with one canonical command per layer and cross-links into the topical leaves.
 - [connectivity.md](references/connectivity.md) — DNS, TCP, endpoint families (Namespace Endpoint for mTLS vs. Regional Endpoint for API keys), firewall/proxy shapes, PrivateLink/PSC, quick diagnostic scripts.
 - [certificates.md](references/certificates.md) — x509 and TLS alert strings, expiry / unknown-authority / hostname-mismatch / key-mismatch diagnosis, Cloud accepted-client-CA set via `tcld namespace accepted-client-ca`, Cloud mTLS certificate requirements, rotation and expiry notifications, openssl recipes.
