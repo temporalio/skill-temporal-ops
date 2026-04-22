@@ -3,31 +3,18 @@
 A skill for diagnosing Temporal failures — stuck workflows, non-determinism errors, connectivity problems, certificate expirations, worker health issues, rate limits, and HA failover trouble.
 
 > [!WARNING]
-> This Skill is currently in Public Preview, and will continue to evolve and improve.
-> We would love to hear your feedback - positive or negative - over in the [Community Slack](https://t.mp/slack), in the [#topic-ai channel](https://temporalio.slack.com/archives/C0818FQPYKY).
+> This skill is not yet released. It is being shared internally to gather feedback before a public release.
+> Please send feedback — positive or negative — to the [#topic-ai channel](https://temporalio.slack.com/archives/C0818FQPYKY) on the Temporal Slack.
 
 ## Installation
 
-### As a Claude Code Plugin
+While this skill is unreleased, install it by cloning the repo directly:
 
-1. Run `/plugin marketplace add temporalio/agent-skills`
-2. Run `/plugin` to open the plugin manager
-3. Select **Marketplaces**
-4. Choose `temporal-marketplace` from the list
-5. Select **Enable auto-update** or **Disable auto-update**
-6. Run `/plugin install temporal-triage@temporalio-agent-skills`
-7. Restart Claude Code
+```bash
+mkdir -p ~/.claude/skills && git clone https://github.com/temporalio/skill-temporal-triage ~/.claude/skills/temporal-triage
+```
 
-### Via `npx skills` — supports all major coding agents
-
-1. `npx skills add temporalio/skill-temporal-triage`
-2. Follow prompts
-
-### Via manually cloning the skill repo
-
-1. `mkdir -p ~/.claude/skills && git clone https://github.com/temporalio/skill-temporal-triage ~/.claude/skills/temporal-triage`
-
-Appropriately adjust the installation directory based on your coding agent.
+Adjust the installation directory based on your coding agent. Plugin-marketplace and `npx skills` installation will be documented here once the skill is released.
 
 ## What this skill covers
 
