@@ -30,7 +30,7 @@ If the conversation drifts into one of these areas, hand off to the relevant sib
 
 When the user wants to perform an operational task:
 
-1. **Identify the intent and backend.** Is this a Cloud operation (`tcld`) or a self-hosted operation (`temporal operator`)? Data-plane operations (`temporal workflow`, `temporal batch`, etc.) work on both.
+1. **Identify the intent and backend.** Is this a Cloud operation (`tcld`) or a self-hosted operation (`temporal operator`)? Data-plane operations (`temporal workflow`, `temporal batch`, etc.) work on both. **If the backend is ambiguous, ask before proceeding — do not assume Cloud or self-hosted and do not output environment-specific commands until you know.**
 2. **Execute commands and interpret output.** Run the documented command, read the result, and report what it means — or act on it if the user asked for an action.
 3. **Verify the result.** After a mutating operation, confirm the new state matches the user's intent.
 
@@ -129,7 +129,7 @@ Determine what the user wants to do and whether it targets:
 - **Self-hosted cluster** → use `temporal operator` commands
 - **Data plane (either backend)** → use `temporal workflow`, `temporal batch`, `temporal schedule`, etc.
 
-If the backend is unambiguous from context — `.tmprl.cloud` address, `tcld` command, Cloud namespace format `ns.account` → Cloud; Kubernetes/Helm, `docker-compose`, self-hosted config files → self-hosted — proceed without asking. Otherwise ask early: "Are you on Temporal Cloud or self-hosted?" Once known, save to memory so you don't ask again in future conversations.
+If the backend is unambiguous from context — `.tmprl.cloud` address, `tcld` command, Cloud namespace format `ns.account` → Cloud; Kubernetes/Helm, `docker-compose`, self-hosted config files → self-hosted — proceed without asking. **Otherwise, stop and ask: "Are you on Temporal Cloud or self-hosted?" before outputting any environment-specific commands.** Do not default to either environment. Once known, save the answer to memory so you don't ask again in future conversations.
 
 #### Step 2: Execute and interpret
 
@@ -150,7 +150,7 @@ Ask the user for the exact, copy-pasted error text. Do not accept paraphrases �
 
 Confirm three things before continuing:
 - What command was run, or what SDK call produced the error?
-- What environment produced it (local dev server, self-hosted cluster, Temporal Cloud)? If clear from context (addresses, commands, namespace format), don't ask — but if uncertain, ask now. Save the answer to memory for future conversations.
+- What environment produced it (local dev server, self-hosted cluster, Temporal Cloud)? If clear from context (addresses, commands, namespace format), don't ask — **but if uncertain, ask now before proceeding with any diagnosis.** Save the answer to memory for future conversations.
 - What changed recently (new deploy, new certs, new namespace, new region)?
 
 #### Step 2: Gather context
