@@ -515,3 +515,216 @@ temporal operator cluster health \
     --tls-key-path <path_to_key>
 ```
 <!-- docs/cli/operator.mdx:549-558 -->
+
+---
+
+## (i) View billing and generate a billing report
+
+**When to use:** You need to understand your Temporal Cloud costs at the namespace level, or generate a CSV billing report for FinOps tooling.
+
+### Step 1: Review billing in the Cloud UI
+
+Navigate to the **Billing** page in the Temporal Cloud UI. Account Owners and Finance Admins can view: <!-- docs/cloud/billing-and-usage/billing.mdx:96 -->
+
+- Current balance and recent bill
+- Invoices table (with downloadable invoices for prior months)
+- Credits table
+- Cost by Namespace (per-namespace proportional cost breakdown)
+
+### Step 2: Generate a billing report via the Billing API
+
+The Billing API (Public Preview) provides namespace-level cost attribution in CSV format. <!-- docs/cloud/billing-and-usage/billing-api.mdx:16-17, 22-25 -->
+
+Report generation is asynchronous: <!-- docs/cloud/billing-and-usage/billing-api.mdx:41, 121-124 -->
+
+1. Call `CreateBillingReport` with the desired date range (billing-month boundaries) and granularity. The response includes a `billing_report_id` and `async_operation_id`.
+2. Poll `GetBillingReport` using the `billing_report_id` with exponential backoff.
+3. When the state is `BILLING_REPORT_STATE_GENERATED`, retrieve the download URL.
+4. Download the CSV before the URL expires.
+
+Date range limits by granularity: <!-- docs/cloud/billing-and-usage/billing-api.mdx:45-48 -->
+
+| Granularity | Available range |
+|---|---|
+| Hourly | Current + previous billing month |
+| Daily | Current + previous two billing months |
+| Monthly | Current + previous eleven billing months |
+
+### Step 3: Interpret the report
+
+Key columns to understand: <!-- docs/cloud/billing-and-usage/billing-api.mdx:99, 107, 91 -->
+
+- `ContractedCost`: The actual cost (not `Cost` or `TotalCost`).
+- `ResourceID`: `namespace_name.account_id` (e.g., `production.a2dd6`), not just the namespace name.
+- `BillingCurrency`: Values are in cents (e.g., `USD (cents)`).
+
+Only one billing report per account is generated at a time; additional requests are queued. <!-- docs/cloud/billing-and-usage/billing-api.mdx:64 -->
+
+---
+
+## (j) Configure an Audit Log sink
+
+**When to use:** You need to stream Temporal Cloud control plane Audit Logs to your infrastructure for compliance or monitoring.
+
+Audit Logs capture control plane events only -- they do NOT capture data plane events (Workflow Start, etc.). <!-- docs/cloud/audit-logs.mdx:30-33 -->
+
+Required role: Account Owner or Global Administrator. <!-- docs/cloud/audit-logs.mdx:27 -->
+
+### Option A: AWS Kinesis
+
+1. Ensure you have a Kinesis Data Stream in your AWS account. An [AWS CloudFormation template](https://temporal-auditlogs-config.s3.us-west-2.amazonaws.com/cloudformation/iam-role-for-temporal-audit-logs.yaml) is available to create the required IAM role. <!-- docs/cloud/audit-logs-aws.mdx:31 -->
+
+2. In the Cloud UI: **Settings** > **Audit Logs** > **Setup**. <!-- docs/cloud/audit-logs-aws.mdx:38-41 -->
+
+3. Choose **Auto** (configure CloudFormation from the UI) or **Manual** (download a template). <!-- docs/cloud/audit-logs-aws.mdx:42-43 -->
+
+4. Enter the **Kinesis ARN**, **Role name**, and **AWS region**. <!-- docs/cloud/audit-logs-aws.mdx:44-46 -->
+
+5. Complete the CloudFormation stack creation.
+
+6. Use the **Verify** button to confirm Temporal can write to the stream. <!-- docs/cloud/audit-logs-aws.mdx:64 -->
+
+First logs appear within 10 minutes. <!-- docs/cloud/audit-logs-aws.mdx:72 -->
+
+### Option B: GCP Pub/Sub
+
+1. Create a Pub/Sub topic and set up a service account in the same GCP project (or skip if using Terraform). <!-- docs/cloud/audit-logs-gcp.mdx:36-40, 30-33 -->
+
+2. In the Cloud UI: **Settings** > **Audit Logs** > **Setup** > **Pub/Sub**. <!-- docs/cloud/audit-logs-gcp.mdx:43-47 -->
+
+3. Enter the **service account email** and **Topic name**. <!-- docs/cloud/audit-logs-gcp.mdx:48-49 -->
+
+4. Choose **Manual** or **Deploy with Terraform** to configure permissions. <!-- docs/cloud/audit-logs-gcp.mdx:50-51 -->
+
+5. Use the **Verify** button, then click **Create**. <!-- docs/cloud/audit-logs-gcp.mdx:53-55 -->
+
+Audit Logs appear in Pub/Sub within 10 minutes. <!-- docs/cloud/audit-logs-gcp.mdx:56 -->
+
+### Verify the sink is working
+
+The Audit Logs page of the Cloud UI shows the current status: an **On** badge if functioning normally, or an error summary if an issue is detected. <!-- docs/cloud/audit-logs.mdx:168-171 -->
+
+### Accessing logs via API
+
+Audit Logs are accessible for the past 30 days using the Cloud Ops API. Use `StartTimeInclusive`, `EndTimeExclusive`, `PageSize` (max 1000, default 100), and `PageToken` for pagination. <!-- docs/cloud/audit-logs.mdx:209, 212-215 -->
+
+---
+
+## (k) Provision resources with Terraform
+
+**When to use:** You want to automate Temporal Cloud resource management (Namespaces, Users, Service Accounts, API Keys, Nexus Endpoints) using infrastructure as code.
+
+### Step 1: Set up the Terraform provider
+
+```bash
+export TEMPORAL_CLOUD_API_KEY=<your-secret-key>
+```
+<!-- docs/cloud/terraform-provider.mdx:71 -->
+
+```hcl
+terraform {
+  required_providers {
+    temporalcloud = {
+      source = "temporalio/temporalcloud"
+    }
+  }
+}
+
+provider "temporalcloud" {
+
+}
+```
+<!-- docs/cloud/terraform-provider.mdx:119-131 -->
+
+### Step 2: Define resources
+
+Example Namespace:
+
+```hcl
+resource "temporalcloud_namespace" "namespace" {
+  name               = "terraform"
+  regions            = ["aws-us-east-1"]
+  accepted_client_ca = base64encode(file("ca.pem"))
+  retention_days     = 14
+}
+```
+<!-- docs/cloud/terraform-provider.mdx:132-137 -->
+
+Example User with namespace access:
+
+```hcl
+resource "temporalcloud_user" "developer" {
+  email          = "developer@example.com"
+  account_access = "Developer"
+
+  namespace_accesses = [{
+    namespace_id = temporalcloud_namespace.namespace.id
+    permission   = "Write"
+  }]
+}
+```
+<!-- docs/cloud/terraform-provider.mdx:597-605 -->
+
+### Step 3: Apply
+
+```bash
+terraform init
+terraform apply
+```
+<!-- docs/cloud/terraform-provider.mdx:148-156 -->
+
+### Key limitations
+
+- Once a resource is managed by Terraform, manage it only through Terraform. <!-- docs/cloud/terraform-provider.mdx:23 -->
+- Terraform cannot create, update, or delete the Account Owner role. <!-- docs/cloud/terraform-provider.mdx:550-551 -->
+- Namespace access must be managed from the User resource, not the Namespace resource. <!-- docs/cloud/terraform-provider.mdx:553-554 -->
+- API keys cannot be imported into Terraform -- create new keys instead. <!-- docs/cloud/terraform-provider.mdx:842-845 -->
+- The Terraform resource for API keys is `temporalcloud_apikey` (no underscore between `api` and `key`). <!-- docs/cloud/terraform-provider.mdx:756 -->
+
+---
+
+## (l) Set up SAML SSO
+
+**When to use:** You want to enable single sign-on for your organization's Temporal Cloud account using your corporate identity provider.
+
+SAML is included in the Business, Enterprise, and Mission Critical plans. <!-- docs/cloud/saml.mdx:26-27 -->
+
+### Step 1: Locate your Account Id
+
+Find your Account Id (5-6 characters after the period in your Namespace Id, e.g., `f45a2`). Available from the Cloud UI profile dropdown or from any Namespace Id. <!-- docs/cloud/saml.mdx:31-34 -->
+
+### Step 2: Construct the SAML URLs
+
+Entity identifier:
+
+```
+urn:auth0:prod-tmprl:ACCOUNT_ID-saml
+```
+<!-- docs/cloud/saml.mdx:61 -->
+
+Callback URL:
+
+```
+https://login.tmprl.cloud/login/callback?connection=ACCOUNT_ID-saml
+```
+<!-- docs/cloud/saml.mdx:74 -->
+
+Replace `ACCOUNT_ID` with your actual Account Id.
+
+### Step 3: Configure your IdP
+
+**Microsoft Entra ID:** Create an Enterprise application, configure SAML with the entity identifier, callback URL, and sign on URL (`https://cloud.temporal.io/login/saml?connection=ACCOUNT_ID-saml`). Set NameID to `user.userprincipalname` with format `emailAddress`. Collect the Certificate (Base64) and Login URL. <!-- docs/cloud/saml.mdx:48-106 -->
+
+**Okta:** Create a SAML 2.0 app integration. Set Single sign on URL to the callback URL. Set Audience URI to the entity identifier. Set Name ID format to `EmailAddress` with `email` and `name` attribute statements. Collect IdP settings and download the active certificate. <!-- docs/cloud/saml.mdx:114-155 -->
+
+### Step 4: Submit a support ticket
+
+Include: <!-- docs/cloud/saml.mdx:163-170 -->
+
+- The sign-in URL from your application
+- The X.509 SAML sign-in certificate in PEM format
+- One or more IdP domains to map to the SAML connection
+
+### Step 5: Verify
+
+After Temporal confirms configuration, log in with your email and click **Continue** to be redirected to your IdP. <!-- docs/cloud/saml.mdx:172-173 -->

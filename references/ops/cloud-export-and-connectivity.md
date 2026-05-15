@@ -275,31 +275,13 @@ Or view them as part of `tcld namespace get`. <!-- docs/cloud/connectivity/index
 
 ## Cloud Ops API
 
-The Cloud Ops API provides programmatic management of Temporal Cloud control plane resources. <!-- docs/cloud/operation-api.mdx:21 -->
+For the full Cloud Ops API reference (endpoints, Go SDK, protobuf compilation, rate limits, use cases), see the standalone [cloud-ops-api.md](cloud-ops-api.md).
 
-- **Stage**: Public Preview. <!-- docs/cloud/operation-api.mdx:16-18 -->
-- **URL** (HTTP and gRPC): `saas-api.tmprl.cloud` (port 443 for gRPC). <!-- docs/cloud/operation-api.mdx:25, 136 -->
-- **Authentication**: API key (required). Many operations require Admin privileges. <!-- docs/cloud/operation-api.mdx:29-32 -->
-- **API version header**: include `temporal-cloud-api-version` in every request. Current version at [github.com/temporalio/cloud-api/blob/main/VERSION](https://github.com/temporalio/cloud-api/blob/main/VERSION). <!-- docs/cloud/operation-api.mdx:133 -->
-- **HTTP API docs**: [saas-api.tmprl.cloud/docs/httpapi.html](https://saas-api.tmprl.cloud/docs/httpapi.html#description/introduction) <!-- docs/cloud/operation-api.mdx:21 -->
-- **gRPC API source**: [github.com/temporalio/cloud-api](https://github.com/temporalio/cloud-api/tree/main) <!-- docs/cloud/operation-api.mdx:21 -->
-- **Go SDK**: [github.com/temporalio/cloud-sdk-go](https://github.com/temporalio/cloud-sdk-go) <!-- docs/cloud/operation-api.mdx:54 -->
-- **gRPC docs on Buf**: [buf.build/temporalio/cloud-api](https://buf.build/temporalio/cloud-api/docs/main:temporal.api.cloud.cloudservice.v1#temporal.api.cloud.cloudservice.v1.CloudService) <!-- docs/cloud/operation-api.mdx:61 -->
+Quick reference:
 
-### Rate limits
-
-| Scope | Limit |
-|---|---|
-| Account-level total | 160 RPS <!-- docs/cloud/operation-api.mdx:152 --> |
-| Per user | 40 RPS <!-- docs/cloud/operation-api.mdx:158 --> |
-| Per service account | 80 RPS <!-- docs/cloud/operation-api.mdx:162 --> |
-| Concurrent async operations | 10 <!-- docs/cloud/operation-api.mdx:166 --> |
-
-Rate limits are enforced across all control plane operations (tcld, UI, API). Multiple clients used by the same identity share the same limit. <!-- docs/cloud/operation-api.mdx:172-174 -->
-
-### Terraform
-
-The [Temporal Cloud Terraform Provider](https://registry.terraform.io/providers/temporalio/temporalcloud/latest) uses the Cloud Ops API and supports export sinks, connectivity rules, Namespaces, and other resources. <!-- docs/cloud/operation-api.mdx:21, docs/cloud/connectivity/index.mdx:97, docs/cloud/aws-export-s3.mdx:150 -->
+- **URL** (HTTP and gRPC): `saas-api.tmprl.cloud` (port 443 for gRPC). <!-- docs/cloud/operation-api.mdx:25, 135 -->
+- **Account-level rate limit**: 160 RPS. <!-- docs/cloud/operation-api.mdx:152 -->
+- **Terraform**: The [Temporal Cloud Terraform Provider](https://registry.terraform.io/providers/temporalio/temporalcloud/latest) uses the Cloud Ops API. For the full Terraform reference, see [cloud-terraform.md](cloud-terraform.md). <!-- docs/cloud/terraform-provider.mdx:17-18 -->
 
 ---
 
