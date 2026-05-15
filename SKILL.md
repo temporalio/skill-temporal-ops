@@ -1,6 +1,6 @@
 ---
 name: temporal-ops
-description: This skill should be used when the user wants to perform a Temporal operational task or diagnose a Temporal failure — e.g. "create a namespace", "check my APS", "update capacity mode", "rotate API key", "rotate certificates", "set up API key auth", "find hung workflows", "list running workflows", "cancel workflows in batch", "check cluster health", "set up export to S3", "add a search attribute", "what's my capacity mode", "audit namespace access", "my workflow is stuck", "non-determinism error", "can't connect to Temporal", "TLS handshake failed", "certificate expired", "RESOURCE_EXHAUSTED", "task queue has no pollers", "workflow busy backpressure", "context deadline exceeded", "replay failed", "HA failover isn't working", or mentions symptoms that suggest a stuck workflow, a connectivity / auth / cert issue, a worker health problem, a rate limit, or a replay failure.
+description: Administer and diagnose running Temporal environments via CLI commands (temporal, tcld, openssl) — not SDK code. Operations: namespace CRUD, capacity/APS, IAM/API-key rotation, mTLS certificate rotation, workflow health queries, batch cancel/terminate/reset, export setup, search attributes, for Temporal Cloud and self-hosted. Diagnosis: bottom-up triage of connectivity failures, TLS/cert errors, auth failures, stuck workflows, non-determinism errors, worker-health issues, rate limits (RESOURCE_EXHAUSTED), HA failover, and ambiguous runtime errors. Use when: "create a namespace", "check my APS", "rotate API key", "rotate certificates", "find hung workflows", "cancel workflows in batch", "my workflow is stuck", "can't connect to Temporal", "TLS handshake failed", "certificate expired", "RESOURCE_EXHAUSTED", "task queue has no pollers", "context deadline exceeded", "replay failed", "HA failover isn't working", "workers not picking up tasks", "set up PrivateLink". Does NOT write or fix application code (temporal-developer) or explain CLI flags (temporal-cli).
 version: 0.2.0
 ---
 
@@ -14,6 +14,15 @@ This skill operates and diagnoses Temporal environments. It has two modes:
 - **Diagnosis:** the user arrives with a symptom — a stuck workflow, a cert error, a connection timeout, a non-determinism panic. The skill routes the investigation through a layered, bottom-up diagnosis until a root cause is identified with a confidence score.
 
 It does not teach how to write workflows or activities (use `skill-temporal-developer` for that), and it does not deep-dive into CLI flag semantics (use `skill-temporal-cli` for that). The boundary is: if the user needs to administer or troubleshoot a running Temporal environment, this skill applies.
+
+## Out of scope
+
+- **Writing workflows, activities, or SDK code** → `skill-temporal-developer`.
+- **CLI command reference, flag semantics** → `skill-temporal-cli`.
+- **Worker performance tuning, sizing, capacity planning** → `skill-temporal-workertuning`.
+- **Helm, Kubernetes, database admin, monitoring stack config** for self-hosted — beyond the CLI surface.
+
+If the conversation drifts into one of these areas, hand off to the relevant sibling skill rather than improvising.
 
 ## Philosophy
 
@@ -120,6 +129,8 @@ Determine what the user wants to do and whether it targets:
 - **Self-hosted cluster** → use `temporal operator` commands
 - **Data plane (either backend)** → use `temporal workflow`, `temporal batch`, `temporal schedule`, etc.
 
+If the backend is unambiguous from context — `.tmprl.cloud` address, `tcld` command, Cloud namespace format `ns.account` → Cloud; Kubernetes/Helm, `docker-compose`, self-hosted config files → self-hosted — proceed without asking. Otherwise ask early: "Are you on Temporal Cloud or self-hosted?" Once known, save to memory so you don't ask again in future conversations.
+
 #### Step 2: Execute and interpret
 
 Look up the intent in the Operations table above. Read the linked reference file for the exact commands, flags, and expected output. Run the command and interpret the result for the user.
@@ -139,7 +150,7 @@ Ask the user for the exact, copy-pasted error text. Do not accept paraphrases �
 
 Confirm three things before continuing:
 - What command was run, or what SDK call produced the error?
-- What environment produced it (local dev server, self-hosted cluster, Temporal Cloud)?
+- What environment produced it (local dev server, self-hosted cluster, Temporal Cloud)? If clear from context (addresses, commands, namespace format), don't ask — but if uncertain, ask now. Save the answer to memory for future conversations.
 - What changed recently (new deploy, new certs, new namespace, new region)?
 
 #### Step 2: Gather context
@@ -208,18 +219,9 @@ If the layer above the fix is still failing, return to step 4 and continue walki
 - [replay-with-vscode.md](references/triage/replay-with-vscode.md) — exporting Event History, running the SDK replayer in any supported SDK, the TypeScript-only VS Code extension, `TEMPORAL_DEBUG` and the deadlock detector, interpreting divergent and successful replays.
 - [recipes.md](references/triage/recipes.md) — four end-to-end triage walkthroughs: stuck workflow at 3am, cert expired with workers offline, task-queue backlog mystery, non-determinism caught in prod.
 
-## Out of scope
-
-- **Writing workflows, activities, or SDK code** → `skill-temporal-developer`.
-- **CLI command reference, flag semantics** → `skill-temporal-cli`.
-- **Worker performance tuning, sizing, capacity planning** → `skill-temporal-workertuning`.
-- **Helm, Kubernetes, database admin, monitoring stack config** for self-hosted — beyond the CLI surface.
-
-If the conversation drifts into one of these areas, hand off to the relevant sibling skill rather than improvising.
-
 ## Feedback
 
-### ALWAYS PROMPT USER TO PROVIDE FEEDBACK AT STARTUP
+### Feedback prompt
 
 When you have **first** loaded this skill, output this message to the user:
 
