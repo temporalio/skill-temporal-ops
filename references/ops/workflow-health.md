@@ -4,7 +4,7 @@ Data-plane commands for **finding** unhealthy Workflow Executions.
 Backend-agnostic (works on Temporal Cloud and self-hosted).
 
 > **Scope.** This file covers *locating* stuck/hung/failed workflows.
-> To *diagnose why* a specific workflow is stuck, see `workflow-stuck.md`.
+> To *diagnose why* a specific workflow is stuck, see `../triage/workflow-stuck.md`.
 
 ---
 
@@ -403,7 +403,7 @@ temporal workflow show --workflow-id <id> --reverse
 temporal workflow stack --workflow-id <id>
 ```
 
-For diagnosing *why* a workflow is stuck, see `workflow-stuck.md`.
+For diagnosing *why* a workflow is stuck, see `../triage/workflow-stuck.md`.
 
 ---
 

@@ -2,7 +2,7 @@
 
 Quick-reference for generating, uploading, filtering, and rotating mTLS certificates on Temporal Cloud using `tcld`.
 
-> For diagnosing certificate errors (x509 failures, TLS handshake errors), see the triage file `certificates.md`.
+> For diagnosing certificate errors (x509 failures, TLS handshake errors), see the triage file `../triage/certificates.md`.
 
 ---
 

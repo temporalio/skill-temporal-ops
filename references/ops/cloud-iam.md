@@ -3,7 +3,7 @@
 Quick-reference for Temporal Cloud identity and access management via `tcld`.
 Covers API keys, users, user groups, service accounts, account operations, roles, and namespace permissions.
 
-> For authentication failures during workflow execution, see the triage ladder in `authentication.md`.
+> For authentication failures during workflow execution, see the triage ladder in `../triage/authentication.md`.
 
 ---
 

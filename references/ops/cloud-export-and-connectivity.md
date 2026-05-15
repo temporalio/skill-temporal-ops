@@ -329,4 +329,4 @@ nc -zv <endpoint_host> 7233
 ```
 <!-- docs/cloud/connectivity/index.mdx:335 -->
 
-For full connectivity diagnosis, see the triage `connectivity.md` reference.
+For full connectivity diagnosis, see the triage `../triage/connectivity.md` reference.

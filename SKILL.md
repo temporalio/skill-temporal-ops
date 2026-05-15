@@ -38,7 +38,7 @@ When the user arrives with a failure or anomaly:
    6. Temporal namespace, task queues, workers
    7. Workflow code (determinism, signals, timers, child workflows)
 
-   The full ladder lives in [diagnostic-ladder.md](references/diagnostic-ladder.md).
+   The full ladder lives in [diagnostic-ladder.md](references/triage/diagnostic-ladder.md).
 
 2. **Always verify the next layer up** rather than prescribing a speculative fix. If TLS works, prove auth works before blaming the workflow. If pollers are present, prove the workflow's last event before blaming the worker.
 
@@ -90,24 +90,24 @@ Find the row that matches the user's symptom. Start the investigation at the fir
 
 | Symptom | Category | First check | Reference |
 |---|---|---|---|
-| `connection refused`, cannot reach frontend | Connectivity | `nc -zvw10 <host> 7233` | [connectivity.md#connection-refused](references/connectivity.md#connection-refused) |
-| `no such host`, DNS resolution fails | Connectivity | `dig +short <host>` or `nslookup <host>` | [connectivity.md#dns](references/connectivity.md#dns) |
-| `tls: handshake failure` <!-- go: crypto/tls -->, server rejects handshake | Certificates | `openssl s_client -connect <host>:7233 -servername <host> </dev/null` | [certificates.md#handshake-failure](references/certificates.md#handshake-failure) |
-| `x509: certificate has expired` or `not yet valid` <!-- go: crypto/x509 --> | Certificates | `openssl x509 -enddate -noout -in cert.pem` | [certificates.md#expired-or-not-yet-valid](references/certificates.md#expired-or-not-yet-valid) |
-| `x509: certificate signed by unknown authority` <!-- go: crypto/x509 --> | Certificates | `openssl verify -CAfile ca.pem client.pem` | [certificates.md#unknown-authority](references/certificates.md#unknown-authority) |
-| `tcld` session / auth fails, Cloud role unclear | Authentication | `tcld account get` | [authentication.md#cloud-role-and-permission-model](references/authentication.md#cloud-role-and-permission-model) |
-| `UNAUTHENTICATED`, API key rejected | Authentication | `env \| grep -i TEMPORAL_API_KEY`, then `tcld apikey get --id <apikey_id>` | [authentication.md#things-to-check-when-unauthenticated-is-returned-with-an-api-key](references/authentication.md#things-to-check-when-unauthenticated-is-returned-with-an-api-key) |
-| `namespace not found` / wrong namespace string with an API key | Authentication | Confirm Regional Endpoint form `<region>.<cloud_provider>.api.temporal.io:7233` | [authentication.md#required-address-form-for-api-key-connections](references/authentication.md#required-address-form-for-api-key-connections) |
-| `RESOURCE_EXHAUSTED` gRPC status | Rate limits | Identify which limit fired via the `resource_exhausted_cause` metric label | [rate-limits.md#identifying-which-limit-was-hit](references/rate-limits.md#identifying-which-limit-was-hit) |
-| Task queue shows no pollers | Worker health | `temporal task-queue describe --task-queue <q>` | [worker-health.md#what-no-pollers-looks-like](references/worker-health.md#what-no-pollers-looks-like) |
-| Workflow stuck on a pending activity / timer / child / signal | Workflow stuck | `temporal workflow describe --workflow-id <id>` | [workflow-stuck.md#the-primary-inspection-command-temporal-workflow-describe](references/workflow-stuck.md#the-primary-inspection-command-temporal-workflow-describe) |
-| `NondeterminismError`, repeating `WorkflowTaskFailed` | Non-determinism | Identify the last `WorkflowTaskFailed` cause in the Event History | [non-determinism.md#the-wft-failure-signature-of-non-determinism](references/non-determinism.md#the-wft-failure-signature-of-non-determinism) |
-| Replay fails locally but prod workflow was running | Non-determinism | Export history and run the SDK replayer | [replay-with-vscode.md#step-2a--sdk-replayer-all-supported-sdks-ci-friendly](references/replay-with-vscode.md#step-2a--sdk-replayer-all-supported-sdks-ci-friendly) |
-| HA failover did not route traffic to failover region | HA failover | `tcld namespace get --namespace <ns>.<acct>` vs. DNS CNAME | [ha-failover.md#verify-the-current-active-region](references/ha-failover.md#verify-the-current-active-region) |
-| `context deadline exceeded` (unknown layer) | Runtime errors | Identify which operation and SDK emitted it | [runtime-errors.md#deadline-exceeded](references/runtime-errors.md#deadline-exceeded) |
-| Caller reports "workflow is busy" / `RESOURCE_EXHAUSTED` on signal/update/query to one Workflow | Runtime errors | Classify via `resource_exhausted_cause`, not by the message text | [runtime-errors.md#workflow-busy-backpressure](references/runtime-errors.md#workflow-busy-backpressure) |
+| `connection refused`, cannot reach frontend | Connectivity | `nc -zvw10 <host> 7233` | [connectivity.md#connection-refused](references/triage/connectivity.md#connection-refused) |
+| `no such host`, DNS resolution fails | Connectivity | `dig +short <host>` or `nslookup <host>` | [connectivity.md#dns](references/triage/connectivity.md#dns) |
+| `tls: handshake failure` <!-- go: crypto/tls -->, server rejects handshake | Certificates | `openssl s_client -connect <host>:7233 -servername <host> </dev/null` | [certificates.md#handshake-failure](references/triage/certificates.md#handshake-failure) |
+| `x509: certificate has expired` or `not yet valid` <!-- go: crypto/x509 --> | Certificates | `openssl x509 -enddate -noout -in cert.pem` | [certificates.md#expired-or-not-yet-valid](references/triage/certificates.md#expired-or-not-yet-valid) |
+| `x509: certificate signed by unknown authority` <!-- go: crypto/x509 --> | Certificates | `openssl verify -CAfile ca.pem client.pem` | [certificates.md#unknown-authority](references/triage/certificates.md#unknown-authority) |
+| `tcld` session / auth fails, Cloud role unclear | Authentication | `tcld account get` | [authentication.md#cloud-role-and-permission-model](references/triage/authentication.md#cloud-role-and-permission-model) |
+| `UNAUTHENTICATED`, API key rejected | Authentication | `env \| grep -i TEMPORAL_API_KEY`, then `tcld apikey get --id <apikey_id>` | [authentication.md#things-to-check-when-unauthenticated-is-returned-with-an-api-key](references/triage/authentication.md#things-to-check-when-unauthenticated-is-returned-with-an-api-key) |
+| `namespace not found` / wrong namespace string with an API key | Authentication | Confirm Regional Endpoint form `<region>.<cloud_provider>.api.temporal.io:7233` | [authentication.md#required-address-form-for-api-key-connections](references/triage/authentication.md#required-address-form-for-api-key-connections) |
+| `RESOURCE_EXHAUSTED` gRPC status | Rate limits | Identify which limit fired via the `resource_exhausted_cause` metric label | [rate-limits.md#identifying-which-limit-was-hit](references/triage/rate-limits.md#identifying-which-limit-was-hit) |
+| Task queue shows no pollers | Worker health | `temporal task-queue describe --task-queue <q>` | [worker-health.md#what-no-pollers-looks-like](references/triage/worker-health.md#what-no-pollers-looks-like) |
+| Workflow stuck on a pending activity / timer / child / signal | Workflow stuck | `temporal workflow describe --workflow-id <id>` | [workflow-stuck.md#the-primary-inspection-command-temporal-workflow-describe](references/triage/workflow-stuck.md#the-primary-inspection-command-temporal-workflow-describe) |
+| `NondeterminismError`, repeating `WorkflowTaskFailed` | Non-determinism | Identify the last `WorkflowTaskFailed` cause in the Event History | [non-determinism.md#the-wft-failure-signature-of-non-determinism](references/triage/non-determinism.md#the-wft-failure-signature-of-non-determinism) |
+| Replay fails locally but prod workflow was running | Non-determinism | Export history and run the SDK replayer | [replay-with-vscode.md#step-2a--sdk-replayer-all-supported-sdks-ci-friendly](references/triage/replay-with-vscode.md#step-2a--sdk-replayer-all-supported-sdks-ci-friendly) |
+| HA failover did not route traffic to failover region | HA failover | `tcld namespace get --namespace <ns>.<acct>` vs. DNS CNAME | [ha-failover.md#verify-the-current-active-region](references/triage/ha-failover.md#verify-the-current-active-region) |
+| `context deadline exceeded` (unknown layer) | Runtime errors | Identify which operation and SDK emitted it | [runtime-errors.md#deadline-exceeded](references/triage/runtime-errors.md#deadline-exceeded) |
+| Caller reports "workflow is busy" / `RESOURCE_EXHAUSTED` on signal/update/query to one Workflow | Runtime errors | Classify via `resource_exhausted_cause`, not by the message text | [runtime-errors.md#workflow-busy-backpressure](references/triage/runtime-errors.md#workflow-busy-backpressure) |
 
-If a symptom does not map to a row, start at [diagnostic-ladder.md](references/diagnostic-ladder.md) and work up from whichever layer was last known healthy.
+If a symptom does not map to a row, start at [diagnostic-ladder.md](references/triage/diagnostic-ladder.md) and work up from whichever layer was last known healthy.
 
 ## The process
 
@@ -146,20 +146,20 @@ Confirm three things before continuing:
 
 The context the investigation needs depends on the category. At minimum:
 
-- **For any Cloud auth / connectivity issue:** auth method (API key vs mTLS), exact address, exact namespace, SDK + version. The endpoint family differs by auth method — see [connectivity.md#endpoint-formats](references/connectivity.md#endpoint-formats).
+- **For any Cloud auth / connectivity issue:** auth method (API key vs mTLS), exact address, exact namespace, SDK + version. The endpoint family differs by auth method — see [connectivity.md#endpoint-formats](references/triage/connectivity.md#endpoint-formats).
 - **For a stuck workflow:** namespace, workflow ID, run ID, and the output of `temporal workflow describe --workflow-id <id>` (pending-operation state lives here, not in the Event History alone). Event History via `temporal workflow show` is the companion view.
 - **For a worker health issue:** worker logs (registration errors, auth errors, panics), and the output of `temporal task-queue describe --task-queue <q>`.
 - **For a non-determinism error:** the worker log line containing the error, the workflow type name, and access to the history JSON for replay.
 
 #### Step 3: Validate pasted SDK config (if any)
 
-If the user has pasted SDK connection code — even just the address/namespace/auth fields — review it against [sdk-snippet-review.md](references/sdk-snippet-review.md) **before** descending the ladder. Wrong endpoint family, short namespace, or mismatched auth method will make every network-layer probe below look broken when nothing lower actually is.
+If the user has pasted SDK connection code — even just the address/namespace/auth fields — review it against [sdk-snippet-review.md](references/triage/sdk-snippet-review.md) **before** descending the ladder. Wrong endpoint family, short namespace, or mismatched auth method will make every network-layer probe below look broken when nothing lower actually is.
 
 Skip this step when the user has an established, previously-working config and the symptom is new — the snippet is not the culprit, the environment changed. Otherwise treat snippet validation as Layer 0.
 
 #### Step 4: Descend the ladder
 
-Use [diagnostic-ladder.md](references/diagnostic-ladder.md) to pick the right starting layer. As a rule of thumb:
+Use [diagnostic-ladder.md](references/triage/diagnostic-ladder.md) to pick the right starting layer. As a rule of thumb:
 
 - Auth / connectivity / cert symptom → start at layer 1 (DNS) and walk up.
 - Worker / task-queue symptom → start at layer 6 (namespace + pollers).
@@ -194,19 +194,19 @@ If the layer above the fix is still failing, return to step 4 and continue walki
 
 ### Diagnosis
 
-- [sdk-snippet-review.md](references/sdk-snippet-review.md) — Layer-0 config check for pasted SDK connection snippets: endpoint form per auth method, namespace format, auth / TLS expectations, `TEMPORAL_*` env vars, common misconfigurations. Run before the diagnostic ladder.
-- [diagnostic-ladder.md](references/diagnostic-ladder.md) — the seven-layer bottom-up model, with one canonical command per layer and cross-links into the topical leaves.
-- [connectivity.md](references/connectivity.md) — DNS, TCP, endpoint families (Namespace Endpoint for mTLS vs. Regional Endpoint for API keys), firewall/proxy shapes, PrivateLink/PSC, quick diagnostic scripts.
-- [certificates.md](references/certificates.md) — x509 and TLS alert strings, expiry / unknown-authority / hostname-mismatch / key-mismatch diagnosis, Cloud accepted-client-CA set via `tcld namespace accepted-client-ca`, Cloud mTLS certificate requirements, rotation and expiry notifications, openssl recipes.
-- [authentication.md](references/authentication.md) — `UNAUTHENTICATED` vs `PERMISSION_DENIED`, API-key lifecycle (`tcld apikey` commands, env var propagation, required Regional Endpoint form), mTLS after TLS (certificate filters, identity-to-role mapping), Cloud account-level roles and namespace-level permissions.
-- [workflow-stuck.md](references/workflow-stuck.md) — Workflow Execution Status values, `temporal workflow describe` as the primary inspection command, Event History via `temporal workflow show`, pending activities / child workflows / signals / Nexus operations / Workflow Tasks, WorkflowTaskFailed retry loops, recovery commands (signal, terminate, cancel, reset, pause/unpause).
-- [non-determinism.md](references/non-determinism.md) — determinism definition, WFT-failure signature, ND-inducing code patterns, per-SDK error shapes, identifying ND from Event History, local replay reproduction, remediation via Worker Versioning / patching / reset.
-- [worker-health.md](references/worker-health.md) — no-pollers runbook via `temporal task-queue describe`, reachability and versioning, worker-level describe, schedule-to-start latency, worker task slots, sticky execution and sticky cache, worker heartbeating, Cloud namespace-level poller limits, worker log signatures.
-- [rate-limits.md](references/rate-limits.md) — what `RESOURCE_EXHAUSTED` means (and does not), Cloud APS / RPS / OPS under On-Demand and Provisioned capacity modes, self-hosted `frontend.rps` / `frontend.namespaceRPS` dynamic config, identifying which limit fired via the `resource_exhausted_cause` metric label.
-- [ha-failover.md](references/ha-failover.md) — Cloud HA routing via the Namespace Endpoint CNAME, verifying the active region (control-plane `tcld namespace get` vs. DNS view), clients that did not follow the failover, PrivateLink after failover, failover-not-executing, handover-window errors, platform limits, RPO/RTO semantics.
-- [runtime-errors.md](references/runtime-errors.md) — deadline-exceeded disambiguated by operation and by where the call was made, "workflow busy" backpressure framed via `resource_exhausted_cause` rather than a pinned string, routing for `no pollers` / `INVALID_ARGUMENT` / unspecified `UNAVAILABLE`.
-- [replay-with-vscode.md](references/replay-with-vscode.md) — exporting Event History, running the SDK replayer in any supported SDK, the TypeScript-only VS Code extension, `TEMPORAL_DEBUG` and the deadlock detector, interpreting divergent and successful replays.
-- [recipes.md](references/recipes.md) — four end-to-end triage walkthroughs: stuck workflow at 3am, cert expired with workers offline, task-queue backlog mystery, non-determinism caught in prod.
+- [sdk-snippet-review.md](references/triage/sdk-snippet-review.md) — Layer-0 config check for pasted SDK connection snippets: endpoint form per auth method, namespace format, auth / TLS expectations, `TEMPORAL_*` env vars, common misconfigurations. Run before the diagnostic ladder.
+- [diagnostic-ladder.md](references/triage/diagnostic-ladder.md) — the seven-layer bottom-up model, with one canonical command per layer and cross-links into the topical leaves.
+- [connectivity.md](references/triage/connectivity.md) — DNS, TCP, endpoint families (Namespace Endpoint for mTLS vs. Regional Endpoint for API keys), firewall/proxy shapes, PrivateLink/PSC, quick diagnostic scripts.
+- [certificates.md](references/triage/certificates.md) — x509 and TLS alert strings, expiry / unknown-authority / hostname-mismatch / key-mismatch diagnosis, Cloud accepted-client-CA set via `tcld namespace accepted-client-ca`, Cloud mTLS certificate requirements, rotation and expiry notifications, openssl recipes.
+- [authentication.md](references/triage/authentication.md) — `UNAUTHENTICATED` vs `PERMISSION_DENIED`, API-key lifecycle (`tcld apikey` commands, env var propagation, required Regional Endpoint form), mTLS after TLS (certificate filters, identity-to-role mapping), Cloud account-level roles and namespace-level permissions.
+- [workflow-stuck.md](references/triage/workflow-stuck.md) — Workflow Execution Status values, `temporal workflow describe` as the primary inspection command, Event History via `temporal workflow show`, pending activities / child workflows / signals / Nexus operations / Workflow Tasks, WorkflowTaskFailed retry loops, recovery commands (signal, terminate, cancel, reset, pause/unpause).
+- [non-determinism.md](references/triage/non-determinism.md) — determinism definition, WFT-failure signature, ND-inducing code patterns, per-SDK error shapes, identifying ND from Event History, local replay reproduction, remediation via Worker Versioning / patching / reset.
+- [worker-health.md](references/triage/worker-health.md) — no-pollers runbook via `temporal task-queue describe`, reachability and versioning, worker-level describe, schedule-to-start latency, worker task slots, sticky execution and sticky cache, worker heartbeating, Cloud namespace-level poller limits, worker log signatures.
+- [rate-limits.md](references/triage/rate-limits.md) — what `RESOURCE_EXHAUSTED` means (and does not), Cloud APS / RPS / OPS under On-Demand and Provisioned capacity modes, self-hosted `frontend.rps` / `frontend.namespaceRPS` dynamic config, identifying which limit fired via the `resource_exhausted_cause` metric label.
+- [ha-failover.md](references/triage/ha-failover.md) — Cloud HA routing via the Namespace Endpoint CNAME, verifying the active region (control-plane `tcld namespace get` vs. DNS view), clients that did not follow the failover, PrivateLink after failover, failover-not-executing, handover-window errors, platform limits, RPO/RTO semantics.
+- [runtime-errors.md](references/triage/runtime-errors.md) — deadline-exceeded disambiguated by operation and by where the call was made, "workflow busy" backpressure framed via `resource_exhausted_cause` rather than a pinned string, routing for `no pollers` / `INVALID_ARGUMENT` / unspecified `UNAVAILABLE`.
+- [replay-with-vscode.md](references/triage/replay-with-vscode.md) — exporting Event History, running the SDK replayer in any supported SDK, the TypeScript-only VS Code extension, `TEMPORAL_DEBUG` and the deadlock detector, interpreting divergent and successful replays.
+- [recipes.md](references/triage/recipes.md) — four end-to-end triage walkthroughs: stuck workflow at 3am, cert expired with workers offline, task-queue backlog mystery, non-determinism caught in prod.
 
 ## Out of scope
 

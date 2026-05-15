@@ -154,7 +154,7 @@ When your Action rate exceeds your APS (or RPS/OPS) limit, Temporal Cloud thrott
 3. **`ResourceExhausted` errors**: Server returns a `ResourceExhausted` gRPC error; SDK clients automatically retry based on the default gRPC retry policy. <!-- docs/evaluate/temporal-cloud/limits.mdx:97 -->
 4. **Potential failure**: If throttling persists beyond the SDK's retry limit, client calls fail -- work **can** be lost if you do not handle these failures. <!-- docs/evaluate/temporal-cloud/limits.mdx:98 -->
 
-> For diagnosis of `RESOURCE_EXHAUSTED` errors in triage context, see `rate-limits.md`.
+> For diagnosis of `RESOURCE_EXHAUSTED` errors in triage context, see `../triage/rate-limits.md`.
 
 **Best practices for handling throttling**: <!-- docs/evaluate/temporal-cloud/limits.mdx:100-103 -->
 

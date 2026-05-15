@@ -1,7 +1,7 @@
 # Ops Recipes
 
 End-to-end operational playbooks that chain commands from the ops reference files.
-For triage-focused walkthroughs, see `../recipes.md`.
+For triage-focused walkthroughs, see `../triage/recipes.md`.
 
 ---
 
@@ -144,7 +144,7 @@ temporal workflow stack --workflow-id <id>
 
 ### Step 5: Diagnose root cause
 
-For diagnosing *why* a specific workflow is stuck (pending activities, pending child workflows, non-determinism, etc.), follow the triage procedures in `workflow-stuck.md`.
+For diagnosing *why* a specific workflow is stuck (pending activities, pending child workflows, non-determinism, etc.), follow the triage procedures in `../triage/workflow-stuck.md`.
 
 ---
 
