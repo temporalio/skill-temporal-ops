@@ -17,7 +17,7 @@ For triage-focused walkthroughs, see `../recipes.md`.
    ```
    <!-- docs/cloud/tcld/namespace.mdx:466-468 -->
 
-   Output is JSON by default (no `--format` flag exists). <!-- docs/cloud/tcld/namespace.mdx:27 -->
+   Output is JSON by default (no `--format` flag exists). <!-- undocumented: source = tcld CLI behavior; tcld commands emit JSON without a --format flag -->
 
 2. In the JSON output, look for the capacity configuration section. Key fields:
 

@@ -133,7 +133,7 @@ Interpret the result:
 | `PERMISSION_DENIED` <!-- grpc: PERMISSION_DENIED --> | Key is authenticated but the identity lacks Namespace permission | [Cloud role and permission model](#cloud-role-and-permission-model) |
 | An `x509:` or `tls:` error | Not an auth issue | [certificates.md](certificates.md) |
 
-A lighter probe is `temporal operator cluster health --address <addr>` — if it returns `SERVING`, the client can reach the frontend service. <!-- docs/cli/operator.mdx:56 --> <!-- VERIFY: the exact auth layers this confirms depend on deployment config -->
+A lighter probe is `temporal operator cluster health --address <addr>` — if it returns `SERVING`, the client can reach the frontend service. <!-- docs/cli/operator.mdx:56 --> <!-- undocumented: source = runtime output of `temporal operator cluster health`; SERVING is the gRPC health-check response string -->
 
 ## mTLS authentication after TLS completes
 

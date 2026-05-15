@@ -235,7 +235,7 @@ Must set either `--user-email` or `--user-id`. <!-- docs/cloud/tcld/user.mdx:33 
 | `--user-email` | | Conditional | <!-- docs/cloud/tcld/user.mdx:39 --> |
 | `--user-id` | | Conditional | <!-- docs/cloud/tcld/user.mdx:49 --> |
 | `--request-id` | `-r` | No | <!-- docs/cloud/tcld/user.mdx:59 --> |
-| `--resource-version` | `-v` | No | ETag; uses latest if not set <!-- docs/cloud/tcld/user.mdx:67 --> |
+| `--resource-version` | `-v` | No | ETag; uses latest if not set <!-- docs/cloud/tcld/user.mdx:66-69 --> |
 
 ### Resend Invite
 
@@ -435,7 +435,7 @@ Alias: `sa` <!-- docs/cloud/tcld/user-group.mdx:141 -->
 | `--append` | `-a` | No | Append namespace roles instead of replacing all existing roles <!-- docs/cloud/tcld/user-group.mdx:157-158 --> |
 | `--remove` | `-r` | No | Remove the given namespace roles instead of replacing <!-- docs/cloud/tcld/user-group.mdx:161-162 --> |
 
-Without `--append` or `--remove`, set-access **replaces** all existing roles. <!-- docs/cloud/tcld/user-group.mdx:139 -->
+Without `--append` or `--remove`, set-access **replaces** all existing roles. <!-- docs/cloud/tcld/user-group.mdx:157-158, 161-162 -->
 
 ---
 

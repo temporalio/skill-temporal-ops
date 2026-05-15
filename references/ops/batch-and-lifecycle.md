@@ -164,7 +164,7 @@ Batch jobs are created implicitly when you pass `--query` to
 `temporal workflow cancel`, `temporal workflow terminate`,
 `temporal workflow signal`, or `temporal workflow delete`.
 The `temporal batch` commands let you inspect and manage those
-jobs. <!-- docs/cli/batch.mdx:23 -->
+jobs. <!-- docs/cli/workflow.mdx:73, 80-82 -->
 
 ### batch describe
 
@@ -412,10 +412,7 @@ Overlap policies: <!-- docs/cli/schedule.mdx:53-69 -->
 
 ## Activity Complete
 
-Complete an Activity, marking it as successfully finished. Used for
-asynchronous Activity completion (where the Activity function returns before
-the work is done, and a separate process reports the
-result). <!-- docs/cli/activity.mdx:62-63 -->
+Complete an Activity, marking it as successfully finished. <!-- docs/cli/activity.mdx:62-63 -->
 
 ```
 temporal activity complete \

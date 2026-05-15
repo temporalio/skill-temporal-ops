@@ -448,10 +448,10 @@ openssl rsa  -in key.pem  -modulus -noout | shasum -a 256
 
 ### Self-signed cert workflow (self-hosted or temporary)
 
-The troubleshooting guide suggests using `temporal operator namespace describe` with explicit TLS flags when working with self-signed certs:
+The troubleshooting guide suggests using `temporal namespace describe` with explicit TLS flags when working with self-signed certs:
 
 ```bash
-temporal operator namespace describe \
+temporal namespace describe \
   --namespace <namespace_id>.<account_id> \
   --address <namespace_grpc_endpoint> \
   --tls-cert-path <path-to-mTLS-pem-file> \
