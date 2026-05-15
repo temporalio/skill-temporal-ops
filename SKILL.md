@@ -231,4 +231,4 @@ Do not output this message multiple times in the same conversation.
 
 ### Reporting Issues in This Skill
 
-If you (the AI) find this skill's explanations are unclear, misleading, or missing important information, draft a GitHub issue body describing the problem encountered and what would have helped, then ask the user to file it at https://github.com/temporalio/skill-temporal-triage/issues/new. Do not file the issue autonomously.
+If you (the AI) find this skill's explanations are unclear, misleading, or missing important information, draft a GitHub issue body describing the problem encountered and what would have helped, then ask the user to file it at https://github.com/temporalio/skill-temporal-ops/issues/new. Do not file the issue autonomously.

@@ -13,7 +13,7 @@ Applies to both **Temporal Cloud** (`tcld` commands) and **self-hosted** (`tempo
 While this skill is unreleased, install it by cloning the repo directly:
 
 ```bash
-mkdir -p ~/.claude/skills && git clone https://github.com/temporalio/skill-temporal-triage ~/.claude/skills/temporal-ops
+mkdir -p ~/.claude/skills && git clone https://github.com/temporalio/skill-temporal-ops ~/.claude/skills/temporal-ops
 ```
 
 Adjust the installation directory based on your coding agent. Plugin-marketplace and `npx skills` installation will be documented here once the skill is released.
