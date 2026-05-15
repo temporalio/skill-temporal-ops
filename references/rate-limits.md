@@ -44,11 +44,11 @@ Cloud enforces three **per-Namespace** throughput limits, each of which can inde
 
 All three have the same **automatic scaling** behavior under the default **On-Demand Capacity** mode: the limit "automatically increases (and decreases) based on the last 7 days of [APS/RPS/OPS] usage. Will never go below the default limit." <!-- docs/evaluate/temporal-cloud/limits.mdx:61-76 --> The On-Demand formula is documented as "the lesser of 4 × APS Average or 2 × APS P90 over the past 7 days." <!-- docs/cloud/capacity-modes.mdx:110 -->
 
-**Provisioned Capacity** (Public Preview <!-- docs/cloud/capacity-modes.mdx:138 -->) replaces the automatic envelope with a fixed allocation, expressed in Temporal Resource Units (TRUs); each TRU supplies 500 APS / 1500 RPS / 4000 OPS. <!-- docs/cloud/capacity-modes.mdx:144-148 --> TRUs are set via UI, `tcld namespace capacity update` <!-- docs/cloud/capacity-modes.mdx:214 -->, or the `UpdateNamespace` API. Adjustments are hourly. <!-- docs/cloud/capacity-modes.mdx:148 -->
+**Provisioned Capacity** replaces the automatic envelope with a fixed allocation, expressed in Temporal Resource Units (TRUs); each TRU supplies 500 APS / 1500 RPS / 4000 OPS. <!-- docs/cloud/capacity-modes.mdx:138-142 --> TRUs are set via UI, `tcld namespace capacity update` <!-- docs/cloud/capacity-modes.mdx:208 -->, or the `UpdateNamespace` API. Adjustments are hourly. <!-- docs/cloud/capacity-modes.mdx:142 -->
 
 There are additional, narrower Namespace-scoped rate limits that also surface as `RESOURCE_EXHAUSTED`:
 
-- **Schedules rate limit**: 10 schedule requests per second, per Namespace, not configurable via UI — raise via a support ticket. <!-- docs/evaluate/temporal-cloud/limits.mdx:108-109 --> The Cloud metric `temporal_cloud_v1_schedule_rate_limited_count` tracks workflows delayed due to this limit. <!-- docs/cloud/metrics/openmetrics/metrics-reference.mdx:646-650 -->
+- **Schedules rate limit**: 10 schedule requests per second, per Namespace, not configurable via UI — raise via a support ticket. <!-- docs/evaluate/temporal-cloud/limits.mdx:108-109 --> The Cloud metric `temporal_cloud_v1_schedule_rate_limited_count` tracks workflows delayed due to this limit. <!-- docs/cloud/metrics/openmetrics/metrics-reference.mdx:684-688 -->
 - **Visibility API rate limit**: 30 Visibility API calls per second per Namespace; not configurable. "All read calls are subject to the Visibility API rate limit." <!-- docs/evaluate/temporal-cloud/limits.mdx:118-122 -->
 - **Concurrent Task pollers**: 20,000 Activity pollers and 20,000 Workflow Task pollers per Namespace concurrently. <!-- docs/evaluate/temporal-cloud/limits.mdx:144 --> Per-Namespace poll saturation falls under poller health — see [worker-health.md](worker-health.md).
 
@@ -109,9 +109,9 @@ Temporal Cloud exposes an OpenMetrics endpoint whose limit / count / throttle tr
 
 | Budget | Limit metric | Count metric | Throttle metric |
 |---|---|---|---|
-| Actions | `temporal_cloud_v1_action_limit` <!-- docs/cloud/service-health.mdx:161 --><!-- docs/cloud/metrics/openmetrics/metrics-reference.mdx:680-682 --> | `temporal_cloud_v1_total_action_count` <!-- docs/cloud/service-health.mdx:161 --><!-- docs/cloud/metrics/openmetrics/metrics-reference.mdx:579-581 --> | `temporal_cloud_v1_total_action_throttled_count` <!-- docs/cloud/service-health.mdx:161 --><!-- docs/cloud/metrics/openmetrics/metrics-reference.mdx:596-598 --> |
-| Frontend gRPC requests | `temporal_cloud_v1_service_request_limit` <!-- docs/cloud/service-health.mdx:162 --><!-- docs/cloud/metrics/openmetrics/metrics-reference.mdx:686-688 --> | `temporal_cloud_v1_service_request_count` <!-- docs/cloud/service-health.mdx:162 --> | `temporal_cloud_v1_service_request_throttled_count` <!-- docs/cloud/service-health.mdx:162 --><!-- docs/cloud/metrics/openmetrics/metrics-reference.mdx:87-89 --> |
-| Operations | `temporal_cloud_v1_operations_limit` <!-- docs/cloud/service-health.mdx:163 --><!-- docs/cloud/metrics/openmetrics/metrics-reference.mdx:674-676 --> | `temporal_cloud_v1_operations_count` <!-- docs/cloud/service-health.mdx:163 --><!-- docs/cloud/metrics/openmetrics/metrics-reference.mdx:602-604 --> | `temporal_cloud_v1_operations_throttled_count` <!-- docs/cloud/service-health.mdx:163 --><!-- docs/cloud/metrics/openmetrics/metrics-reference.mdx:614-616 --> |
+| Actions | `temporal_cloud_v1_action_limit` <!-- docs/cloud/service-health.mdx:161 --><!-- docs/cloud/metrics/openmetrics/metrics-reference.mdx:718-722 --> | `temporal_cloud_v1_total_action_count` <!-- docs/cloud/service-health.mdx:161 --><!-- docs/cloud/metrics/openmetrics/metrics-reference.mdx:596-599 --> | `temporal_cloud_v1_total_action_throttled_count` <!-- docs/cloud/service-health.mdx:161 --><!-- docs/cloud/metrics/openmetrics/metrics-reference.mdx:634-638 --> |
+| Frontend gRPC requests | `temporal_cloud_v1_service_request_limit` <!-- docs/cloud/service-health.mdx:162 --><!-- docs/cloud/metrics/openmetrics/metrics-reference.mdx:724-727 --> | `temporal_cloud_v1_service_request_count` <!-- docs/cloud/service-health.mdx:162 --> | `temporal_cloud_v1_service_request_throttled_count` <!-- docs/cloud/service-health.mdx:162 --><!-- docs/cloud/metrics/openmetrics/metrics-reference.mdx:95-101 --> |
+| Operations | `temporal_cloud_v1_operations_limit` <!-- docs/cloud/service-health.mdx:163 --><!-- docs/cloud/metrics/openmetrics/metrics-reference.mdx:712-717 --> | `temporal_cloud_v1_operations_count` <!-- docs/cloud/service-health.mdx:163 --><!-- docs/cloud/metrics/openmetrics/metrics-reference.mdx:640-650 --> | `temporal_cloud_v1_operations_throttled_count` <!-- docs/cloud/service-health.mdx:163 --><!-- docs/cloud/metrics/openmetrics/metrics-reference.mdx:652-662 --> |
 
 The v1 metrics are pre-computed per-second rates aggregated over a 1-minute window <!-- docs/cloud/metrics/openmetrics/metrics-reference.mdx:33-41 -->, so a sustained non-zero value on a `*_throttled_count` metric is the definitive Cloud signal that a specific budget is being hit.
 
@@ -123,7 +123,7 @@ For Provisioned Capacity namespaces, the *envelope* metrics (`temporal_cloud_v1_
 
 ### Without metrics (UI-only)
 
-When the caller has no metrics pipeline, the Cloud UI shows a recent APS usage summary on the Namespace's *Manage Capacity* panel <!-- docs/cloud/capacity-modes.mdx:205-207 -->, which can confirm whether the Namespace is actually running hot.
+When the caller has no metrics pipeline, the Cloud UI shows a recent APS usage summary on the Namespace's *Manage Capacity* panel <!-- docs/cloud/capacity-modes.mdx:199 -->, which can confirm whether the Namespace is actually running hot.
 
 ## What RESOURCE_EXHAUSTED is not
 

@@ -182,9 +182,9 @@ openssl s_client -connect <host>:7233 -servername <host> </dev/null 2>/dev/null 
 
 **What the Cloud docs say:**
 
-- When a client uses a PrivateLink / PSC endpoint instead of the Namespace Endpoint DNS name, the docs instruct you to "Set TLS configuration to override the TLS server name (e.g., my-namespace.my-account.tmprl.cloud)." <!-- docs/cloud/connectivity/index.mdx:208-212 -->
-- When a client uses a Regional Endpoint with mTLS, the docs say: "the Temporal Client must set the `server_name` property to `<namespace endpoint value>` in its request to the value of the Namespace endpoint. This tells the client to expect a different SNI header during the TLS handshake, since the request to the regional endpoint is redirected to the specific Namespace." <!-- docs/cloud/get-started/namespaces.mdx:332 -->
-- Temporal recommends configuring private DNS instead, so the Namespace Endpoint hostname resolves to the VPC endpoint directly and no server-name override is needed. <!-- docs/cloud/connectivity/index.mdx:203-206 -->
+- When a client uses a PrivateLink / PSC endpoint instead of the Namespace Endpoint DNS name, the docs instruct you to "Set TLS configuration to override the TLS server name (e.g., my-namespace.my-account.tmprl.cloud)." <!-- docs/cloud/connectivity/index.mdx:215-218 -->
+- When a client uses a Regional Endpoint with mTLS, the docs say: "the Temporal Client must set the `server_name` property to `<namespace endpoint value>` in its request to the value of the Namespace endpoint. This tells the client to expect a different SNI header during the TLS handshake, since the request to the regional endpoint is redirected to the specific Namespace." <!-- docs/cloud/get-started/namespaces.mdx:338 -->
+- Temporal recommends configuring private DNS instead, so the Namespace Endpoint hostname resolves to the VPC endpoint directly and no server-name override is needed. <!-- docs/cloud/connectivity/index.mdx:210-213 -->
 
 **How to override on each client — verified forms only:**
 
@@ -216,7 +216,7 @@ export TEMPORAL_TLS_SERVER_NAME=<namespace>.<account>.tmprl.cloud
 temporal workflow list --namespace <namespace>.<account>
 ```
 
-The exact form above — `TEMPORAL_ADDRESS=vpce-...:7233` paired with `TEMPORAL_TLS_SERVER_NAME=my-namespace.my-account.tmprl.cloud` — is written out in the Cloud connectivity guide. <!-- docs/cloud/connectivity/index.mdx:217-221 -->
+The exact form above — `TEMPORAL_ADDRESS=vpce-...:7233` paired with `TEMPORAL_TLS_SERVER_NAME=my-namespace.my-account.tmprl.cloud` — is written out in the Cloud connectivity guide. <!-- docs/cloud/connectivity/index.mdx:234-238 -->
 
 `grpcurl` (useful as a SDK-independent probe) — exactly the form the Cloud docs give:
 
@@ -227,7 +227,7 @@ grpcurl \
   -key path/to/cert.key \
   vpce-0123456789abcdef-abc.us-east-1.vpce.amazonaws.com:7233 \
   temporal.api.workflowservice.v1.WorkflowService/GetSystemInfo
-# Recipe as written in: <!-- docs/cloud/connectivity/index.mdx:226-233 -->
+# Recipe as written in: <!-- docs/cloud/connectivity/index.mdx:243-251 -->
 ```
 
 **For SDK clients:** the SDK concept is the same — set the TLS `ServerName` (Go / Java / .NET / Python / TypeScript) to the Namespace Endpoint hostname. The exact property name varies by SDK; refer to each SDK's client-connection doc linked from `docs/cloud/certificates#configure-clients-to-use-client-certificates` <!-- docs/cloud/get-started/certificates.mdx:484-489 --> and cross-check against `skill-temporal-developer`. This triage file deliberately does not spell SDK APIs out, to avoid drift. <!-- VERIFY: SDK-specific property names per-release; out of scope here. -->
@@ -448,10 +448,10 @@ openssl rsa  -in key.pem  -modulus -noout | shasum -a 256
 
 ### Self-signed cert workflow (self-hosted or temporary)
 
-The troubleshooting guide suggests using `temporal namespace describe` with explicit TLS flags when working with self-signed certs:
+The troubleshooting guide suggests using `temporal operator namespace describe` with explicit TLS flags when working with self-signed certs:
 
 ```bash
-temporal namespace describe \
+temporal operator namespace describe \
   --namespace <namespace_id>.<account_id> \
   --address <namespace_grpc_endpoint> \
   --tls-cert-path <path-to-mTLS-pem-file> \

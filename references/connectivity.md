@@ -26,7 +26,7 @@ Out of scope here (link, don't absorb):
 
 **Things to check (not attributed causes — verify each one):**
 - **Dev server not running.** The local dev server is `temporal server start-dev` <!-- docs/cli/server.mdx:40 -->, which listens on `localhost:7233` by default <!-- docs/cli/server.mdx:50 --><!-- docs/cli/index.mdx:121 -->.
-- **Wrong port.** Temporal Cloud's Namespace gRPC endpoint is on port `7233` <!-- docs/cloud/get-started/namespaces.mdx:325 -->. The Cloud Ops / control-plane endpoint `saas-api.tmprl.cloud` is on port `443`, not `7233` <!-- docs/cloud/operation-api.mdx:135 --> — pointing a worker or `temporal` CLI data-plane command at `saas-api.tmprl.cloud:7233` will not connect.
+- **Wrong port.** Temporal Cloud's Namespace gRPC endpoint is on port `7233` <!-- docs/cloud/get-started/namespaces.mdx:331 -->. The Cloud Ops / control-plane endpoint `saas-api.tmprl.cloud` is on port `443`, not `7233` <!-- docs/cloud/operation-api.mdx:135 --> — pointing a worker or `temporal` CLI data-plane command at `saas-api.tmprl.cloud:7233` will not connect.
 - **Self-hosted frontend not accepting connections.** Verify from the process/pod perspective that the frontend is listening on the configured port.
 
 **First check:**
@@ -44,10 +44,10 @@ On macOS/BSD `nc`, `-z` scans without sending data, `-v` is verbose, `-w <timeou
 **What it means:** the resolver could not produce an IP for the hostname. No TCP attempt happens.
 
 **Things to check:**
-- **Namespace endpoint format.** Temporal Cloud Namespace Endpoint is `<namespace>.<account>.tmprl.cloud:7233` <!-- docs/cloud/get-started/namespaces.mdx:325 -->. A short namespace name without the `.<account>` suffix will not resolve.
+- **Namespace endpoint format.** Temporal Cloud Namespace Endpoint is `<namespace>.<account>.tmprl.cloud:7233` <!-- docs/cloud/get-started/namespaces.mdx:331 -->. A short namespace name without the `.<account>` suffix will not resolve.
 - **Typo in the namespace or account ID.** The hostname must match the Namespace page in the Cloud UI exactly.
 - **Broken resolver in the client environment.** Container with missing/empty `/etc/resolv.conf`, CoreDNS not running in the cluster, split-tunnel VPN that isn't forwarding DNS for `*.tmprl.cloud`.
-- **PrivateLink / PSC private DNS not set up.** When a namespace is served via a private connection, public DNS still returns a public IP; without a private hosted zone the client may resolve an address it cannot route. See [PrivateLink and PSC](#privatelink-and-psc) below and `/cloud/connectivity` for the required DNS configuration <!-- docs/cloud/connectivity/index.mdx:201 -->.
+- **PrivateLink / PSC private DNS not set up.** When a namespace is served via a private connection, public DNS still returns a public IP; without a private hosted zone the client may resolve an address it cannot route. See [PrivateLink and PSC](#privatelink-and-psc) below and `/cloud/connectivity` for the required DNS configuration <!-- docs/cloud/connectivity/index.mdx:208 -->.
 
 **First check:**
 
@@ -69,16 +69,16 @@ Using the wrong endpoint family is one of the most common causes of "cannot conn
 
 | Purpose | Endpoint pattern | Port | Source |
 |---|---|---|---|
-| Cloud Namespace Endpoint (recommended for workers and `temporal` CLI data-plane) | `<namespace>.<account>.tmprl.cloud` | 7233 | <!-- docs/cloud/get-started/namespaces.mdx:325 --> |
-| Cloud Regional Endpoint (explicit region routing; required for API-key connections per the API-keys guide) | `<region>.<cloud_provider>.api.temporal.io` | 7233 | <!-- docs/cloud/get-started/namespaces.mdx:329 --><!-- docs/cloud/get-started/api-keys.mdx:370 --> |
-| Cloud control-plane (Cloud Ops API, `tcld`, Terraform provider) | `saas-api.tmprl.cloud` | 443 | <!-- docs/cloud/operation-api.mdx:135 --><!-- docs/cloud/connectivity/index.mdx:329 --> |
+| Cloud Namespace Endpoint (recommended for workers and `temporal` CLI data-plane) | `<namespace>.<account>.tmprl.cloud` | 7233 | <!-- docs/cloud/get-started/namespaces.mdx:331 --> |
+| Cloud Regional Endpoint (explicit region routing; required for API-key connections per the API-keys guide) | `<region>.<cloud_provider>.api.temporal.io` | 7233 | <!-- docs/cloud/get-started/namespaces.mdx:335 --><!-- docs/cloud/get-started/api-keys.mdx:370 --> |
+| Cloud control-plane (Cloud Ops API, `tcld`, Terraform provider) | `saas-api.tmprl.cloud` | 443 | <!-- docs/cloud/operation-api.mdx:135 --><!-- docs/cloud/connectivity/index.mdx:346 --> |
 | Self-hosted frontend | `<your-frontend-host>` | `7233` default <!-- docs/cli/server.mdx:50 --> | deployment-specific |
 | Local dev server | `localhost` | `7233` default <!-- docs/cli/server.mdx:50 --><!-- docs/cli/index.mdx:121 --> | `temporal server start-dev` <!-- docs/cli/server.mdx:40 --> |
 
 Notes:
 
-- The **Namespace Endpoint** is recommended for Temporal Clients (SDK, workers, `temporal` CLI) because it transparently follows HA failovers without a client change <!-- docs/cloud/get-started/namespaces.mdx:328 -->.
-- The **Regional Endpoint** is the form used for **API-key** authenticated connections to Cloud <!-- docs/cloud/get-started/api-keys.mdx:370 -->, and also for mTLS clients that want to pin a region. When using mTLS against the Regional Endpoint, the client must set the TLS server name to the Namespace Endpoint value <!-- docs/cloud/get-started/namespaces.mdx:332 --> (see [certificates.md → server name override](certificates.md#server-name-override)).
+- The **Namespace Endpoint** is recommended for Temporal Clients (SDK, workers, `temporal` CLI) because it transparently follows HA failovers without a client change <!-- docs/cloud/get-started/namespaces.mdx:331-334 -->.
+- The **Regional Endpoint** is the form used for **API-key** authenticated connections to Cloud <!-- docs/cloud/get-started/api-keys.mdx:370 -->, and also for mTLS clients that want to pin a region. When using mTLS against the Regional Endpoint, the client must set the TLS server name to the Namespace Endpoint value <!-- docs/cloud/get-started/namespaces.mdx:338 --> (see [certificates.md → server name override](certificates.md#server-name-override)).
 - `saas-api.tmprl.cloud` is **not** a workflow data-plane endpoint — pointing a worker or `temporal workflow …` command at it will not work.
 - The `--address` flag (env `TEMPORAL_ADDRESS`) takes `host:port`, not a URL <!-- docs/cli/cmd-options.mdx:137-139 --><!-- docs/cli/index.mdx:269 -->.
 
@@ -108,7 +108,7 @@ Classification of common layer-1/2 failures after PrivateLink/PSC is supposed to
 
 - **DNS resolves to a public IP, VPC cannot route it.** Private DNS (Route 53 PHZ in AWS, Cloud DNS private zone in GCP) is missing or not attached to the workers' VPC. Without it, the client gets the public A record, and the VPC has no egress to the internet. See the private-DNS setup in `/cloud/connectivity/aws-connectivity` <!-- docs/cloud/connectivity/aws-connectivity.mdx:83-158 --> or `/cloud/connectivity/gcp-connectivity` <!-- docs/cloud/connectivity/gcp-connectivity.mdx:98-172 -->.
 - **DNS resolves to the private endpoint, port unreachable.** Likely the VPC-endpoint security group is not permitting TCP/7233 from the client subnet <!-- docs/cloud/connectivity/aws-connectivity.mdx:68 -->.
-- **Connection succeeds but TLS fails with a server-name mismatch.** This is layer 3, not layer 2. Clients connecting by VPC-endpoint DNS name must set the TLS server name (SNI override) to the Namespace Endpoint (`<namespace>.<account>.tmprl.cloud`) <!-- docs/cloud/connectivity/index.mdx:208-212 -->. Details in [certificates.md → server name override](certificates.md#server-name-override).
+- **Connection succeeds but TLS fails with a server-name mismatch.** This is layer 3, not layer 2. Clients connecting by VPC-endpoint DNS name must set the TLS server name (SNI override) to the Namespace Endpoint (`<namespace>.<account>.tmprl.cloud`) <!-- docs/cloud/connectivity/index.mdx:215-218 -->. Details in [certificates.md → server name override](certificates.md#server-name-override).
 - **Works before failover, breaks after failover (HA Namespaces).** For multi-region Namespaces, the Namespace record CNAMEs to `<region>.region.tmprl.cloud`, and on failover the CNAME is updated to point to the new active region <!-- docs/cloud/high-availability/ha-connectivity.mdx:83-90 -->. If private DNS only overrides the old region, workers lose the path on failover. The `region.tmprl.cloud` private zone must cover every region the Namespace can fail over to <!-- docs/cloud/high-availability/ha-connectivity.mdx:58-61 -->. Note: automatic DNS-based failover is not supported for GCP PSC — manual worker reconfiguration is required <!-- docs/cloud/connectivity/gcp-connectivity.mdx:32-36 -->.
 
 **Quick reachability check from inside the client's VPC:**
@@ -118,7 +118,7 @@ Classification of common layer-1/2 failures after PrivateLink/PSC is supposed to
 nc -zvw10 vpce-0123456789abcdef-abc.us-east-1.vpce.amazonaws.com 7233   # man: nc(1)
 ```
 
-This command form is taken directly from the Cloud connectivity guide <!-- docs/cloud/connectivity/index.mdx:317-319 -->.
+This command form is taken directly from the Cloud connectivity guide <!-- docs/cloud/connectivity/index.mdx:333-335 -->.
 
 ## Quick diagnostic scripts
 

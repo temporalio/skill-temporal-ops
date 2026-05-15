@@ -1,22 +1,33 @@
 ---
-name: temporal-triage
-description: This skill should be used when the user reports a Temporal failure or anomaly — e.g. "my workflow is stuck", "non-determinism error", "can't connect to Temporal", "TLS handshake failed", "certificate expired", "RESOURCE_EXHAUSTED", "task queue has no pollers", "workflow busy backpressure", "context deadline exceeded", "replay failed", "HA failover isn't working", "tcld login failed", or mentions symptoms that suggest a stuck workflow, a connectivity / auth / cert issue, a worker health problem, a rate limit, or a replay failure.
-version: 0.1.0
+name: temporal-ops
+description: This skill should be used when the user wants to perform a Temporal operational task or diagnose a Temporal failure — e.g. "create a namespace", "check my APS", "update capacity mode", "rotate API key", "rotate certificates", "set up API key auth", "find hung workflows", "list running workflows", "cancel workflows in batch", "check cluster health", "set up export to S3", "add a search attribute", "what's my capacity mode", "audit namespace access", "my workflow is stuck", "non-determinism error", "can't connect to Temporal", "TLS handshake failed", "certificate expired", "RESOURCE_EXHAUSTED", "task queue has no pollers", "workflow busy backpressure", "context deadline exceeded", "replay failed", "HA failover isn't working", or mentions symptoms that suggest a stuck workflow, a connectivity / auth / cert issue, a worker health problem, a rate limit, or a replay failure.
+version: 0.2.0
 ---
 
-# Skill: temporal-triage
+# Skill: temporal-ops
 
 ## Overview
 
-This skill diagnoses Temporal failures and anomalies. The user arrives with a symptom — a stuck workflow, a cert error, a connection timeout, a non-determinism panic — and this skill routes the investigation through a layered, bottom-up diagnosis until a root cause is identified with a confidence score.
+This skill operates and diagnoses Temporal environments. It has two modes:
 
-It does not teach which commands to run (use `skill-temporal-cli` for that) and it does not teach how to write workflows or activities (use `skill-temporal-developer` for that). The boundary is: if the command ran and the system is misbehaving, this skill applies.
+- **Operations:** the user wants to do something — create a namespace, rotate a key, check capacity, find unhealthy workflows, cancel a batch, set up export. The skill executes the right commands and interprets the output.
+- **Diagnosis:** the user arrives with a symptom — a stuck workflow, a cert error, a connection timeout, a non-determinism panic. The skill routes the investigation through a layered, bottom-up diagnosis until a root cause is identified with a confidence score.
+
+It does not teach how to write workflows or activities (use `skill-temporal-developer` for that), and it does not deep-dive into CLI flag semantics (use `skill-temporal-cli` for that). The boundary is: if the user needs to administer or troubleshoot a running Temporal environment, this skill applies.
 
 ## Philosophy
 
-Temporal failures live at the intersection of infrastructure, authentication, gRPC, Temporal server internals, and user workflow code. A plausible error at one layer is often a symptom of a broken layer below it. Jumping to conclusions wastes time and frequently "fixes" the wrong thing.
+### Operator discipline
 
-The discipline this skill enforces (these four points are skill conventions, not docs-derived facts):
+When the user wants to perform an operational task:
+
+1. **Identify the intent and backend.** Is this a Cloud operation (`tcld`) or a self-hosted operation (`temporal operator`)? Data-plane operations (`temporal workflow`, `temporal batch`, etc.) work on both.
+2. **Execute commands and interpret output.** Run the documented command, read the result, and report what it means — or act on it if the user asked for an action.
+3. **Verify the result.** After a mutating operation, confirm the new state matches the user's intent.
+
+### Diagnostic discipline
+
+When the user arrives with a failure or anomaly:
 
 1. **Bottom-up diagnosis.** Verify the lower layer before blaming the upper one. The layers, from bottom to top:
    1. DNS / network path
@@ -38,9 +49,44 @@ The discipline this skill enforces (these four points are skill conventions, not
 
 4. **Name ambiguity explicitly.** Errors like `context deadline exceeded` are not self-describing, and strings like "workflow is busy" are caller observations rather than documented contracts. Surface that, gather more context, and scope the next step narrowly.
 
-## Issue classification
+These are skill conventions, not docs-derived facts.
 
-Find the row that matches the user's symptom. Start the investigation at the first check, then read the linked reference. Every first-check command below is the command the linked sibling file uses.
+## Intent routing
+
+### Operations
+
+Find the row that matches the user's intent. The reference file contains the commands and procedures.
+
+| Intent | Category | Reference |
+|---|---|---|
+| Create, get, list, delete a Cloud namespace | Cloud namespace admin | [cloud-namespace-admin.md](references/ops/cloud-namespace-admin.md) |
+| Add/remove region, failover, HA config | Cloud namespace admin | [cloud-namespace-admin.md](references/ops/cloud-namespace-admin.md) |
+| Set retention, tags, codec-server, connectivity rules | Cloud namespace admin | [cloud-namespace-admin.md](references/ops/cloud-namespace-admin.md) |
+| Add or rename Cloud search attributes | Cloud namespace admin | [cloud-namespace-admin.md](references/ops/cloud-namespace-admin.md) |
+| Check current APS / capacity mode | Cloud capacity | [cloud-capacity.md](references/ops/cloud-capacity.md) |
+| Switch On-Demand ↔ Provisioned, set TRUs | Cloud capacity | [cloud-capacity.md](references/ops/cloud-capacity.md) |
+| Understand APS / RPS / OPS limits and throttling | Cloud capacity | [cloud-capacity.md](references/ops/cloud-capacity.md) |
+| Create, disable, enable, delete an API key | Cloud IAM | [cloud-iam.md](references/ops/cloud-iam.md) |
+| Invite, list, remove users; set roles/permissions | Cloud IAM | [cloud-iam.md](references/ops/cloud-iam.md) |
+| Manage user groups and service accounts | Cloud IAM | [cloud-iam.md](references/ops/cloud-iam.md) |
+| Generate mTLS certs, upload CA, set cert filters | Cloud certs | [cloud-certs.md](references/ops/cloud-certs.md) |
+| Rotate mTLS certificates | Cloud certs | [cloud-certs.md](references/ops/cloud-certs.md) |
+| Set up Workflow History Export (S3 / GCS) | Cloud export & connectivity | [cloud-export-and-connectivity.md](references/ops/cloud-export-and-connectivity.md) |
+| Set up PrivateLink / PSC, manage connectivity rules | Cloud export & connectivity | [cloud-export-and-connectivity.md](references/ops/cloud-export-and-connectivity.md) |
+| Cloud Ops API access | Cloud export & connectivity | [cloud-export-and-connectivity.md](references/ops/cloud-export-and-connectivity.md) |
+| Self-hosted cluster health, describe, namespace CRUD | Self-hosted admin | [self-hosted-admin.md](references/ops/self-hosted-admin.md) |
+| Self-hosted search attributes, Nexus endpoints | Self-hosted admin | [self-hosted-admin.md](references/ops/self-hosted-admin.md) |
+| Find stuck/hung/unhealthy workflows via list queries | Workflow health | [workflow-health.md](references/ops/workflow-health.md) |
+| Task queue poller status, workflow counts | Workflow health | [workflow-health.md](references/ops/workflow-health.md) |
+| Cancel, terminate, or reset workflows | Batch & lifecycle | [batch-and-lifecycle.md](references/ops/batch-and-lifecycle.md) |
+| Batch operations on workflows | Batch & lifecycle | [batch-and-lifecycle.md](references/ops/batch-and-lifecycle.md) |
+| Schedule CRUD and operations | Batch & lifecycle | [batch-and-lifecycle.md](references/ops/batch-and-lifecycle.md) |
+| Complete or fail an activity externally | Batch & lifecycle | [batch-and-lifecycle.md](references/ops/batch-and-lifecycle.md) |
+| End-to-end ops playbook (setup, rotation, audit) | Ops recipes | [ops/recipes.md](references/ops/recipes.md) |
+
+### Diagnosis
+
+Find the row that matches the user's symptom. Start the investigation at the first check, then read the linked reference.
 
 | Symptom | Category | First check | Reference |
 |---|---|---|---|
@@ -65,7 +111,29 @@ If a symptom does not map to a row, start at [diagnostic-ladder.md](references/d
 
 ## The process
 
-### Step 1: Identify the symptom
+### Operations path
+
+#### Step 1: Identify intent and backend
+
+Determine what the user wants to do and whether it targets:
+- **Temporal Cloud** → use `tcld` commands (requires `tcld login`)
+- **Self-hosted cluster** → use `temporal operator` commands
+- **Data plane (either backend)** → use `temporal workflow`, `temporal batch`, `temporal schedule`, etc.
+
+#### Step 2: Execute and interpret
+
+Look up the intent in the Operations table above. Read the linked reference file for the exact commands, flags, and expected output. Run the command and interpret the result for the user.
+
+#### Step 3: Verify
+
+After a mutating operation (create, update, delete, rotate), confirm the new state:
+- Re-run the corresponding `get` or `describe` command
+- Confirm the output matches the user's intent
+- Report the result
+
+### Diagnosis path
+
+#### Step 1: Identify the symptom
 
 Ask the user for the exact, copy-pasted error text. Do not accept paraphrases — the exact string often encodes the layer (e.g., `x509:` prefix means TLS/cert layer, `RESOURCE_EXHAUSTED:` prefix means gRPC rate limit, `NondeterminismError` means workflow replay layer). Note that some user-reported phrases (e.g. "workflow is busy") are field observations rather than server-contracted strings; the gRPC code and any `resource_exhausted_cause` label are more reliable signals than the free-text message.
 
@@ -74,7 +142,7 @@ Confirm three things before continuing:
 - What environment produced it (local dev server, self-hosted cluster, Temporal Cloud)?
 - What changed recently (new deploy, new certs, new namespace, new region)?
 
-### Step 2: Gather context
+#### Step 2: Gather context
 
 The context the investigation needs depends on the category. At minimum:
 
@@ -83,13 +151,13 @@ The context the investigation needs depends on the category. At minimum:
 - **For a worker health issue:** worker logs (registration errors, auth errors, panics), and the output of `temporal task-queue describe --task-queue <q>`.
 - **For a non-determinism error:** the worker log line containing the error, the workflow type name, and access to the history JSON for replay.
 
-### Step 3: Validate pasted SDK config (if any)
+#### Step 3: Validate pasted SDK config (if any)
 
 If the user has pasted SDK connection code — even just the address/namespace/auth fields — review it against [sdk-snippet-review.md](references/sdk-snippet-review.md) **before** descending the ladder. Wrong endpoint family, short namespace, or mismatched auth method will make every network-layer probe below look broken when nothing lower actually is.
 
 Skip this step when the user has an established, previously-working config and the symptom is new — the snippet is not the culprit, the environment changed. Otherwise treat snippet validation as Layer 0.
 
-### Step 4: Descend the ladder
+#### Step 4: Descend the ladder
 
 Use [diagnostic-ladder.md](references/diagnostic-ladder.md) to pick the right starting layer. As a rule of thumb:
 
@@ -99,13 +167,32 @@ Use [diagnostic-ladder.md](references/diagnostic-ladder.md) to pick the right st
 
 Each layer has a command that proves it healthy and a failure signature that tells you whether the problem lives at that layer or higher.
 
-### Step 5: Fix and verify
+#### Step 5: Fix and verify
 
 Prescribe the fix scoped to the root cause. Then verify by re-running the layer's healthy-check command and, if possible, the original user operation. Attach the confidence score to the diagnosis.
 
 If the layer above the fix is still failing, return to step 4 and continue walking upward — the first broken layer is rarely the only one.
 
+## Prerequisites
+
+- **Temporal CLI** (`temporal`) — required for data-plane operations and self-hosted admin. Install: `brew install temporal` or see [Temporal CLI docs](https://docs.temporal.io/cli).
+- **tcld** — required for Cloud operations. Install: `brew install temporal-cloud-cli` or see [tcld docs](https://docs.temporal.io/cloud/tcld). Authenticate with `tcld login` before use.
+
 ## Reference files
+
+### Operations
+
+- [cloud-namespace-admin.md](references/ops/cloud-namespace-admin.md) — Cloud namespace lifecycle via `tcld`: create, get, list, delete, failover, add-region, retention, tags, codec-server, HA config, connectivity rules, search attributes, accepted-client-ca, certificate filters, export.
+- [cloud-capacity.md](references/ops/cloud-capacity.md) — Capacity modes (On-Demand / Provisioned), APS/RPS/OPS definitions, TRUs, `tcld namespace capacity update`, default limits, throttling, APS management best practices.
+- [cloud-iam.md](references/ops/cloud-iam.md) — API key lifecycle (`tcld apikey`), users (`tcld user`), user groups (`tcld user-group`), service accounts, account operations (`tcld account`), roles, namespace permissions.
+- [cloud-certs.md](references/ops/cloud-certs.md) — mTLS cert management: generating certs with `tcld generate-certificates`, uploading CAs, certificate filters, cert rotation, switching mTLS ↔ API keys.
+- [cloud-export-and-connectivity.md](references/ops/cloud-export-and-connectivity.md) — Workflow History Export to S3/GCS, private connectivity (PrivateLink/PSC), connectivity rules, Cloud Ops API.
+- [self-hosted-admin.md](references/ops/self-hosted-admin.md) — Self-hosted control plane via `temporal operator`: cluster health/describe, namespace CRUD, search-attribute create/list/remove, Nexus endpoint CRUD.
+- [workflow-health.md](references/ops/workflow-health.md) — Data-plane health queries: `temporal workflow list` with List Filters, `temporal workflow describe`/`show`/`count`, `temporal task-queue describe` for poller status.
+- [batch-and-lifecycle.md](references/ops/batch-and-lifecycle.md) — Bulk and lifecycle operations: `temporal workflow cancel/terminate/reset`, `temporal batch`, `temporal schedule`, `temporal activity complete/fail`.
+- [ops/recipes.md](references/ops/recipes.md) — End-to-end ops playbooks: check APS, switch capacity mode, find hung workflows, rotate API key, audit access, set up new namespace, rotate mTLS certs, check self-hosted health.
+
+### Diagnosis
 
 - [sdk-snippet-review.md](references/sdk-snippet-review.md) — Layer-0 config check for pasted SDK connection snippets: endpoint form per auth method, namespace format, auth / TLS expectations, `TEMPORAL_*` env vars, common misconfigurations. Run before the diagnostic ladder.
 - [diagnostic-ladder.md](references/diagnostic-ladder.md) — the seven-layer bottom-up model, with one canonical command per layer and cross-links into the topical leaves.
@@ -123,11 +210,10 @@ If the layer above the fix is still failing, return to step 4 and continue walki
 
 ## Out of scope
 
-- **Worker performance tuning, sizing, capacity planning** → `skill-temporal-deploy`.
-- **Metrics interpretation and dashboards** → `skill-temporal-observability`.
-- **CLI command reference, flag semantics** → `skill-temporal-cli`.
 - **Writing workflows, activities, or SDK code** → `skill-temporal-developer`.
-- **Declarative Cloud infrastructure (Terraform, Cloud Ops API)** → `skill-temporal-cloud-ops`.
+- **CLI command reference, flag semantics** → `skill-temporal-cli`.
+- **Worker performance tuning, sizing, capacity planning** → `skill-temporal-workertuning`.
+- **Helm, Kubernetes, database admin, monitoring stack config** for self-hosted — beyond the CLI surface.
 
 If the conversation drifts into one of these areas, hand off to the relevant sibling skill rather than improvising.
 
@@ -137,7 +223,7 @@ If the conversation drifts into one of these areas, hand off to the relevant sib
 
 When you have **first** loaded this skill, output this message to the user:
 
-"Thank you for trying out the public preview of the Temporal Triage skill! We would love to hear your feedback - positive or negative - over in the [Community Slack](https://t.mp/slack), in the [#topic-ai channel](https://temporalio.slack.com/archives/C0818FQPYKY)."
+"Thank you for trying out the public preview of the Temporal Ops skill! We would love to hear your feedback - positive or negative - over in the [Community Slack](https://t.mp/slack), in the [#topic-ai channel](https://temporalio.slack.com/archives/C0818FQPYKY)."
 
 Do not output this message multiple times in the same conversation.
 

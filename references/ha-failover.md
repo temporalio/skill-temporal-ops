@@ -26,10 +26,10 @@ A Namespace with High Availability features keeps a primary and a replica in sep
 
 Two DNS names matter during failover:
 
-- **Namespace Endpoint** — `<namespace>.<account>.tmprl.cloud:7233`. Single hostname clients use. It does not change on failover. <!-- docs/cloud/get-started/namespaces.mdx:325 --><!-- docs/cloud/high-availability/failovers.mdx:68-69 -->
-- **Regional Endpoint target** — `<region>.region.tmprl.cloud` (e.g. `aws-us-west-2.region.tmprl.cloud`). The Namespace Endpoint is a CNAME to this regional record, and on failover Temporal updates the CNAME target from the old region to the new one. <!-- docs/cloud/high-availability/ha-connectivity.mdx:32-42 --><!-- docs/cloud/high-availability/ha-connectivity.mdx:83-87 -->
+- **Namespace Endpoint** — `<namespace>.<account>.tmprl.cloud:7233`. Single hostname clients use. It does not change on failover. <!-- docs/cloud/get-started/namespaces.mdx:331 --><!-- docs/cloud/high-availability/failovers.mdx:68-69 -->
+- **Regional Endpoint target** — `<region>.region.tmprl.cloud` (e.g. `aws-us-west-2.region.tmprl.cloud`). The Namespace Endpoint is a CNAME to this regional record, and on failover Temporal updates the CNAME target from the old region to the new one. <!-- docs/cloud/high-availability/ha-connectivity.mdx:26-31 --><!-- docs/cloud/high-availability/ha-connectivity.mdx:44-57 -->
 
-Docs quantify DNS convergence explicitly: Namespace DNS records are configured with a 15 second TTL, and clients should converge to the newly targeted region within, at most, a 30-second delay. <!-- docs/cloud/high-availability/ha-connectivity.mdx:87-90 -->
+Docs quantify DNS convergence explicitly: Namespace DNS records are configured with a 15 second TTL, and clients should converge to the newly targeted region within, at most, a 30-second delay. <!-- docs/cloud/high-availability/ha-connectivity.mdx:152-154 -->
 
 Temporal Cloud also enforces a maximum connection lifetime of 5 minutes, which gives Workers an opportunity to re-resolve DNS. <!-- docs/cloud/high-availability/failovers.mdx:382-383 -->
 
@@ -51,7 +51,7 @@ dig +short <namespace>.<account>.tmprl.cloud   # man: dig(1)
 nslookup <namespace>.<account>.tmprl.cloud     # man: nslookup(1)
 ```
 
-The CNAME target encodes the active region (e.g. `aws-us-east-1.region.tmprl.cloud`). <!-- docs/cloud/high-availability/ha-connectivity.mdx:32-42 -->
+The CNAME target encodes the active region (e.g. `aws-us-east-1.region.tmprl.cloud`). <!-- docs/cloud/high-availability/ha-connectivity.mdx:26-31 -->
 
 Failover events are also written to the audit log as `"operation": "FailoverNamespace"` and shown on the Namespace detail page in the Web UI; Temporal emails account admins when a failover happens. <!-- docs/cloud/high-availability/failovers.mdx:290-295 --><!-- docs/cloud/high-availability/monitoring.mdx:67-69 -->
 
@@ -67,7 +67,7 @@ Failover events are also written to the audit log as `"operation": "FailoverName
 
 **Things to discriminate:**
 
-1. **DNS resolver caching on the client path.** Docs state that any DNS cache should re-resolve the Namespace record within the 15-second TTL and converge within ~30 seconds. <!-- docs/cloud/high-availability/ha-connectivity.mdx:87-90 --> If a specific resolver on the client path (NodeLocal DNSCache, a local `dnsmasq`, a VM's stub resolver) is holding the old CNAME longer than that, repeated `dig +short` will show the stale target. There's no Temporal-docs-authoritative list of which resolvers honor a 15-second TTL; verify empirically.
+1. **DNS resolver caching on the client path.** Docs state that any DNS cache should re-resolve the Namespace record within the 15-second TTL and converge within ~30 seconds. <!-- docs/cloud/high-availability/ha-connectivity.mdx:152-154 --> If a specific resolver on the client path (NodeLocal DNSCache, a local `dnsmasq`, a VM's stub resolver) is holding the old CNAME longer than that, repeated `dig +short` will show the stale target. There's no Temporal-docs-authoritative list of which resolvers honor a 15-second TTL; verify empirically.
 2. **Long-lived connection not re-resolving.** Temporal Cloud enforces a maximum connection lifetime of 5 minutes specifically so Workers get an opportunity to re-resolve DNS. <!-- docs/cloud/high-availability/failovers.mdx:382-383 --> If a Worker is wedged on a single connection that outlives this window, restarting the worker pod is the fastest way to force a fresh resolution.
 3. **Application-level address caching.** If the caller resolved the hostname to an IP at startup and reused it, a CNAME swap doesn't help. Pass the hostname to the client config, not a pre-resolved IP.
 4. **Private DNS override covers only one region.** See [PrivateLink stopped working after failover](#symptom-privatelink-stopped-working-after-failover).
@@ -87,9 +87,9 @@ Then re-run whatever operation was failing.
 
 **What it means:** the private DNS override covered only the old active region's `<region>.region.tmprl.cloud` record. After the CNAME flips to the new region, that record has no private hosted zone entry, so the client falls back to public DNS (or dead-ends in a no-egress VPC).
 
-**Fix:** the `region.tmprl.cloud` private hosted zone must cover every region the Namespace can fail over to, mapping each `<region>.region.tmprl.cloud` to the VPC Endpoint in that region's VPC. <!-- docs/cloud/high-availability/ha-connectivity.mdx:58-61 --><!-- docs/cloud/connectivity/aws-connectivity.mdx:217-229 --> Workers must also be able to reach the new region — either by running Workers in both regions, or by linking the VPCs (Transit Gateway / VPC Peering). <!-- docs/cloud/high-availability/ha-connectivity.mdx:66-68 --><!-- docs/cloud/connectivity/aws-connectivity.mdx:227-229 -->
+**Fix:** the `region.tmprl.cloud` private hosted zone must cover every region the Namespace can fail over to, mapping each `<region>.region.tmprl.cloud` to the VPC Endpoint in that region's VPC. <!-- docs/cloud/high-availability/ha-connectivity.mdx:67-74 --><!-- docs/cloud/connectivity/aws-connectivity.mdx:217-229 --> Workers must also be able to reach the new region — either by running Workers in both regions, or by linking the VPCs (Transit Gateway / VPC Peering). <!-- docs/cloud/high-availability/ha-connectivity.mdx:78-81 --><!-- docs/cloud/connectivity/aws-connectivity.mdx:227-229 -->
 
-**Related trap — direct VPCE targeting:** the direct-VPCE approach (pointing Workers at the VPC Endpoint DNS name with an SNI override, no per-Namespace DNS record) is explicitly not compatible with HA Namespaces, because HA relies on Temporal's public DNS CNAME records to route traffic to the active region; bypassing DNS means Workers cannot follow the CNAME to the new region. <!-- docs/cloud/connectivity/aws-connectivity.mdx:242-248 -->
+**Related trap — direct VPCE targeting:** the direct-VPCE approach (pointing Workers at the VPC Endpoint DNS name with an SNI override, no per-Namespace DNS record) is explicitly not compatible with HA Namespaces, because HA relies on Temporal's public DNS CNAME records to route traffic to the active region; bypassing DNS means Workers cannot follow the CNAME to the new region. <!-- docs/cloud/connectivity/aws-connectivity.mdx:206-213 -->
 
 ## Symptom: failover was requested but never happened
 
@@ -122,13 +122,13 @@ If the failover legitimately did not execute when requested, escalate to Tempora
 **Things to check if the handover window is longer or the error is not retried:**
 
 - Is the caller a Temporal SDK or a raw gRPC client? SDK retries handle this window by design; a raw client must retry the `UNAVAILABLE` status itself. <!-- grpc: UNAVAILABLE -->
-- Is replication lag large? A forced failover with significant replication lag has a higher likelihood of rolling back Workflow progress; docs recommend always checking the lag before failing over. <!-- docs/cloud/high-availability/failovers.mdx:187-192 --><!-- docs/cloud/high-availability/monitoring.mdx:55-56 --> Lag is exposed via `temporal_cloud_v1_replication_lag_p50` / `_p95` / `_p99`. <!-- docs/cloud/metrics/openmetrics/metrics-reference.mdx:652-670 -->
+- Is replication lag large? A forced failover with significant replication lag has a higher likelihood of rolling back Workflow progress; docs recommend always checking the lag before failing over. <!-- docs/cloud/high-availability/failovers.mdx:187-192 --><!-- docs/cloud/high-availability/monitoring.mdx:55-56 --> Lag is exposed via `temporal_cloud_v1_replication_lag_p50` / `_p95` / `_p99`. <!-- docs/cloud/metrics/openmetrics/metrics-reference.mdx:692-708 -->
 
 ## Worker placement — triage-layer pointer
 
 The triage concern is narrow: confirm that Workers are able to reach whichever region is currently active and that they follow the CNAME rather than hard-coding a Regional Endpoint.
 
-- Docs describe two Worker configurations: run Workers in both regions continuously, or establish cross-region connectivity (Transit Gateway / VPC Peering) so a single-region Worker fleet can reach the newly active region. <!-- docs/cloud/high-availability/ha-connectivity.mdx:66-68 --><!-- docs/cloud/connectivity/aws-connectivity.mdx:227-229 -->
+- Docs describe two Worker configurations: run Workers in both regions continuously, or establish cross-region connectivity (Transit Gateway / VPC Peering) so a single-region Worker fleet can reach the newly active region. <!-- docs/cloud/high-availability/ha-connectivity.mdx:78-81 --><!-- docs/cloud/connectivity/aws-connectivity.mdx:227-229 -->
 - Docs call out explicitly that enabling HA does not require specific Worker configuration; the DNS redirection is invisible to Workers that use the Namespace Endpoint. <!-- docs/cloud/high-availability/failovers.mdx:368-372 -->
 - On a regional outage, Workers in that region may fail alongside the primary Namespace; docs recommend a second set of Workers in the replica's region to keep Workflows moving. <!-- docs/cloud/high-availability/failovers.mdx:374-378 -->
 
@@ -136,9 +136,9 @@ Deployment-level pattern selection (cost, latency, operational complexity) is a 
 
 ## Known platform limits
 
-- **`sa-east-1` is not available for Multi-region Namespaces.** Currently it's the only Temporal Cloud region on its continent, and the replica must be on the same continent as the primary. <!-- docs/cloud/high-availability/ha-connectivity.mdx:72-76 --><!-- docs/cloud/high-availability/index.mdx:65-66 --><!-- docs/cloud/high-availability/enable.mdx:15 -->
-- **GCP Private Service Connect does not support automatic failover via Temporal Cloud DNS.** If you use GCP PSC, you must manually update Workers to point to the active region's PSC endpoint when a failover occurs. <!-- docs/cloud/connectivity/gcp-connectivity.mdx:32-36 --> (The older HA connectivity guide also notes "Private connectivity is not yet offered for GCP Multi-region Namespaces" <!-- docs/cloud/high-availability/ha-connectivity.mdx:52-56 --> — treat the `gcp-connectivity.mdx` wording as the operational contract.)
-- **Direct VPCE targeting (SNI-override pattern) is incompatible with HA Namespaces.** HA depends on the public DNS CNAME to route to the active region; bypassing DNS breaks failover. <!-- docs/cloud/connectivity/aws-connectivity.mdx:242-248 -->
+- **`sa-east-1` is not available for Multi-region Namespaces.** Currently it's the only Temporal Cloud region on its continent, and the replica must be on the same continent as the primary. <!-- docs/cloud/high-availability/ha-connectivity.mdx:136-140 --><!-- docs/cloud/high-availability/index.mdx:65-66 --><!-- docs/cloud/high-availability/enable.mdx:15 -->
+- **GCP Private Service Connect does not support automatic failover via Temporal Cloud DNS.** If you use GCP PSC, you must manually update Workers to point to the active region's PSC endpoint when a failover occurs. <!-- docs/cloud/connectivity/gcp-connectivity.mdx:32-36 -->
+- **Direct VPCE targeting (SNI-override pattern) is incompatible with HA Namespaces.** HA depends on the public DNS CNAME to route to the active region; bypassing DNS breaks failover. <!-- docs/cloud/connectivity/aws-connectivity.mdx:206-213 -->
 - **Multi-region and Multi-cloud cannot both be enabled on the same Namespace simultaneously.** <!-- docs/cloud/high-availability/index.mdx:69-70 -->
 - **Seven-day waiting period after replica removal.** After `tcld namespace delete-region`, re-enabling HA in the same region requires waiting 7 days. <!-- docs/cloud/tcld/namespace.mdx:329-352 --><!-- docs/cloud/high-availability/enable.mdx:115-121 -->
 
