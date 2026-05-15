@@ -145,7 +145,7 @@ Things to check on a pending activity:
 
 ### Heartbeating
 
-For long-running activities, heartbeating is the only mechanism by which the server detects a dead worker. A missed heartbeat within the `heartbeat_timeout` results in `ActivityTaskTimedOut` and a retry. <!-- docs/encyclopedia/detecting-activity-failures.mdx:197 --> Activities without heartbeating cannot be killed server-side mid-execution; they run until `start_to_close_timeout` (or forever, if neither start-to-close nor schedule-to-close is set).
+For long-running activities, heartbeating is the only mechanism by which the server detects a dead worker. A missed heartbeat within the `heartbeat_timeout` results in `ActivityTaskTimedOut` and a retry. <!-- docs/encyclopedia/detecting-activity-failures.mdx:200-201, 257-259 --> Activities without heartbeating cannot be killed server-side mid-execution; they run until `start_to_close_timeout` (or forever, if neither start-to-close nor schedule-to-close is set).
 
 ## Pending child workflows
 
