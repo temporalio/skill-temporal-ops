@@ -189,19 +189,30 @@ For diagnosing *why* a specific workflow is stuck (pending activities, pending c
 
 3. Update clients and workers to load the new key. <!-- docs/cloud/get-started/api-keys.mdx:219-225 -->
 
-4. Once no traffic uses the old key, delete it:
+4. Disable the old key before deleting (reversible safety step):
+
+   ```bash
+   tcld apikey disable --id <old_apikey_id>
+   ```
+   <!-- docs/cloud/tcld/apikey.mdx:192-234 -->
+
+   Disabling is separate from deletion. If anything breaks, re-enable immediately:
+
+   ```bash
+   tcld apikey enable --id <old_apikey_id>
+   ```
+   <!-- docs/cloud/tcld/apikey.mdx:238-282 -->
+
+   Watch for auth failures. Once the fleet remains healthy, proceed to delete.
+
+5. Delete the old key:
 
    ```bash
    tcld apikey delete --id <old_apikey_id>
    ```
    <!-- docs/cloud/tcld/apikey.mdx:144-188 -->
 
-   Alternatively, disable before deleting to validate nothing breaks:
-
-   ```bash
-   tcld apikey disable --id <old_apikey_id>
-   ```
-   <!-- docs/cloud/tcld/apikey.mdx:192-234 -->
+   Deletion is permanent. The `disable`, `enable`, and `delete` subcommands also accept `--resource-version` (ETag) and `--request-id` for strong idempotency. <!-- docs/cloud/tcld/apikey.mdx:214,260,166 -->
 
 **Limits:** Up to 10 non-expired keys per user; up to 20 non-expired keys per Service Account. Maximum expiration: 2 years. <!-- docs/cloud/get-started/api-keys.mdx:440-449 -->
 
@@ -321,7 +332,31 @@ temporal workflow list \
 ```
 <!-- docs/cloud/get-started/api-keys.mdx:364-389 -->
 
-### Step 5: (Optional) Grant additional user access
+### Step 5: Store a `temporal env` for the new namespace
+
+`temporal env` stores named environments in `$HOME/.config/temporalio/temporal.yaml`. Use `--env <name>` to select one. <!-- docs/cli/env.mdx:86-110 -->
+
+```bash
+# For API-key Cloud namespaces the docs prescribe the regional endpoint
+# format for --address: <region>.<cloud_provider>.api.temporal.io:7233
+temporal env set <name>.address "<region>.aws.api.temporal.io:7233"
+temporal env set <name>.namespace "<namespace_name>.<account_suffix>"
+temporal env set <name>.api-key "<key-secret-from-step-3>"
+```
+<!-- docs/cli/env.mdx:86-110, docs/cloud/get-started/api-keys.mdx:370-371 -->
+
+For mTLS namespaces, set `tls-cert-path`, `tls-key-path`, and (when connecting via PrivateLink / PSC) `tls-server-name` instead of `api-key`, and use the Namespace endpoint `<ns>.<acct>.tmprl.cloud:7233` as the address.
+
+### Step 6: Smoke-test the connection
+
+```bash
+temporal workflow list --env <name> --limit 1
+```
+<!-- docs/cli/env.mdx:130 -->
+
+A returned result -- even an empty list -- confirms address + namespace + credentials are coherent. A non-zero exit means one of those three is wrong.
+
+### Step 7: (Optional) Grant additional user access
 
 ```bash
 tcld user set-namespace-permissions \
@@ -332,7 +367,7 @@ tcld user set-namespace-permissions \
 
 Permissions: `Admin`, `Write`, `Read`. <!-- docs/cloud/tcld/user.mdx:331-338 -->
 
-### Step 6: (Optional) Enable delete protection
+### Step 8: (Optional) Enable delete protection
 
 ```bash
 tcld namespace lifecycle set \

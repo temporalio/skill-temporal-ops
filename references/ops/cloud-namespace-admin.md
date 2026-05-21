@@ -32,6 +32,79 @@ If `--namespace` is omitted, the environment variable `$TEMPORAL_CLOUD_NAMESPACE
 
 ---
 
+## Account commands (`tcld account`)
+
+Commands for inspecting the Cloud account itself, before working with namespaces.
+
+### Get account info
+
+```bash
+tcld account get
+```
+<!-- docs/cloud/tcld/account.mdx:311-319 -->
+
+Returns account ID, name, and related metadata. No modifiers. <!-- docs/cloud/tcld/account.mdx:313,319 -->
+
+### List available regions
+
+```bash
+tcld account list-regions
+```
+<!-- docs/cloud/tcld/account.mdx:321-325 -->
+
+Lists all regions where the account can provision namespaces, including the cloud provider (AWS or GCP). Alias: `l` <!-- docs/cloud/tcld/account.mdx:323-325 -->
+
+---
+
+## Polling async operations (`tcld request`)
+
+Namespace creation, deletion, region additions/removals, and failover are **asynchronous** operations. Poll their status with `tcld request get`. <!-- docs/cloud/tcld/request.mdx:16-17 -->
+
+```bash
+tcld request get --request-id <request_id>
+```
+<!-- docs/cloud/tcld/request.mdx:26 -->
+
+Alias: `g`. The `--request-id` (alias `-r`) flag is required. <!-- docs/cloud/tcld/request.mdx:28,34 -->
+
+**Pattern:** submit a mutation with a client-supplied `--request-id`, then poll until the state becomes terminal (fulfilled or rejected). Guard against persistent failure: if `tcld request get` itself returns a non-zero exit code, stop and report rather than looping indefinitely.
+
+```bash
+# 1. Submit with an idempotency key
+tcld namespace create --namespace payments.a1b2c --region us-east-1 \
+    --auth-method api_key --request-id create-01
+
+# 2. Poll
+tcld request get --request-id create-01
+
+# 3. Inspect the namespace once ready
+tcld namespace get --namespace payments.a1b2c
+```
+<!-- docs/cloud/tcld/request.mdx:42-44, docs/cloud/tcld/namespace.mdx:466-468 -->
+
+---
+
+## Feature flags and version
+
+```bash
+# Inspect account-level feature flags
+tcld feature get
+
+# Toggle a specific flag (dynamic subcommand name: toggle-<flag>)
+tcld feature toggle-apikey
+```
+<!-- docs/cloud/tcld/feature.mdx:25-69 -->
+
+`tcld feature` has two subcommands: `get` (alias `g`) and `toggle-*`. The `*` is replaced by the feature name. Example output: `Feature flag enable-apikey is now true`. <!-- docs/cloud/tcld/feature.mdx:52-75 -->
+
+```bash
+# tcld binary version
+tcld version
+```
+<!-- docs/cloud/tcld/version.mdx:16-22 -->
+
+---
+
 ## tcld namespace create
 
 Alias: `c` <!-- docs/cloud/tcld/namespace.mdx:103 -->
@@ -244,21 +317,7 @@ tcld namespace retention set \
 
 ## tcld namespace update-codec-server
 
-Alias: `ucs` <!-- docs/cloud/tcld/namespace.mdx:1689 -->
-
-```bash
-tcld namespace update-codec-server \
-    --namespace <namespace_id> \
-    --endpoint <https_url>
-```
-<!-- docs/cloud/tcld/namespace.mdx:1704-1707 -->
-
-| Flag | Alias | Required | Notes |
-|---|---|---|---|
-| `--namespace` | `-n` | Yes | |
-| `--endpoint` | `-e` | Yes | Must be HTTPS <!-- docs/cloud/tcld/namespace.mdx:1713-1714 --> |
-| `--pass-access-token` | `--pat` | No | Default `false` <!-- docs/cloud/tcld/namespace.mdx:1728-1730 --> |
-| `--include-credentials` | `--ic` | No | Default `false` <!-- docs/cloud/tcld/namespace.mdx:1743-1744 --> |
+See [codec-server.md](codec-server.md#namespace-level-cloud-or-self-hosted----web-ui-or-tcld) for the full flag table, HTTP contract, CORS, and authorization details.
 
 ---
 

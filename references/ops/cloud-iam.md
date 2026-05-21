@@ -7,6 +7,51 @@ Covers API keys, users, user groups, service accounts, account operations, roles
 
 ---
 
+## tcld Authentication
+
+`tcld` supports two authentication modes: browser-based OAuth (interactive default) and API key (headless/CI). `tcld` does **not** share credentials with `temporal`. <!-- docs/cloud/tcld/login.mdx:16-18, docs/cloud/tcld/index.mdx:35-42 -->
+
+### Login (browser-based OAuth)
+
+```bash
+tcld login
+```
+<!-- docs/cloud/tcld/login.mdx:16-22 -->
+
+Alias: `l`. Follow instructions in the browser to authenticate. The command has no modifiers. <!-- docs/cloud/tcld/login.mdx:20-24 -->
+
+### Logout
+
+```bash
+tcld logout
+```
+<!-- docs/cloud/tcld/logout.mdx:16-20 -->
+
+Alias: `lo` <!-- docs/cloud/tcld/logout.mdx:19 -->
+
+| Flag | Default | Notes |
+|------|---------|-------|
+| `--disable-pop-up` | `false` | Suppresses the browser pop-up (for headless environments) <!-- docs/cloud/tcld/logout.mdx:24-27 --> |
+
+### Non-interactive (API key) auth
+
+Pass an API key instead of using the OAuth flow: <!-- docs/cloud/get-started/api-keys.mdx:407-410 -->
+
+```bash
+# Option 1: environment variable
+export TEMPORAL_API_KEY=<key-secret>
+tcld account get
+
+# Option 2: --api-key flag on every invocation
+tcld --api-key <key-secret> account get
+```
+
+### Global modifier
+
+`--auto_confirm` (env var `AUTO_CONFIRM`, default `false`) skips interactive confirmation prompts on any `tcld` command. <!-- docs/cloud/tcld/index.mdx:37-42 -->
+
+---
+
 ## API Key Lifecycle (`tcld apikey`)
 
 Alias: `ak` <!-- docs/cloud/tcld/apikey.mdx:19 -->
@@ -135,6 +180,37 @@ temporal workflow list \
     --address <namespace>.<account>.tmprl.cloud:7233 \
     --namespace <namespace_id>.<account_id>
 ```
+
+### Three ways to supply an API key to `temporal`
+
+The `temporal` CLI accepts an API key through any of the following, listed from highest to lowest precedence: <!-- docs/cloud/get-started/api-keys.mdx:364-365, docs/cli/env.mdx:130 -->
+
+1. **`TEMPORAL_API_KEY` environment variable** (recommended): <!-- docs/cloud/get-started/api-keys.mdx:364-365 -->
+
+   ```bash
+   export TEMPORAL_API_KEY=<key-secret>
+   temporal workflow list \
+       --address <endpoint> \
+       --namespace <namespace_id>.<account_id>
+   ```
+
+2. **`--api-key` flag**: <!-- docs/cli/cmd-options.mdx:141-143 -->
+
+   ```bash
+   temporal workflow list \
+       --api-key <key-secret> \
+       --address <endpoint> \
+       --namespace <namespace_id>.<account_id>
+   ```
+
+3. **Stored in a `temporal env` profile**: <!-- docs/cli/env.mdx:86-110 -->
+
+   ```bash
+   temporal env set prod.api-key "<key-secret>"
+   temporal workflow list --env prod
+   ```
+
+TLS is not optional: `--tls` defaults to `true` as soon as `--api-key` (or any TLS flag) is present. <!-- docs/cli/env.mdx:141 -->
 
 ### tcld authentication
 

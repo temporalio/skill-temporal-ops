@@ -294,6 +294,52 @@ To disable statistics and show only poller info, use `--disable-stats`. <!-- doc
 
 ---
 
+## 7b. Task Queue rate-limit configuration
+
+`temporal task-queue config` reads and updates the rate-limit settings for a Task Queue. <!-- docs/cli/task-queue.mdx:23-33 -->
+
+### Read current configuration
+
+```
+temporal task-queue config get \
+    --task-queue YourTaskQueue \
+    --task-queue-type activity
+```
+<!-- docs/cli/task-queue.mdx:40-42 -->
+
+Returns the current queue rate limit and fairness key rate limit defaults. <!-- docs/cli/task-queue.mdx:45-51 -->
+
+| Flag | Req | Type | Description |
+|------|-----|------|-------------|
+| `--task-queue`, `-t` | Yes | string | Task Queue name. | <!-- docs/cli/task-queue.mdx:57 -->
+| `--task-queue-type` | Yes | string-enum | Accepted values: `workflow`, `activity`, `nexus`. | <!-- docs/cli/task-queue.mdx:58 -->
+
+### Update configuration
+
+```
+temporal task-queue config set \
+    --task-queue YourTaskQueue \
+    --task-queue-type activity \
+    --queue-rps-limit 200 \
+    --queue-rps-limit-reason "holiday traffic"
+```
+<!-- docs/cli/task-queue.mdx:65-71 -->
+
+To unset a rate limit, pass `default` (e.g. `--queue-rps-limit default`). <!-- docs/cli/task-queue.mdx:87 -->
+
+| Flag | Req | Type | Description |
+|------|-----|------|-------------|
+| `--task-queue`, `-t` | Yes | string | Task Queue name. | <!-- docs/cli/task-queue.mdx:101 -->
+| `--task-queue-type` | Yes | string-enum | Accepted values: `workflow`, `activity`, `nexus`. | <!-- docs/cli/task-queue.mdx:102 -->
+| `--queue-rps-limit` | No | float\|default | Queue rate limit in requests per second. Pass `default` to unset. | <!-- docs/cli/task-queue.mdx:99 -->
+| `--queue-rps-limit-reason` | No | string | Reason for queue rate limit update. | <!-- docs/cli/task-queue.mdx:100 -->
+| `--fairness-key-rps-limit-default` | No | float\|default | Fairness key rate limit default. Pass `default` to unset. | <!-- docs/cli/task-queue.mdx:95 -->
+| `--fairness-key-rps-limit-reason` | No | string | Reason for fairness key rate limit update. | <!-- docs/cli/task-queue.mdx:96 -->
+| `--fairness-key-weight` | No | string[] | Set or unset fairness key weight overrides (`key=weight` or `key=default`). Repeatable. | <!-- docs/cli/task-queue.mdx:97 -->
+| `--fairness-key-weight-clear-all` | No | bool | Unset all fairness key weight overrides. | <!-- docs/cli/task-queue.mdx:98 -->
+
+---
+
 ## 8. Workflow tracing
 
 Display progress of a Workflow Execution and its child workflows in real time: <!-- docs/cli/workflow.mdx:682-689 -->

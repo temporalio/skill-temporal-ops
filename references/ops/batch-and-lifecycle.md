@@ -158,6 +158,48 @@ reset. <!-- docs/cli/workflow.mdx:394-395 -->
 
 ---
 
+## Workflow Signal (including batch)
+
+Send an asynchronous Signal to a running Workflow Execution. <!-- docs/cli/workflow.mdx:443-447 -->
+
+### Single Workflow
+
+```
+temporal workflow signal \
+    --workflow-id YourWorkflowId \
+    --name YourSignal \
+    --input '{"YourInputKey": "YourInputValue"}'
+```
+<!-- docs/cli/workflow.mdx:450-453 -->
+
+### Bulk via visibility Query (batch signal)
+
+Replace `--workflow-id` with `--query` to signal every Workflow matching a List Filter. This runs as a batch job, the same mechanism used by cancel, terminate, and delete. <!-- docs/cli/workflow.mdx:469-471 -->
+
+```
+temporal workflow signal \
+    --query 'WorkflowType="GreetingWorkflow" AND ExecutionStatus="Running"' \
+    --name UpdateGreeting \
+    --input '"Hola"' \
+    --reason "bulk rename"
+```
+<!-- docs/cli/workflow.mdx:469-474 -->
+
+### Flags
+
+| Flag | Req | Type | Description |
+|------|-----|------|-------------|
+| `--name` | Yes | string | Signal name. | <!-- docs/cli/workflow.mdx:468 -->
+| `--workflow-id`, `-w` | No | string | Workflow ID. Must set either `--workflow-id` or `--query`. | <!-- docs/cli/workflow.mdx:473 -->
+| `--query`, `-q` | No | string | SQL-like `QUERY` List Filter. Must set either `--workflow-id` or `--query`. | <!-- docs/cli/workflow.mdx:469 -->
+| `--input`, `-i` | No | string[] | Input value (JSON). Can be passed multiple times. | <!-- docs/cli/workflow.mdx:464 -->
+| `--run-id`, `-r` | No | string | Run ID. Only use with `--workflow-id`. Cannot use with `--query`. | <!-- docs/cli/workflow.mdx:472 -->
+| `--reason` | No | string | Reason for batch operation. Only use with `--query`. Defaults to user name. | <!-- docs/cli/workflow.mdx:470 -->
+| `--rps` | No | float | Limit batch's requests per second. Only allowed if query is present. | <!-- docs/cli/workflow.mdx:471 -->
+| `--yes`, `-y` | No | bool | Don't prompt to confirm. Only allowed when `--query` is present. | <!-- docs/cli/workflow.mdx:474 -->
+
+---
+
 ## Batch Job Management (`temporal batch`)
 
 Batch jobs are created implicitly when you pass `--query` to

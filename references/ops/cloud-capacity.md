@@ -111,6 +111,50 @@ When switching back to On-Demand mode, your APS limit resets to the running aver
 
 ---
 
+## Metrics Endpoint Administration (`tcld account metrics`)
+
+The Cloud account exposes a Prometheus-compatible metrics endpoint that requires mTLS. Manage it with `tcld account metrics`. <!-- docs/cloud/tcld/account.mdx:327-335 -->
+
+### Enable / disable the endpoint
+
+```bash
+tcld account metrics enable
+tcld account metrics disable
+```
+<!-- docs/cloud/tcld/account.mdx:594-614 -->
+
+Neither command takes modifiers. The end-entity certificates for the metrics endpoint **must** be configured before the endpoint can be enabled. <!-- docs/cloud/tcld/account.mdx:596-602 -->
+
+### Manage accepted client CA certificates
+
+The `tcld account metrics accepted-client-ca` subcommands configure the certificates the Prometheus endpoint uses for mTLS authentication. <!-- docs/cloud/tcld/account.mdx:337-352 -->
+
+```bash
+# Add a CA certificate (base64 string or PEM file)
+tcld account metrics accepted-client-ca add --ca-certificate-file <path>
+
+# List currently configured certificates
+tcld account metrics accepted-client-ca list
+
+# Replace all certificates (used for rotation)
+tcld account metrics accepted-client-ca set --ca-certificate-file <path>
+
+# Remove a certificate by fingerprint, base64 cert, or file
+tcld account metrics accepted-client-ca remove --ca-certificate-fingerprint <fp>
+```
+<!-- docs/cloud/tcld/account.mdx:354-520 -->
+
+| Subcommand | Alias | Key flags |
+|---|---|---|
+| `add` | `a` | `--ca-certificate` / `-c` or `--ca-certificate-file` / `-f` (one required) <!-- docs/cloud/tcld/account.mdx:354-424 --> |
+| `list` | `l` | No modifiers <!-- docs/cloud/tcld/account.mdx:426-434 --> |
+| `set` | `s` | `--ca-certificate` / `-c` or `--ca-certificate-file` / `-f` (one required) <!-- docs/cloud/tcld/account.mdx:522-592 --> |
+| `remove` | `r` | `--ca-certificate`, `--ca-certificate-file`, or `--ca-certificate-fingerprint` / `--fp` (one required) <!-- docs/cloud/tcld/account.mdx:436-520 --> |
+
+All four subcommands also accept `--request-id` / `-r` and `--resource-version` / `-v`.
+
+---
+
 ## Setting Capacity Modes
 
 Capacity modes can be set and adjusted by **Global Admin** and **Namespace Admin**. <!-- docs/cloud/capacity-modes.mdx:179 -->

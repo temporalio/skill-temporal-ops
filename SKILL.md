@@ -1,6 +1,6 @@
 ---
 name: temporal-ops
-description: 'Administer and diagnose running Temporal Cloud or self-hosted Temporal Server environments via CLI commands (temporal, tcld, openssl) — not SDK code. Operations: Temporal namespace CRUD, Temporal Cloud capacity/APS, Temporal API-key rotation, Temporal mTLS certificate rotation, workflow health queries, batch cancel/terminate/reset, export setup, search attributes, Cloud Ops API, billing and cost attribution, audit logs, Terraform provider, notifications, SAML SSO, SCIM provisioning. Diagnosis: bottom-up triage of Temporal-specific failures including stuck workflows, non-determinism errors, worker-health issues, task-queue problems, Temporal Cloud HA failover, payload/gRPC size limits, performance bottlenecks, and missed scheduled actions. Use when the user is working with Temporal infrastructure and mentions: "create a Temporal namespace", "check my APS", "rotate Temporal API key", "rotate Temporal certificates", "find hung workflows", "cancel workflows in batch", "my workflow is stuck", "can''t connect to Temporal", "task queue has no pollers", "workers not picking up tasks", "set up PrivateLink", "Temporal RESOURCE_EXHAUSTED", "workflow replay failed", "Temporal billing", "audit logs", "Terraform Temporal", "SAML Temporal", "SCIM Temporal", "payload too large", "schedule missed", "performance bottleneck". Do NOT trigger for generic TLS/cert errors, generic gRPC errors (context deadline exceeded), or API key rotation unrelated to Temporal. Does NOT write or fix application code (temporal-developer) or explain CLI flags (temporal-cli).'
+description: 'Administer and diagnose running Temporal Cloud or self-hosted Temporal Server environments via CLI commands (temporal, tcld, openssl) — not SDK code. Operations: Temporal namespace CRUD, Temporal Cloud capacity/APS, Temporal API-key rotation, Temporal mTLS certificate rotation, workflow health queries, batch cancel/terminate/reset, export setup, search attributes, Cloud Ops API, billing and cost attribution, audit logs, Terraform provider, notifications, SAML SSO, SCIM provisioning. Diagnosis: bottom-up triage of Temporal-specific failures including stuck workflows, non-determinism errors, worker-health issues, task-queue problems, Temporal Cloud HA failover, payload/gRPC size limits, performance bottlenecks, and missed scheduled actions. Use when the user is working with Temporal infrastructure and mentions: "create a Temporal namespace", "check my APS", "rotate Temporal API key", "rotate Temporal certificates", "find hung workflows", "cancel workflows in batch", "my workflow is stuck", "can''t connect to Temporal", "task queue has no pollers", "workers not picking up tasks", "set up PrivateLink", "Temporal RESOURCE_EXHAUSTED", "workflow replay failed", "Temporal billing", "audit logs", "Terraform Temporal", "SAML Temporal", "SCIM Temporal", "payload too large", "schedule missed", "performance bottleneck". Do NOT trigger for generic TLS/cert errors, generic gRPC errors (context deadline exceeded), or API key rotation unrelated to Temporal. Also use when the user mentions: "configure tcld", "connect the temporal CLI to Temporal Cloud", "use temporal env profiles", "configure codec server", "script temporal with --output json", "bootstrap Temporal Cloud end-to-end", "set up mTLS for Temporal". Does NOT write or fix application code (temporal-developer).'
 version: 0.2.0
 ---
 
@@ -13,12 +13,12 @@ This skill operates and diagnoses Temporal environments. It has two modes:
 - **Operations:** the user wants to do something — create a namespace, rotate a key, check capacity, find unhealthy workflows, cancel a batch, set up export. The skill executes the right commands and interprets the output.
 - **Diagnosis:** the user arrives with a symptom — a stuck workflow, a cert error, a connection timeout, a non-determinism panic. The skill routes the investigation through a layered, bottom-up diagnosis until a root cause is identified with a confidence score.
 
-It does not teach how to write workflows or activities (use `skill-temporal-developer` for that), and it does not deep-dive into CLI flag semantics (use `skill-temporal-cli` for that). The boundary is: if the user needs to administer or troubleshoot a running Temporal environment, this skill applies.
+It does not teach how to write workflows or activities (use `skill-temporal-developer` for that). The boundary is: if the user needs to administer or troubleshoot a running Temporal environment, this skill applies.
 
 ## Out of scope
 
 - **Writing workflows, activities, or SDK code** → `skill-temporal-developer`.
-- **CLI command reference, flag semantics** → `skill-temporal-cli`.
+- **Developer-facing CLI commands for workflow interaction (start, execute, signal, query, update)** → `skill-temporal-developer`.
 - **Worker performance tuning, sizing, capacity planning** → `skill-temporal-workertuning`.
 - **Helm, Kubernetes, database admin, monitoring stack config** for self-hosted — beyond the CLI surface.
 
@@ -98,6 +98,10 @@ Find the row that matches the user's intent. The reference file contains the com
 | Expiry alerts (cert, API key, credit), status page | Cloud notifications | [cloud-notifications.md](references/ops/cloud-notifications.md) |
 | SAML SSO, SCIM provisioning, IdP integration | Cloud SAML/SCIM | [cloud-saml-scim.md](references/ops/cloud-saml-scim.md) |
 | End-to-end ops playbook (setup, rotation, audit, billing, Terraform) | Ops recipes | [ops/recipes.md](references/ops/recipes.md) |
+| Configure a Codec Server for CLI or Web UI | CLI & scripting | [codec-server.md](references/ops/codec-server.md) |
+| Script temporal CLI output with jq or parse JSON | CLI & scripting | [cli-scripting.md](references/ops/cli-scripting.md) |
+| Set up temporal env stored environments | CLI & scripting | [cli-scripting.md](references/ops/cli-scripting.md) |
+| Look up a temporal or tcld subcommand by name | CLI reference | [command-index.md](references/ops/command-index.md) |
 
 ### Diagnosis
 
@@ -219,6 +223,9 @@ If the layer above the fix is still failing, return to step 4 and continue walki
 - [workflow-health.md](references/ops/workflow-health.md) — Data-plane health queries: `temporal workflow list` with List Filters, `temporal workflow describe`/`show`/`count`, `temporal task-queue describe` for poller status.
 - [batch-and-lifecycle.md](references/ops/batch-and-lifecycle.md) — Bulk and lifecycle operations: `temporal workflow cancel/terminate/reset`, `temporal batch`, `temporal schedule`, `temporal activity complete/fail`.
 - [ops/recipes.md](references/ops/recipes.md) — End-to-end ops playbooks: check APS, switch capacity mode, find hung workflows, rotate API key, audit access, set up new namespace, rotate mTLS certs, check self-hosted health, view billing / generate billing report, configure audit log sink, provision resources with Terraform, set up SAML SSO.
+- [codec-server.md](references/ops/codec-server.md) — Codec Server HTTP contract, CLI and Web UI wiring, CORS, authorization.
+- [cli-scripting.md](references/ops/cli-scripting.md) — CLI output formatting, environment variables, stored environments, operational gotchas.
+- [command-index.md](references/ops/command-index.md) — Alphabetical index of all temporal and tcld leaf subcommands.
 
 ### Diagnosis
 
