@@ -172,15 +172,6 @@ To authenticate SDK or CLI connections to Temporal Cloud using an API key:
 
 <!-- docs/cloud/get-started/api-keys.mdx:364-389 -->
 
-### Environment variable approach (recommended)
-
-```bash
-export TEMPORAL_API_KEY=<key-secret>
-temporal workflow list \
-    --address <namespace>.<account>.tmprl.cloud:7233 \
-    --namespace <namespace_id>.<account_id>
-```
-
 ### Three ways to supply an API key to `temporal`
 
 The `temporal` CLI accepts an API key through any of the following, listed from highest to lowest precedence: <!-- docs/cloud/get-started/api-keys.mdx:364-365, docs/cli/env.mdx:130 -->
@@ -212,18 +203,7 @@ The `temporal` CLI accepts an API key through any of the following, listed from 
 
 TLS is not optional: `--tls` defaults to `true` as soon as `--api-key` (or any TLS flag) is present. <!-- docs/cli/env.mdx:141 -->
 
-### tcld authentication
-
-<!-- docs/cloud/get-started/api-keys.mdx:407-410 -->
-
-Pass the key with `--api-key` flag or set the `TEMPORAL_API_KEY` environment variable:
-
-```bash
-tcld --api-key <key-secret> apikey list
-# or
-export TEMPORAL_API_KEY=<key-secret>
-tcld apikey list
-```
+For `tcld` API key auth, see the [tcld Authentication](#tcld-authentication) section at the top of this file.
 
 ### Namespace gRPC endpoint format
 
