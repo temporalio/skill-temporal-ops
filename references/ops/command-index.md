@@ -153,16 +153,21 @@ listed -- only their terminal subcommands are.
 | `tcld apikey enable` | `tcld` | `docs/cloud/tcld/apikey.mdx#enable` | [cloud-iam.md](cloud-iam.md) |
 | `tcld apikey get` | `tcld` | `docs/cloud/tcld/apikey.mdx#get` | [cloud-iam.md](cloud-iam.md) |
 | `tcld apikey list` | `tcld` | `docs/cloud/tcld/apikey.mdx#list` | [cloud-iam.md](cloud-iam.md) |
-| `tcld connectivity-rule create` | `tcld` | `docs/cloud/tcld/connectivity-rule.mdx#create` | [cloud-export-and-connectivity.md](cloud-export-and-connectivity.md) |
-| `tcld connectivity-rule delete` | `tcld` | `docs/cloud/tcld/connectivity-rule.mdx#delete` | [cloud-export-and-connectivity.md](cloud-export-and-connectivity.md) |
-| `tcld connectivity-rule get` | `tcld` | `docs/cloud/tcld/connectivity-rule.mdx#get` | [cloud-export-and-connectivity.md](cloud-export-and-connectivity.md) |
-| `tcld connectivity-rule list` | `tcld` | `docs/cloud/tcld/connectivity-rule.mdx#list` | [cloud-export-and-connectivity.md](cloud-export-and-connectivity.md) |
+| `tcld connectivity-rule create` | `tcld` | `docs/cloud/tcld/connectivity-rule.mdx#create` | [cloud-connectivity.md](cloud-connectivity.md) |
+| `tcld connectivity-rule delete` | `tcld` | `docs/cloud/tcld/connectivity-rule.mdx#delete` | [cloud-connectivity.md](cloud-connectivity.md) |
+| `tcld connectivity-rule get` | `tcld` | `docs/cloud/tcld/connectivity-rule.mdx#get` | [cloud-connectivity.md](cloud-connectivity.md) |
+| `tcld connectivity-rule list` | `tcld` | `docs/cloud/tcld/connectivity-rule.mdx#list` | [cloud-connectivity.md](cloud-connectivity.md) |
 | `tcld feature get` | `tcld` | `docs/cloud/tcld/feature.mdx#get` | [cloud-namespace-admin.md](cloud-namespace-admin.md) |
 | `tcld feature toggle` | `tcld` | `docs/cloud/tcld/feature.mdx#toggle` | [cloud-namespace-admin.md](cloud-namespace-admin.md) |
 | `tcld generate-certificates certificate-authority-certificate` | `tcld` | `docs/cloud/tcld/generate-certificates.mdx#certificate-authority-certificate` | [cloud-certs.md](cloud-certs.md) |
 | `tcld generate-certificates end-entity-certificate` | `tcld` | `docs/cloud/tcld/generate-certificates.mdx#end-entity-certificate` | [cloud-certs.md](cloud-certs.md) |
 | `tcld login` | `tcld` | `docs/cloud/tcld/login.mdx` (no subcommand; top-level) | [cloud-iam.md](cloud-iam.md) |
 | `tcld logout` | `tcld` | `docs/cloud/tcld/logout.mdx` (no subcommand; top-level) | [cloud-iam.md](cloud-iam.md) |
+| `tcld migration start` | `tcld` | `docs/cloud/migrate/automated.mdx` | [cloud-migration.md](cloud-migration.md) |
+| `tcld migration get` | `tcld` | `docs/cloud/migrate/automated.mdx` | [cloud-migration.md](cloud-migration.md) |
+| `tcld migration handover` | `tcld` | `docs/cloud/migrate/automated.mdx` | [cloud-migration.md](cloud-migration.md) |
+| `tcld migration confirm` | `tcld` | `docs/cloud/migrate/automated.mdx` | [cloud-migration.md](cloud-migration.md) |
+| `tcld migration abort` | `tcld` | `docs/cloud/migrate/automated.mdx` | [cloud-migration.md](cloud-migration.md) |
 | `tcld namespace accepted-client-ca add` | `tcld` | `docs/cloud/tcld/namespace.mdx#add` | [cloud-certs.md](cloud-certs.md) |
 | `tcld namespace accepted-client-ca list` | `tcld` | `docs/cloud/tcld/namespace.mdx#list` | [cloud-certs.md](cloud-certs.md) |
 | `tcld namespace accepted-client-ca remove` | `tcld` | `docs/cloud/tcld/namespace.mdx#remove` | [cloud-certs.md](cloud-certs.md) |
@@ -175,18 +180,18 @@ listed -- only their terminal subcommands are.
 | `tcld namespace create` | `tcld` | `docs/cloud/tcld/namespace.mdx#create` | [cloud-namespace-admin.md](cloud-namespace-admin.md) |
 | `tcld namespace delete` | `tcld` | `docs/cloud/tcld/namespace.mdx#delete` | [cloud-namespace-admin.md](cloud-namespace-admin.md) |
 | `tcld namespace delete-region` | `tcld` | `docs/cloud/tcld/namespace.mdx#delete-region` | [cloud-namespace-admin.md](cloud-namespace-admin.md) |
-| `tcld namespace export s3 create` | `tcld` | `docs/cloud/tcld/namespace.mdx#create` | [cloud-export-and-connectivity.md](cloud-export-and-connectivity.md) |
-| `tcld namespace export s3 delete` | `tcld` | `docs/cloud/tcld/namespace.mdx#delete` | [cloud-export-and-connectivity.md](cloud-export-and-connectivity.md) |
-| `tcld namespace export s3 get` | `tcld` | `docs/cloud/tcld/namespace.mdx#get` | [cloud-export-and-connectivity.md](cloud-export-and-connectivity.md) |
-| `tcld namespace export s3 list` | `tcld` | `docs/cloud/tcld/namespace.mdx#list` | [cloud-export-and-connectivity.md](cloud-export-and-connectivity.md) |
-| `tcld namespace export s3 update` | `tcld` | `docs/cloud/tcld/namespace.mdx#update` | [cloud-export-and-connectivity.md](cloud-export-and-connectivity.md) |
-| `tcld namespace export s3 validate` | `tcld` | `docs/cloud/tcld/namespace.mdx#validate` | [cloud-export-and-connectivity.md](cloud-export-and-connectivity.md) |
-| `tcld namespace export gcs create` | `tcld` | `docs/cloud/gcp-export-gcs.mdx#using-tcld` | [cloud-export-and-connectivity.md](cloud-export-and-connectivity.md) |
-| `tcld namespace export gcs delete` | `tcld` | `docs/cloud/gcp-export-gcs.mdx#using-tcld` | [cloud-export-and-connectivity.md](cloud-export-and-connectivity.md) |
-| `tcld namespace export gcs get` | `tcld` | `docs/cloud/gcp-export-gcs.mdx#using-tcld` | [cloud-export-and-connectivity.md](cloud-export-and-connectivity.md) |
-| `tcld namespace export gcs list` | `tcld` | `docs/cloud/gcp-export-gcs.mdx#using-tcld` | [cloud-export-and-connectivity.md](cloud-export-and-connectivity.md) |
-| `tcld namespace export gcs update` | `tcld` | `docs/cloud/gcp-export-gcs.mdx#using-tcld` | [cloud-export-and-connectivity.md](cloud-export-and-connectivity.md) |
-| `tcld namespace export gcs validate` | `tcld` | `docs/cloud/gcp-export-gcs.mdx#using-tcld` | [cloud-export-and-connectivity.md](cloud-export-and-connectivity.md) |
+| `tcld namespace export s3 create` | `tcld` | `docs/cloud/tcld/namespace.mdx#create` | [cloud-export.md](cloud-export.md) |
+| `tcld namespace export s3 delete` | `tcld` | `docs/cloud/tcld/namespace.mdx#delete` | [cloud-export.md](cloud-export.md) |
+| `tcld namespace export s3 get` | `tcld` | `docs/cloud/tcld/namespace.mdx#get` | [cloud-export.md](cloud-export.md) |
+| `tcld namespace export s3 list` | `tcld` | `docs/cloud/tcld/namespace.mdx#list` | [cloud-export.md](cloud-export.md) |
+| `tcld namespace export s3 update` | `tcld` | `docs/cloud/tcld/namespace.mdx#update` | [cloud-export.md](cloud-export.md) |
+| `tcld namespace export s3 validate` | `tcld` | `docs/cloud/tcld/namespace.mdx#validate` | [cloud-export.md](cloud-export.md) |
+| `tcld namespace export gcs create` | `tcld` | `docs/cloud/gcp-export-gcs.mdx#using-tcld` | [cloud-export.md](cloud-export.md) |
+| `tcld namespace export gcs delete` | `tcld` | `docs/cloud/gcp-export-gcs.mdx#using-tcld` | [cloud-export.md](cloud-export.md) |
+| `tcld namespace export gcs get` | `tcld` | `docs/cloud/gcp-export-gcs.mdx#using-tcld` | [cloud-export.md](cloud-export.md) |
+| `tcld namespace export gcs list` | `tcld` | `docs/cloud/gcp-export-gcs.mdx#using-tcld` | [cloud-export.md](cloud-export.md) |
+| `tcld namespace export gcs update` | `tcld` | `docs/cloud/gcp-export-gcs.mdx#using-tcld` | [cloud-export.md](cloud-export.md) |
+| `tcld namespace export gcs validate` | `tcld` | `docs/cloud/gcp-export-gcs.mdx#using-tcld` | [cloud-export.md](cloud-export.md) |
 | `tcld namespace failover` | `tcld` | `docs/cloud/tcld/namespace.mdx#failover` | [cloud-namespace-admin.md](cloud-namespace-admin.md) |
 | `tcld namespace get` | `tcld` | `docs/cloud/tcld/namespace.mdx#get` | [cloud-namespace-admin.md](cloud-namespace-admin.md) |
 | `tcld namespace list` | `tcld` | `docs/cloud/tcld/namespace.mdx#list` | [cloud-namespace-admin.md](cloud-namespace-admin.md) |
@@ -194,7 +199,7 @@ listed -- only their terminal subcommands are.
 | `tcld namespace retention set` | `tcld` | `docs/cloud/tcld/namespace.mdx#set` | [cloud-namespace-admin.md](cloud-namespace-admin.md) |
 | `tcld namespace search-attributes add` | `tcld` | `docs/cloud/tcld/namespace.mdx#add` | [cloud-namespace-admin.md](cloud-namespace-admin.md) |
 | `tcld namespace search-attributes rename` | `tcld` | `docs/cloud/tcld/namespace.mdx#rename` | [cloud-namespace-admin.md](cloud-namespace-admin.md) |
-| `tcld namespace set-connectivity-rules` | `tcld` | `docs/cloud/tcld/namespace.mdx#set-connectivity-rules` | [cloud-export-and-connectivity.md](cloud-export-and-connectivity.md) |
+| `tcld namespace set-connectivity-rules` | `tcld` | `docs/cloud/tcld/namespace.mdx#set-connectivity-rules` | [cloud-connectivity.md](cloud-connectivity.md) |
 | `tcld namespace tags remove` | `tcld` | `docs/cloud/tcld/namespace.mdx#remove` | [cloud-namespace-admin.md](cloud-namespace-admin.md) |
 | `tcld namespace tags upsert` | `tcld` | `docs/cloud/tcld/namespace.mdx#upsert` | [cloud-namespace-admin.md](cloud-namespace-admin.md) |
 | `tcld namespace update-codec-server` | `tcld` | `docs/cloud/tcld/namespace.mdx#update-codec-server` | [codec-server.md](codec-server.md) |
