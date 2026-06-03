@@ -46,7 +46,6 @@ Adjust the installation directory based on your coding agent. Plugin-marketplace
 
 ## What this skill does NOT cover
 
-- **CLI commands and flags** — use `skill-temporal-cli`
 - **Writing workflows/activities** — use `skill-temporal-developer`
 - **Worker performance tuning, scaling, capacity planning** — use `skill-temporal-workertuning`
 - **SDK-specific ergonomics** — use `skill-temporal-developer`
