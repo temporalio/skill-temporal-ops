@@ -300,7 +300,7 @@ Valid values: `mtls`, `api_key`, `api_key_or_mtls` <!-- docs/cloud/tcld/namespac
 
 - `mtls` (default): requires `--ca-certificate` or `--ca-certificate-file` <!-- docs/cloud/tcld/namespace.mdx:124 -->
 - `api_key`: no certificate flags needed <!-- docs/cloud/tcld/namespace.mdx:125 -->
-- `api_key_or_mtls`: accepts both authentication methods simultaneously (requires flexible auth to be enabled; contact [Temporal Support](https://temporalsupport.zendesk.com/) to enable it)
+- `api_key_or_mtls`: accepts both authentication methods simultaneously (requires flexible auth to be enabled; contact Temporal Support to enable it)
 
 ```bash
 tcld namespace create \
