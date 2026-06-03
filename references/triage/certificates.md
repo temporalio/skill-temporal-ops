@@ -4,6 +4,10 @@ Diagnose TLS and x509 failures against Temporal Cloud or a self-hosted frontend.
 
 Prerequisite: before reading this file, rule out layers 1 and 2 (DNS, TCP). TLS errors can masquerade as connectivity errors when a middlebox drops packets mid-handshake, so confirm TCP reachability first via [connectivity.md](connectivity.md#connection-refused). The reverse also happens: when a TLS handshake completes but the cert is invalid, the Go client emits cert-shaped errors that are firmly in layer 3.
 
+**Ports referenced in this file:** SDK and CLI gRPC traffic to a Namespace (Cloud or self-hosted frontend) uses **7233**, for both mTLS and API-key Namespaces. The web UI uses **443**. All examples below assume 7233 unless stated.
+
+**Flexible Auth (mTLS + API key on the same Namespace):** When a Namespace has both auth methods enabled concurrently, a TLS-layer failure on the mTLS leg can be masked by a successful API-key path (and vice versa). Before triaging, confirm which auth method the failing client is using. If the same client is configured for both, disable one at a time to isolate which leg is broken. The recipes in this file apply to the mTLS leg only; API-key auth failures live in [authentication.md](authentication.md).
+
 Out of scope here (link, don't absorb):
 - DNS / TCP / endpoint / firewall → [connectivity.md](connectivity.md) (layers 1-2)
 - gRPC `UNAUTHENTICATED` after a successful TLS handshake → [authentication.md](authentication.md) (layer 4)
@@ -20,6 +24,7 @@ Out of scope here (link, don't absorb):
 - [Server name override](#server-name-override)
 - [Key does not match cert](#key-does-not-match-cert)
 - [Accepted client CA set (mTLS Cloud)](#accepted-client-ca-set-mtls-cloud)
+  - [Certificate filters](#certificate-filters)
 - [Certificate requirements (Cloud mTLS)](#certificate-requirements-cloud-mtls)
 - [Rotation and expiry notifications](#rotation-and-expiry-notifications)
 - [openssl recipes](#openssl-recipes)
@@ -160,7 +165,7 @@ openssl verify -CAfile root-ca.pem -untrusted intermediate.pem client.pem
 - `x509: certificate is valid for <SAN list>, not <requested host>` <!-- go: crypto/x509 -->
 - `x509: certificate is not valid for any names, but wanted to match <host>` <!-- go: crypto/x509 -->
 - `x509: cannot validate certificate for <host>` <!-- go: crypto/x509 -->
-- Go client may also emit: `x509: certificate relies on legacy Common Name field, use SANs instead` <!-- go: crypto/x509 --> when a server cert has no SAN and only a CN.
+- Go client may also emit: `x509: certificate relies on legacy Common Name field, use SANs instead` <!-- go: crypto/x509 --> when a server cert has no SAN and only a CN. Rare on modern clients: this string is from the deprecated `GODEBUG=x509ignoreCN=0` path, which Go 1.17 removed. Go 1.17+ rejects the cert with a hostname-mismatch error instead. Treat the legacy-CN string as a Go 1.15–1.16 era signal; if you see it on a current build, the client is pinned to an older Go runtime.
 
 **What it means:** the hostname the client asked for does not match any Subject Alternative Name (or DNSName) on the server certificate the peer presented.
 
@@ -256,11 +261,29 @@ If the modulus hashes disagree, the cert and key file are from different keypair
 
 On Temporal Cloud, an mTLS Namespace authenticates a client by validating the client cert against the CA set configured on the Namespace. The server-side error when the CA is not trusted is `remote error: tls: unknown certificate authority` <!-- go: crypto/tls/alert.go -->. When a CA *is* trusted but the end-entity cert fails other checks (certificate filter mismatch, malformed cert), the server sends `remote error: tls: bad certificate` <!-- go: crypto/tls/alert.go -->.
 
+### Certificate filters
+
+Certificate filters are SAN/CN-based allow rules configured on the Namespace that further restrict which client certs are accepted, even when the signing CA is in the accepted set. A filter specifies allowed values for the leaf's Common Name, Subject Organization, Subject Organizational Unit, or SANs (DNS names, URIs, emails); a client cert that chains to a trusted CA but does not match any filter is rejected with `remote error: tls: bad certificate`. <!-- docs/cloud/get-started/certificates.mdx:402 -->
+
+Filters are the common cause of "the CA is trusted, the cert looks fine, but the handshake still fails." If you see `remote error: tls: bad certificate` and the local `openssl verify -CAfile ...` check passes, suspect a filter mismatch before regenerating certs.
+
+```bash
+# Inspect what filters (if any) are configured on the Namespace
+tcld namespace certificate-filters export \
+  --namespace <namespace_id>.<account_id>
+# Reference: <!-- docs/cloud/tcld/namespace.mdx (certificate-filters subcommand) -->
+
+# Inspect the SANs / CN / OU on the client cert that's failing
+openssl x509 -in client.pem -noout -subject -ext subjectAltName
+```
+
+If the filter set is non-empty, the leaf cert's subject fields and SANs must match at least one filter entry. Either re-issue the leaf with subject/SAN values that match an existing filter, or update the filter set to allow the new cert.
+
 **List what the Namespace currently accepts:**
 
 ```bash
 tcld namespace accepted-client-ca list \
-  --namespace <namespace_id>
+  --namespace <namespace_id>.<account_id>
 # Command:     <!-- docs/cloud/tcld/namespace.mdx:867 -->
 # --namespace: <!-- docs/cloud/tcld/namespace.mdx:878 -->
 ```
@@ -269,7 +292,7 @@ tcld namespace accepted-client-ca list \
 
 ```bash
 tcld namespace accepted-client-ca add \
-  --namespace <namespace_id> \
+  --namespace <namespace_id>.<account_id> \
   --ca-certificate-file <path>
 # Command:                 <!-- docs/cloud/tcld/namespace.mdx:778 -->
 # --ca-certificate-file:   <!-- docs/cloud/tcld/namespace.mdx:850 -->
@@ -279,7 +302,7 @@ tcld namespace accepted-client-ca add \
 
 ```bash
 tcld namespace accepted-client-ca remove \
-  --namespace <namespace_id> \
+  --namespace <namespace_id>.<account_id> \
   --ca-certificate-fingerprint <fingerprint>
 # Command:                           <!-- docs/cloud/tcld/namespace.mdx:892 -->
 # --ca-certificate-fingerprint (--fp): <!-- docs/cloud/tcld/namespace.mdx:985 -->
@@ -293,6 +316,7 @@ The Cloud docs describe a concat-old-plus-new-then-set pattern for rolling over 
 # 1. Create a file with old + new CA PEM blocks concatenated.
 # 2. Run:
 tcld namespace accepted-client-ca set \
+  --namespace <namespace_id>.<account_id> \
   --ca-certificate-file <path>
 # Command and rollover procedure: <!-- docs/cloud/tcld/namespace.mdx:1002-1039 -->
 # Same procedure in:              <!-- docs/cloud/get-started/certificates.mdx:374-400 -->
@@ -370,7 +394,7 @@ tcld generate-certificates end-entity-certificate \
 
 # Upload concatenated old+new CA bundle to the Namespace, then (after drain) upload new-only bundle.
 tcld namespace accepted-client-ca set \
-  --namespace <namespace_id> \
+  --namespace <namespace_id>.<account_id> \
   --ca-certificate-file <path-to-bundle>
 # Procedure:                              <!-- docs/cloud/tcld/namespace.mdx:1011-1039 -->
 # --namespace:                            <!-- docs/cloud/tcld/namespace.mdx:1043 -->
@@ -486,7 +510,7 @@ Each row is tagged with the string's origin. When an error doesn't fit any row h
 | `x509: a root or intermediate certificate is not authorized to sign for this name: <detail>` <!-- go: crypto/x509 --> | Go x509 | Name-constraints extension rejects the leaf |
 | `x509: certificate is not authorized to sign other certificates` <!-- go: crypto/x509 --> | Go x509 | Cert with `CA: false` is being used as an issuer |
 | `x509: failed to load system roots and no roots provided` <!-- go: crypto/x509 --> | Go x509 | Minimal container missing `ca-certificates`; or `TEMPORAL_TLS_CA` / `--tls-ca-path` not set |
-| `x509: certificate relies on legacy Common Name field, use SANs instead` <!-- go: crypto/x509 --> | Go x509 | Peer cert has no SAN, only CN; re-issue with SANs |
+| `x509: certificate relies on legacy Common Name field, use SANs instead` <!-- go: crypto/x509 --> | Go x509 (Go 1.15–1.16 era) | Peer cert has no SAN, only CN; re-issue with SANs. Go 1.17+ emits hostname-mismatch instead; if you see this on current Go, the client is pinned to an older runtime |
 | `tls: handshake failure` <!-- go: crypto/tls --> | Go tls (local) | See [Handshake failure](#handshake-failure) and reproduce with `openssl s_client` |
 | `remote error: tls: handshake failure` <!-- go: crypto/tls/alert.go --> | peer alert | Peer rejected the handshake; reproduce with `openssl s_client` for the alert description |
 | `remote error: tls: bad certificate` <!-- go: crypto/tls/alert.go --> | peer alert | [Accepted client CA set](#accepted-client-ca-set-mtls-cloud); also check certificate filters <!-- docs/cloud/get-started/certificates.mdx:402 --> |
