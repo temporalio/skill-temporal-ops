@@ -390,6 +390,26 @@ temporal workflow count \
     --query "ExecutionStatus = 'Failed' AND CloseTime > '2024-01-15T00:00:00Z'"
 ```
 
+To break failures down by Workflow Type, add a `WorkflowType` filter to the same query. Run a count per type across your known types:
+
+```bash
+temporal workflow count \
+    --query "ExecutionStatus = 'Failed' AND WorkflowType = '<YourWorkflowType>'"
+```
+
+This identifies which Workflow Type is contributing the most failures rather than returning a flat list. `GROUP BY` in the Count API only supports grouping by `ExecutionStatus`, not by `WorkflowType` or other attributes — use per-type filtered counts instead. <!-- docs/encyclopedia/visibility/visibility.mdx:41-53 -->
+
+### Pattern: "Workflows approaching history limits"
+
+The server terminates a Workflow Execution when its Event History exceeds 51,200 events, contains more than 2,000 Updates, or more than 10,000 Signals. <!-- docs/encyclopedia/workflow/workflow-execution/event.mdx:74-78 --> The `HistoryLength` Search Attribute surfaces the event count for running workflows. <!-- docs/encyclopedia/visibility/search-attributes.mdx:84 -->
+
+```bash
+temporal workflow list \
+    --query "ExecutionStatus = 'Running' AND HistoryLength > 40000"
+```
+
+Long-lived workflows that grow history without using Continue-As-New will eventually hit these limits. This is common in agent-loop or orchestrator patterns. Workflows returned by this query need either Continue-As-New or a redesign to bound history growth.
+
 ### Pattern: "Drill into a specific stuck workflow"
 
 ```bash
