@@ -1,6 +1,6 @@
 ---
 name: temporal-ops
-description: 'Administer and diagnose running Temporal Cloud or self-hosted Temporal Server environments via CLI commands (temporal, tcld, openssl) — not SDK code. Operations: Temporal namespace CRUD, Temporal Cloud capacity/APS, Temporal API-key rotation, Temporal mTLS certificate rotation, workflow health queries, batch cancel/terminate/reset, export setup, search attributes, Cloud Ops API, billing and cost attribution, audit logs, Terraform provider, notifications, SAML SSO, SCIM provisioning. Diagnosis: bottom-up triage of Temporal-specific failures including stuck workflows, non-determinism errors, worker-health issues, task-queue problems, Temporal Cloud HA failover, payload/gRPC size limits, performance bottlenecks, and missed scheduled actions. Use when the user is working with Temporal infrastructure and mentions: "create a Temporal namespace", "check my APS", "rotate Temporal API key", "rotate Temporal certificates", "find hung workflows", "cancel workflows in batch", "my workflow is stuck", "can''t connect to Temporal", "task queue has no pollers", "workers not picking up tasks", "set up PrivateLink", "Temporal RESOURCE_EXHAUSTED", "workflow replay failed", "Temporal billing", "audit logs", "Terraform Temporal", "SAML Temporal", "SCIM Temporal", "payload too large", "schedule missed", "performance bottleneck". Do NOT trigger for generic TLS/cert errors, generic gRPC errors (context deadline exceeded), or API key rotation unrelated to Temporal. Does NOT write or fix application code (temporal-developer) or explain CLI flags (temporal-cli).'
+description: 'Administer and diagnose running Temporal Cloud or self-hosted Temporal Server environments via CLI (temporal, tcld) — not SDK code. Operations: namespace CRUD, Cloud capacity/APS, API-key rotation, mTLS cert rotation, workflow health, batch cancel/terminate/reset, export, search attributes, Ops API, billing, audit logs, Terraform, SAML/SCIM, migration. Diagnosis: bottom-up triage of stuck workflows, non-determinism, worker-health, task-queue problems, HA failover, payload size limits, performance bottlenecks, missed schedules. Do NOT trigger for generic TLS/gRPC errors unrelated to Temporal, writing application code (temporal-developer), or worker tuning/sizing (temporal-workertuning).'
 version: 0.2.0
 ---
 
@@ -80,9 +80,8 @@ Find the row that matches the user's intent. The reference file contains the com
 | Manage user groups and service accounts | Cloud IAM | [cloud-iam.md](references/ops/cloud-iam.md) |
 | Generate mTLS certs, upload CA, set cert filters | Cloud certs | [cloud-certs.md](references/ops/cloud-certs.md) |
 | Rotate mTLS certificates | Cloud certs | [cloud-certs.md](references/ops/cloud-certs.md) |
-| Set up Workflow History Export (S3 / GCS) | Cloud export & connectivity | [cloud-export-and-connectivity.md](references/ops/cloud-export-and-connectivity.md) |
-| Set up PrivateLink / PSC, manage connectivity rules | Cloud export & connectivity | [cloud-export-and-connectivity.md](references/ops/cloud-export-and-connectivity.md) |
-| Cloud Ops API access | Cloud export & connectivity | [cloud-export-and-connectivity.md](references/ops/cloud-export-and-connectivity.md) |
+| Set up Workflow History Export (S3 / GCS) | Cloud export | [cloud-export.md](references/ops/cloud-export.md) |
+| Set up PrivateLink / PSC, manage connectivity rules | Cloud connectivity | [cloud-connectivity.md](references/ops/cloud-connectivity.md) |
 | Self-hosted cluster health, describe, namespace CRUD | Self-hosted admin | [self-hosted-admin.md](references/ops/self-hosted-admin.md) |
 | Self-hosted search attributes, Nexus endpoints | Self-hosted admin | [self-hosted-admin.md](references/ops/self-hosted-admin.md) |
 | Find stuck/hung/unhealthy workflows via list queries | Workflow health | [workflow-health.md](references/ops/workflow-health.md) |
@@ -97,6 +96,7 @@ Find the row that matches the user's intent. The reference file contains the com
 | Terraform provider: Namespace/User/SA/API Key/Nexus CRUD | Cloud Terraform | [cloud-terraform.md](references/ops/cloud-terraform.md) |
 | Expiry alerts (cert, API key, credit), status page | Cloud notifications | [cloud-notifications.md](references/ops/cloud-notifications.md) |
 | SAML SSO, SCIM provisioning, IdP integration | Cloud SAML/SCIM | [cloud-saml-scim.md](references/ops/cloud-saml-scim.md) |
+| Migrate self-hosted to Cloud (automated or manual), migrate between Cloud regions | Cloud migration | [cloud-migration.md](references/ops/cloud-migration.md) |
 | End-to-end ops playbook (setup, rotation, audit, billing, Terraform) | Ops recipes | [ops/recipes.md](references/ops/recipes.md) |
 
 ### Diagnosis
@@ -208,7 +208,9 @@ If the layer above the fix is still failing, return to step 4 and continue walki
 - [cloud-capacity.md](references/ops/cloud-capacity.md) — Capacity modes (On-Demand / Provisioned), APS/RPS/OPS definitions, TRUs, `tcld namespace capacity update`, default limits, throttling, APS management best practices.
 - [cloud-iam.md](references/ops/cloud-iam.md) — API key lifecycle (`tcld apikey`), users (`tcld user`), user groups (`tcld user-group`), service accounts, account operations (`tcld account`), roles, namespace permissions.
 - [cloud-certs.md](references/ops/cloud-certs.md) — mTLS cert management: generating certs with `tcld generate-certificates`, uploading CAs, certificate filters, cert rotation, switching mTLS ↔ API keys.
-- [cloud-export-and-connectivity.md](references/ops/cloud-export-and-connectivity.md) — Workflow History Export to S3/GCS, private connectivity (PrivateLink/PSC), connectivity rules. Cloud Ops API quick reference (pointer to standalone file).
+- [cloud-export.md](references/ops/cloud-export.md) — Workflow History Export to S3/GCS: export setup, directory structure, prerequisites, monitoring, HA behavior.
+- [cloud-connectivity.md](references/ops/cloud-connectivity.md) — Private connectivity (AWS PrivateLink / GCP PSC), connectivity rules: setup, rule parameters, tcld commands, attaching rules to namespaces.
+- [cloud-migration.md](references/ops/cloud-migration.md) — Migration paths: automated self-hosted→Cloud (S2S proxy, `tcld migration` commands, 5 phases), manual self-hosted→Cloud (client changes, workflow strategies), within-Cloud region-to-region (HA add-region/failover).
 - [cloud-ops-api.md](references/ops/cloud-ops-api.md) — Cloud Ops API: HTTP and gRPC endpoints (`saas-api.tmprl.cloud`), Go SDK, protobuf compilation, rate limits (160 RPS account, 40 user, 80 SA, 10 concurrent async), API version header, use cases.
 - [cloud-billing.md](references/ops/cloud-billing.md) — Cloud billing: Billing Center (invoices, credits, plans, cost by namespace), Usage Dashboards, Billing API (Public Preview): async CSV report generation, FOCUS-friendly format, 26-column report schema, date range constraints.
 - [cloud-audit-logs.md](references/ops/cloud-audit-logs.md) — Cloud Audit Logs: supported control plane events (Account, API Keys, Connectivity Rules, Namespace, Export, Nexus, Service Accounts, User, User Groups), JSON format, API access (30-day retention), AWS Kinesis and GCP Pub/Sub sink configuration.
