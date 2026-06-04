@@ -27,6 +27,7 @@ Out of scope here (link, don't absorb):
   - [Certificate filters](#certificate-filters)
 - [Certificate requirements (Cloud mTLS)](#certificate-requirements-cloud-mtls)
 - [Rotation and expiry notifications](#rotation-and-expiry-notifications)
+- [Private key handling](#private-key-handling)
 - [openssl recipes](#openssl-recipes)
 - [TLS / cert error reference](#tls--cert-error-reference)
 
@@ -290,6 +291,8 @@ tcld namespace accepted-client-ca list \
 
 **Add a new CA to the accepted set:**
 
+`add` **appends** to the existing set without removing other CAs, so it is the safe verb for the upload-alongside step of a rollover.
+
 ```bash
 tcld namespace accepted-client-ca add \
   --namespace <namespace_id>.<account_id> \
@@ -320,9 +323,13 @@ tcld namespace accepted-client-ca set \
   --ca-certificate-file <path>
 # Command and rollover procedure: <!-- docs/cloud/tcld/namespace.mdx:1002-1039 -->
 # Same procedure in:              <!-- docs/cloud/get-started/certificates.mdx:374-400 -->
-# 3. Wait for traffic to old CA to drain.
+# 3. Wait until all clients present leaves signed by the new CA (operator-confirmed; Cloud shows no drain signal).
 # 4. Create a file with only the new CA and run the set command again.
 ```
+
+:::caution
+`set` **replaces the entire accepted-CA bundle** with exactly what you pass, and it does not prompt for confirmation. Passing only the new CA silently drops every other trusted CA and locks out any client still presenting a leaf under them. Use `add` to append a CA during a rollover; use `set` only with a deliberately concatenated old+new bundle. Trust-changing commands (`set`, `remove`, rotation) are high-consequence: run them with operator confirmation of the blast radius, not autonomously.
+:::
 
 **Verify locally before uploading** that the client cert chains to the CA you're about to upload:
 
@@ -353,9 +360,16 @@ The docs state hard requirements for any CA or leaf cert you upload to a Cloud N
 - Key usage must include Digital Signature. <!-- docs/cloud/get-started/certificates.mdx:94 -->
 - Signing algorithm: RSA or ECDSA with SHA-256 or stronger. <!-- docs/cloud/get-started/certificates.mdx:95-96 -->
 
-**Certificate Revocation Lists:** Temporal does not support or check CRLs; customers are expected to keep certificates up to date. <!-- docs/cloud/get-started/certificates.mdx:268-270 -->
+**Certificate Revocation Lists:** Temporal does not support or check CRLs (or OCSP); customers are expected to keep certificates up to date. <!-- docs/cloud/get-started/certificates.mdx:268-270 --> Because there is no revocation list, plan for revocation by other means:
+
+- **Short certificate lifetimes** are the primary control: a short-lived leaf bounds how long a stolen key is usable. Set leaves to expire before their issuing CA.
+- **Removing a CA from the accepted set** (`tcld namespace accepted-client-ca remove`) is the hard kill switch. This rejects *all* leaves signed by that CA, so confirm the blast radius before running it.
+- **Certificate filters** scope acceptance to specific leaf identities (CN/OU/Subject Organization/SAN); tightening or removing a filter cuts off specific certs without rotating the CA.
+- There is **no per-leaf revocation**: to cut off a single leaf before it expires, you must rotate or remove its CA. Size leaf lifetimes accordingly.
 
 **Algorithm choice when generating with tcld:** `tcld gen ca` defaults to ECDSA P-384; `--rsa-algorithm` (alias `--rsa`) switches to a 4096-bit RSA key pair. <!-- docs/cloud/tcld/generate-certificates.mdx:83-94 -->
+
+The accepted set above (RSA or ECDSA, SHA-256+) is a floor, not a recommendation: Temporal does not mandate a specific key size or curve for customer CAs. Match key strength to certificate lifetime. RSA-2048 (~112-bit) is acceptable for short-lived certs today, but NIST (SP 800-131A Rev. 2) deprecates 112-bit strength after 2030, so a long-lived CA root that must stay trusted past then should use ECDSA (P-256/P-384) or RSA-3072 or larger (4096 preferred; the `--rsa` flag emits 4096). The tcld default, ECDSA P-384, is a good choice for most cases.
 
 **Duration caps when generating with tcld:** `tcld gen ca` has a maximum duration of 1 year (`-d 1y`). You must set an end-entity cert to expire before its root CA. <!-- docs/cloud/get-started/certificates.mdx:129-131 -->
 
@@ -363,9 +377,9 @@ The docs state hard requirements for any CA or leaf cert you upload to a Cloud N
 
 **Notifications.** Temporal Cloud sends email notifications before CA expiry. The notifications doc lists "Certificate Expiring in 15 days" as an admin notification sent to Global Administrators, Namespace Administrators, and Account Owners. <!-- docs/cloud/notifications.mdx:33 --> The certificates guide states: "Temporal Cloud begins sending notifications 15 days before expiration." <!-- docs/cloud/get-started/certificates.mdx:336 -->
 
-**Rollover strategy.** The Cloud docs prescribe a zero-downtime rollover pattern: upload the new CA alongside the existing one, wait for traffic to shift to leaves signed by the new CA, then remove the old CA. The same shape applies whether you use the UI or `tcld namespace accepted-client-ca set`. <!-- docs/cloud/get-started/certificates.mdx:340-400 --><!-- docs/cloud/tcld/namespace.mdx:1011-1039 -->
+**Rollover strategy.** The Cloud docs prescribe a zero-downtime rollover pattern: add the new CA alongside the existing one (`accepted-client-ca add`), wait until every client has rolled to leaves signed by the new CA, then remove the old CA. Cloud exposes no signal for when traffic has fully shifted, so treat this as operator-driven: confirm your worker fleet is on new-CA leaves before removing the old CA. The same shape applies whether you use the UI or `tcld`. <!-- docs/cloud/get-started/certificates.mdx:340-400 --><!-- docs/cloud/tcld/namespace.mdx:1011-1039 -->
 
-**Rotation command sequence (issue with tcld, upload with tcld):**
+**Rotation command sequence (issue with tcld, upload with tcld):** the generated `*.key` files are secrets; see [Private key handling](#private-key-handling).
 
 ```bash
 # Issue a new CA cert (if rotating CA). Default is ECDSA P-384.
@@ -401,6 +415,18 @@ tcld namespace accepted-client-ca set \
 ```
 
 **When the CA itself is already expired** (the rollover window was missed), a new CA must be uploaded before any client can reconnect. This is the "cert expired at 3 a.m." shape; see [recipes.md](recipes.md) for the full step-by-step.
+
+## Private key handling
+
+The recipes in this file generate private keys (`new-ca.key`, `client.key`). Treat them as secrets, and treat the CA private key as a root credential: it can mint client certificates the Namespace will accept, and there is no revocation backstop if it leaks (see [Certificate Revocation Lists](#certificate-requirements-cloud-mtls)).
+
+- **Never print, echo, `cat`, or log private-key contents.** To check whether a key matches a cert, use the modulus/fingerprint comparisons in [Compare a keypair](#compare-a-keypair) and [Key does not match cert](#key-does-not-match-cert) — those expose no secret material.
+- **The key is plaintext on disk.** Cloud requires CA keys to be generated without a passphrase <!-- docs/cloud/get-started/certificates.mdx:76 -->, so the file itself is the secret. Restrict permissions (`chmod 600`), never commit it to source control (add `*.key` to `.gitignore`), and keep the long-term CA key in a secrets manager or offline storage.
+- **Don't leave key material in working or shared directories.** Where a key should live long-term depends on the environment, so flag leftover key files to the operator to place in durable secret storage rather than guessing or deleting them.
+
+:::caution
+Generating or rotating keys locally is safe, but anything that changes a Namespace's trust (`accepted-client-ca set`/`remove`, rotation) or deletes key material is high-consequence: it can lock out every worker on the Namespace or destroy an unrecoverable CA key. Run those steps with operator confirmation, not autonomously.
+:::
 
 ## openssl recipes
 
