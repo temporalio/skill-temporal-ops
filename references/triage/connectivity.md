@@ -59,9 +59,9 @@ dig +short <namespace>.<account>.tmprl.cloud # short-form answer
 
 Interpreting results:
 
-- For a **public-internet Namespace**, the A record resolves to a public IP (CNAME chain through `<region>.region.tmprl.cloud`). <!-- docs/cloud/high-availability/ha-connectivity.mdx:34 -->
+- For a **public-internet Namespace**, the A record resolves to a public IP (CNAME chain through `<cloud>-<region>.region.tmprl.cloud`). <!-- /cloud/high-availability/ha-connectivity#namespace-endpoint-recommended -->
 - For a **PrivateLink/PSC Namespace with private DNS configured**, the Namespace hostname should resolve to the VPC endpoint address (AWS VPCE DNS name) or the PSC internal IP (GCP) from inside the VPC. <!-- docs/cloud/connectivity/aws-connectivity.mdx:87-93 --><!-- docs/cloud/connectivity/gcp-connectivity.mdx:104-108 -->
-- For an HA (multi-region) Namespace, the Namespace record is a CNAME to `<region>.region.tmprl.cloud` where `<region>` is the currently active region. <!-- docs/cloud/high-availability/ha-connectivity.mdx:83-87 -->
+- For an HA (multi-region) Namespace, the Namespace record is a CNAME to `<cloud>-<region>.region.tmprl.cloud` where `<region>` is the currently active region. <!-- /cloud/high-availability/ha-connectivity#how-requests-reach-the-replica -->
 
 ## Endpoint formats
 
@@ -109,7 +109,7 @@ Classification of common layer-1/2 failures after PrivateLink/PSC is supposed to
 - **DNS resolves to a public IP, VPC cannot route it.** Private DNS (Route 53 PHZ in AWS, Cloud DNS private zone in GCP) is missing or not attached to the workers' VPC. Without it, the client gets the public A record, and the VPC has no egress to the internet. See the private-DNS setup in `/cloud/connectivity/aws-connectivity` <!-- docs/cloud/connectivity/aws-connectivity.mdx:83-158 --> or `/cloud/connectivity/gcp-connectivity` <!-- docs/cloud/connectivity/gcp-connectivity.mdx:98-172 -->.
 - **DNS resolves to the private endpoint, port unreachable.** Likely the VPC-endpoint security group is not permitting TCP/7233 from the client subnet <!-- docs/cloud/connectivity/aws-connectivity.mdx:68 -->.
 - **Connection succeeds but TLS fails with a server-name mismatch.** This is layer 3, not layer 2. Clients connecting by VPC-endpoint DNS name must set the TLS server name (SNI override) to the Namespace Endpoint (`<namespace>.<account>.tmprl.cloud`) <!-- docs/cloud/connectivity/index.mdx:215-218 -->. Details in [certificates.md → server name override](certificates.md#server-name-override).
-- **Works before failover, breaks after failover (HA Namespaces).** For multi-region Namespaces, the Namespace record CNAMEs to `<region>.region.tmprl.cloud`, and on failover the CNAME is updated to point to the new active region <!-- docs/cloud/high-availability/ha-connectivity.mdx:83-90 -->. If private DNS only overrides the old region, workers lose the path on failover. The `region.tmprl.cloud` private zone must cover every region the Namespace can fail over to <!-- docs/cloud/high-availability/ha-connectivity.mdx:58-61 -->. Note: automatic DNS-based failover is not supported for GCP PSC — manual worker reconfiguration is required <!-- docs/cloud/connectivity/gcp-connectivity.mdx:32-36 -->.
+- **Works before failover, breaks after failover (HA Namespaces).** For multi-region Namespaces, the Namespace record CNAMEs to `<cloud>-<region>.region.tmprl.cloud`, and on failover the CNAME is updated to point to the new active region <!-- /cloud/high-availability/ha-connectivity#how-requests-reach-the-replica -->. If private DNS only overrides the old region, workers lose the path on failover. The `region.tmprl.cloud` private zone must cover every region the Namespace can fail over to <!-- /cloud/high-availability/ha-connectivity#how-to-set-up-the-dns-override -->. Note: automatic DNS-based failover is not supported for GCP PSC — manual worker reconfiguration is required <!-- /cloud/connectivity/gcp-connectivity#high-availability-and-private-service-connect -->.
 
 **Quick reachability check from inside the client's VPC:**
 
