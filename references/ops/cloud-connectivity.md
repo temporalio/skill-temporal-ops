@@ -22,13 +22,13 @@ Namespace access is always authenticated via API keys or mTLS regardless of conn
 - PrivateLink endpoint services are **regional** -- individual Namespaces do not use separate services. <!-- docs/cloud/connectivity/aws-connectivity.mdx:57-58 -->
 - Security group must accept **TCP ingress on port 7233**. <!-- docs/cloud/connectivity/aws-connectivity.mdx:68 -->
 - After the VPC endpoint status is `Available`, configure private DNS or direct VPCE targeting. <!-- docs/cloud/connectivity/aws-connectivity.mdx:77 -->
-- **Direct VPCE targeting** (without per-Namespace DNS) works for single-region Namespaces only; set `ServerName` / SNI override to the Namespace Endpoint. Not compatible with HA Namespaces. <!-- docs/cloud/connectivity/aws-connectivity.mdx:196-213 -->
+- **Direct VPCE targeting** (without per-Namespace DNS) works for single-region Namespaces only; set `ServerName` / SNI override to the Namespace Endpoint. Not compatible with HA Namespaces. <!-- /cloud/connectivity/aws-connectivity#direct-vpce -->
 
 ### GCP Private Service Connect key facts
 
 - PSC endpoint must be in the **same region** as the Namespace. <!-- docs/cloud/connectivity/gcp-connectivity.mdx:39 -->
 - PSC endpoint stays in **`Pending`** until a matching Connectivity Rule is created -- the Connectivity Rule is the approval step. <!-- docs/cloud/connectivity/gcp-connectivity.mdx:77, 83-84 -->
-- Automatic failover via Temporal Cloud DNS is **not currently supported** with GCP PSC; manual worker updates are required on failover. <!-- docs/cloud/connectivity/gcp-connectivity.mdx:33-36 -->
+- Automatic Failover via Temporal Cloud DNS is **not currently supported** with GCP PSC; manual worker updates are required on failover. <!-- /cloud/connectivity/gcp-connectivity#high-availability-and-private-service-connect -->
 
 ### Client configuration without private DNS
 
