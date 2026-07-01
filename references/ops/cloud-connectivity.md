@@ -24,7 +24,7 @@ Namespace access is always authenticated via API keys or mTLS regardless of conn
 - PrivateLink endpoint services are **regional** -- individual Namespaces do not use separate services. <!-- /cloud/connectivity/aws-connectivity#creating-an-aws-privatelink-connection -->
 - Security group must accept **TCP ingress on port 7233**. <!-- /cloud/connectivity/aws-connectivity#creating-an-aws-privatelink-connection -->
 - The VPC endpoint can take up to 10 minutes to reach `Available`; configure private DNS or direct VPCE targeting only after that. <!-- /cloud/connectivity/aws-connectivity#creating-an-aws-privatelink-connection -->
-- **Direct VPCE targeting** (without per-Namespace DNS) works for single-region Namespaces only; set `ServerName` / SNI override to the Namespace Endpoint. Not compatible with HA Namespaces. <!-- /cloud/connectivity/aws-connectivity#direct-vpce -->
+- **Direct VPCE targeting** (without per-Namespace DNS): point clients at the VPC Endpoint DNS name and set `ServerName` / SNI override to the Namespace Endpoint. Works with HA too — each Worker targets its own region's VPC Endpoint (different VPCE address per region), while `ServerName` stays the Namespace Endpoint. It does not follow the CNAME, so Temporal Cloud's cross-region forwarding is what keeps passive-region Workers productive and preserves the path across a failover. <!-- /cloud/connectivity/aws-connectivity#direct-vpce -->
 
 ### GCP Private Service Connect key facts
 
