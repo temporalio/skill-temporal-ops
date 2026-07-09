@@ -82,6 +82,16 @@ Notes:
 - `saas-api.tmprl.cloud` is **not** a workflow data-plane endpoint — pointing a worker or `temporal workflow …` command at it will not work.
 - The `--address` flag (env `TEMPORAL_ADDRESS`) takes `host:port`, not a URL <!-- docs/cli/cmd-options.mdx:137-139 --><!-- docs/cli/index.mdx:269 -->.
 
+**Private connectivity (PrivateLink / PSC):** When using private endpoints without private DNS, the TLS server name override varies by auth method: <!-- docs/cloud/connectivity/index.mdx:215-226 -->
+
+| Auth method | TLS server name |
+|---|---|
+| mTLS (single-region) | Namespace Endpoint, e.g. `<namespace>.<account>.tmprl.cloud` |
+| API key (single-region) | Regional API endpoint, e.g. `<region>.<cloud_provider>.api.temporal.io` |
+| Multi-region (mTLS or API key) | Active region endpoint, e.g. `<cloud>-<region>.region.tmprl.cloud` |
+
+For full private connectivity setup (PrivateLink, PSC, connectivity rules), see [cloud-connectivity.md](../ops/cloud-connectivity.md).
+
 See also [skill-temporal-cli → connection-setup](../../skill-temporal-cli/references/core/connection-setup.md) for the full endpoint / env-var reference.
 
 ## Firewall and proxy

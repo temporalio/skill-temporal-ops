@@ -168,9 +168,9 @@ Confirm three things before continuing:
 
 The context the investigation needs depends on the category. At minimum:
 
-- **For any Cloud auth / connectivity issue:** auth method (API key vs mTLS), exact address, exact namespace, SDK + version. The endpoint family differs by auth method — see [connectivity.md#endpoint-formats](references/triage/connectivity.md#endpoint-formats).
+- **For any Cloud auth / connectivity issue:** auth method (API key vs mTLS), exact address, exact namespace, SDK + version. The endpoint family differs by auth method — see [connectivity.md#endpoint-formats](references/triage/connectivity.md#endpoint-formats). For private connectivity (PrivateLink / PSC), TLS server name overrides also vary by auth method — see [cloud-connectivity.md](references/ops/cloud-connectivity.md).
 - **For a stuck workflow:** namespace, workflow ID, run ID, and the output of `temporal workflow describe --workflow-id <id>` (pending-operation state lives here, not in the Event History alone). Event History via `temporal workflow show` is the companion view.
-- **For a worker health issue:** worker logs (registration errors, auth errors, panics), and the output of `temporal task-queue describe --task-queue <q>`.
+- **For a worker health issue:** worker logs (registration errors, auth errors, panics), the output of `temporal task-queue describe --task-queue <q>`, and `temporal worker describe --task-queue <q>` for per-worker details.
 - **For a non-determinism error:** the worker log line containing the error, the workflow type name, and access to the history JSON for replay.
 
 #### Step 3: Validate pasted SDK config (if any)
@@ -220,7 +220,7 @@ If the layer above the fix is still failing, return to step 4 and continue walki
 - [self-hosted-admin.md](references/ops/self-hosted-admin.md) — Self-hosted control plane via `temporal operator`: cluster health/describe, namespace CRUD, search-attribute create/list/remove, Nexus endpoint CRUD.
 - [workflow-health.md](references/ops/workflow-health.md) — Data-plane health queries: `temporal workflow list` with List Filters, `temporal workflow describe`/`show`/`count`, `temporal task-queue describe` for poller status.
 - [batch-and-lifecycle.md](references/ops/batch-and-lifecycle.md) — Bulk and lifecycle operations: `temporal workflow cancel/terminate/reset`, `temporal batch`, `temporal schedule`, `temporal activity complete/fail`.
-- [ops/recipes.md](references/ops/recipes.md) — End-to-end ops playbooks: check APS, switch capacity mode, find hung workflows, rotate API key, audit access, set up new namespace, rotate mTLS certs, check self-hosted health, view billing / generate billing report, configure audit log sink, provision resources with Terraform, set up SAML SSO.
+- [ops/recipes.md](references/ops/recipes.md) — End-to-end ops playbooks: set up new namespace, check APS, switch capacity mode, find hung workflows, rotate API key, audit access, rotate mTLS certs, check self-hosted health, view billing / generate billing report, configure audit log sink, provision resources with Terraform, set up SAML SSO.
 
 ### Diagnosis
 
