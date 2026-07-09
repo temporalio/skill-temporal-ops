@@ -80,7 +80,7 @@ Find the row that matches the user's intent. The reference file contains the com
 | Manage user groups and service accounts | Cloud IAM | [cloud-iam.md](references/ops/cloud-iam.md) |
 | Generate mTLS certs, upload CA, set cert filters | Cloud certs | [cloud-certs.md](references/ops/cloud-certs.md) |
 | Rotate mTLS certificates | Cloud certs | [cloud-certs.md](references/ops/cloud-certs.md) |
-| Set up Workflow History Export (S3 / GCS) | Cloud export | [cloud-export.md](references/ops/cloud-export.md) |
+| Set up Workflow History Export (S3 / GCS) | Cloud namespace admin | [cloud-namespace-admin.md](references/ops/cloud-namespace-admin.md) |
 | Set up PrivateLink / PSC, manage connectivity rules | Cloud connectivity | [cloud-connectivity.md](references/ops/cloud-connectivity.md) |
 | Self-hosted cluster health, describe, namespace CRUD | Self-hosted admin | [self-hosted-admin.md](references/ops/self-hosted-admin.md) |
 | Self-hosted search attributes, Nexus endpoints | Self-hosted admin | [self-hosted-admin.md](references/ops/self-hosted-admin.md) |
@@ -208,7 +208,6 @@ If the layer above the fix is still failing, return to step 4 and continue walki
 - [cloud-capacity.md](references/ops/cloud-capacity.md) — Capacity modes (On-Demand / Provisioned), APS/RPS/OPS definitions, TRUs, `tcld namespace capacity update`, default limits, throttling, APS management best practices.
 - [cloud-iam.md](references/ops/cloud-iam.md) — API key lifecycle (`tcld apikey`), users (`tcld user`), user groups (`tcld user-group`), service accounts, account operations (`tcld account`), roles, namespace permissions.
 - [cloud-certs.md](references/ops/cloud-certs.md) — mTLS cert management: generating certs with `tcld generate-certificates`, uploading CAs, certificate filters, cert rotation, switching mTLS ↔ API keys.
-- [cloud-export.md](references/ops/cloud-export.md) — Workflow History Export to S3/GCS: export setup, directory structure, prerequisites, monitoring, HA behavior.
 - [cloud-connectivity.md](references/ops/cloud-connectivity.md) — Private connectivity (AWS PrivateLink / GCP PSC), connectivity rules: setup, rule parameters, tcld commands, attaching rules to namespaces.
 - [cloud-migration.md](references/ops/cloud-migration.md) — Migration paths: automated self-hosted→Cloud (S2S proxy, `tcld migration` commands, 5 phases), manual self-hosted→Cloud (client changes, workflow strategies), within-Cloud region-to-region (HA add-region/failover).
 - [cloud-ops-api.md](references/ops/cloud-ops-api.md) — Cloud Ops API: HTTP and gRPC endpoints (`saas-api.tmprl.cloud`), Go SDK, protobuf compilation, rate limits (160 RPS account, 40 user, 80 SA, 10 concurrent async), API version header, use cases.
