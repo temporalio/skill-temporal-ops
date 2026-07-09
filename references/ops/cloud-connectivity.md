@@ -1,68 +1,73 @@
 # Cloud Connectivity
 
-Quick-reference for private connectivity (AWS PrivateLink / GCP PSC) and connectivity rules in Temporal Cloud.
+Quick-reference for private connectivity (AWS PrivateLink / GCP PSC) and Connectivity Rules in Temporal Cloud.
+
+Citations use stable doc anchors (slug + heading), e.g. `/cloud/connectivity#connectivity-rules` — public URL fragments, not line numbers.
 
 ---
 
 ## Private Connectivity
 
-Temporal Cloud supports private connectivity via **AWS PrivateLink** or **GCP Private Service Connect (PSC)** in addition to public internet endpoints. <!-- docs/cloud/connectivity/index.mdx:26 -->
+Temporal Cloud supports private connectivity via **AWS PrivateLink** or **GCP Private Service Connect (PSC)** in addition to public internet endpoints. <!-- /cloud/connectivity#private-network-connectivity-for-namespaces -->
 
-Namespace access is always authenticated via API keys or mTLS regardless of connectivity method. <!-- docs/cloud/connectivity/index.mdx:28 -->
+Namespace access is always authenticated via API keys or mTLS regardless of connectivity method. <!-- /cloud/connectivity#private-network-connectivity-for-namespaces -->
 
 ### Three-step setup process
 
-1. **Set up the private connection** from your VPC to the region where the Namespace is located. <!-- docs/cloud/connectivity/index.mdx:36 -->
-2. **Update private DNS and/or client configuration** to use the private connection. Activating private connectivity does not change Namespace or Regional Endpoints automatically. <!-- docs/cloud/connectivity/index.mdx:37 -->
-3. **Create a Connectivity Rule** (required for GCP PSC, optional for AWS PrivateLink) and attach it to the target Namespace(s). <!-- docs/cloud/connectivity/index.mdx:38 -->
+1. **Set up the private connection** from your VPC to the region where the Namespace is located. <!-- /cloud/connectivity#required-steps -->
+2. **Update private DNS and/or client configuration** to use the private connection. Activating private connectivity does not change Namespace or Regional Endpoints automatically — clients keep resolving public addresses until you do this. <!-- /cloud/connectivity#required-steps -->
+3. **Create a Connectivity Rule** (required for GCP PSC, optional for AWS PrivateLink) and attach it to the target Namespace(s). <!-- /cloud/connectivity#required-steps -->
 
 ### AWS PrivateLink key facts
 
-- The PrivateLink endpoint **must be in the same region** as the Temporal Cloud Namespace. Cross-region endpoints are not supported. <!-- docs/cloud/connectivity/aws-connectivity.mdx:36-39 -->
-- PrivateLink endpoint services are **regional** -- individual Namespaces do not use separate services. <!-- docs/cloud/connectivity/aws-connectivity.mdx:57-58 -->
-- Security group must accept **TCP ingress on port 7233**. <!-- docs/cloud/connectivity/aws-connectivity.mdx:68 -->
-- After the VPC endpoint status is `Available`, configure private DNS or direct VPCE targeting. <!-- docs/cloud/connectivity/aws-connectivity.mdx:77 -->
-- **Direct VPCE targeting** (without per-Namespace DNS) works for single-region Namespaces only; set `ServerName` / SNI override to the Namespace Endpoint. Not compatible with HA Namespaces. <!-- /cloud/connectivity/aws-connectivity#direct-vpce -->
+- The PrivateLink endpoint **must be in the same region** as the Namespace (or, for HA, the same region as one of the replicas). Cross-region endpoints are not supported. <!-- /cloud/connectivity/aws-connectivity#requirements -->
+- PrivateLink endpoint services are **regional** -- individual Namespaces do not use separate services. <!-- /cloud/connectivity/aws-connectivity#creating-an-aws-privatelink-connection -->
+- Security group must accept **TCP ingress on port 7233**. <!-- /cloud/connectivity/aws-connectivity#creating-an-aws-privatelink-connection -->
+- The VPC endpoint can take up to 10 minutes to reach `Available`; configure private DNS or direct VPCE targeting only after that. <!-- /cloud/connectivity/aws-connectivity#creating-an-aws-privatelink-connection -->
+- **Direct VPCE targeting** (without per-Namespace DNS): point clients at the VPC Endpoint DNS name and set `ServerName` / SNI override to the Namespace Endpoint. Works with HA too — each Worker targets its own region's VPC Endpoint (different VPCE address per region), while `ServerName` stays the Namespace Endpoint. It does not follow the CNAME, so Temporal Cloud's cross-region forwarding is what keeps passive-region Workers productive and preserves the path across a failover. <!-- /cloud/connectivity/aws-connectivity#direct-vpce -->
 
 ### GCP Private Service Connect key facts
 
-- PSC endpoint must be in the **same region** as the Namespace. <!-- docs/cloud/connectivity/gcp-connectivity.mdx:39 -->
-- PSC endpoint stays in **`Pending`** until a matching Connectivity Rule is created -- the Connectivity Rule is the approval step. <!-- docs/cloud/connectivity/gcp-connectivity.mdx:77, 83-84 -->
+- PSC endpoint must be in the **same region** as the Namespace (or, for HA, the same region as one of the replicas). <!-- /cloud/connectivity/gcp-connectivity#requirements -->
+- PSC endpoint stays in **`Pending`** until a matching Connectivity Rule is created -- the Connectivity Rule is the approval step (no separate producer-side approval). <!-- /cloud/connectivity/gcp-connectivity#creating-a-private-service-connect-connection -->
 - Automatic Failover via Temporal Cloud DNS is **not currently supported** with GCP PSC; manual worker updates are required on failover. <!-- /cloud/connectivity/gcp-connectivity#high-availability-and-private-service-connect -->
 
 ### Client configuration without private DNS
 
-If you cannot set up private DNS, update two settings in your Temporal clients: <!-- docs/cloud/connectivity/index.mdx:215-216 -->
+If you cannot set up private DNS, update two settings in your Temporal clients: <!-- /cloud/connectivity#update-dns-or-clients-to-use-private-connectivity -->
 
-1. Set endpoint server address to the PrivateLink DNS name or PSC IP address, port `7233`. <!-- docs/cloud/connectivity/index.mdx:217 -->
-2. Set TLS server name override: <!-- docs/cloud/connectivity/index.mdx:218 -->
+1. Set endpoint server address to the PrivateLink DNS name or PSC IP address, port `7233`.
+2. Set the TLS server name override (depends on auth method):
 
 | Auth method | TLS server name |
 |---|---|
 | mTLS (single-region) | Namespace Endpoint, e.g. `my-namespace.my-account.tmprl.cloud` |
-| API key (single-region) | Regional API endpoint, e.g. `us-east-1.aws.api.temporal.io` |
+| API key (single-region) | Regional API endpoint, e.g. `us-east-1.aws.api.temporal.io` (or `us-central1.gcp.api.temporal.io`) |
 | Multi-region (mTLS or API key) | Active region endpoint, e.g. `aws-us-east-1.region.tmprl.cloud` |
-<!-- docs/cloud/connectivity/index.mdx:222-226 -->
+<!-- /cloud/connectivity#update-dns-or-clients-to-use-private-connectivity -->
+
+Using the wrong TLS server name with API-key auth over PrivateLink/PSC fails the handshake with `connection reset by peer` even though `nc` shows the port open. <!-- /cloud/connectivity#update-dns-or-clients-to-use-private-connectivity -->
 
 ### Control plane connectivity
 
-- The control plane (`saas-api.tmprl.cloud`) is accessible via public internet and optionally via AWS PrivateLink. <!-- docs/cloud/connectivity/index.mdx:346-347 -->
-- Control plane PrivateLink is in `us-west-2` with service name `com.amazonaws.vpce.us-west-2.vpce-svc-0c57a5930b6f6be0e`. <!-- docs/cloud/connectivity/index.mdx:358-359 -->
-- Control plane private connectivity does **not** block public internet access to the control plane. <!-- docs/cloud/connectivity/index.mdx:351 -->
+- The control plane (`saas-api.tmprl.cloud`) is accessible via public internet and optionally via AWS PrivateLink. Private connectivity does **not** block public internet access — the control plane is always reachable publicly. <!-- /cloud/connectivity#aws-privatelink-connectivity-to-temporal-cloud-control-plane -->
+- Control plane PrivateLink is in `us-west-2`, service name `com.amazonaws.vpce.us-west-2.vpce-svc-0c57a5930b6f6be0e`. The endpoint ships its own private DNS name, so clients can use it without configuring private DNS (enable the VPC's `Enable DNS hostnames` and `Enable DNS support`). <!-- /cloud/connectivity#aws-privatelink-connectivity-to-temporal-cloud-control-plane -->
+- Hostnames by surface: `saas-api.tmprl.cloud` for Terraform / `tcld` / Cloud Ops API; `web.onboarding.tmprl.cloud` and `web.saas-api.tmprl.cloud` for the Web UI. <!-- /cloud/connectivity#control-plane-hostnames -->
+- The PrivateLink service is exposed only in `us-west-2`; reach it from another region via a `us-west-2` VPC Endpoint plus VPC Peering. <!-- /cloud/connectivity#aws-privatelink-connectivity-to-temporal-cloud-control-plane -->
 
 ---
 
 ## Connectivity Rules
 
-Connectivity Rules restrict the network paths that can reach a Namespace. They are enforced by Temporal Cloud and do not create or modify the underlying network connection. <!-- docs/cloud/connectivity/index.mdx:69 -->
+Connectivity Rules restrict the network paths that can reach a Namespace. They are enforced by Temporal Cloud and do not create or modify the underlying network connection. <!-- /cloud/connectivity#definition -->
 
 ### Default behavior
 
-A Namespace with **zero** Connectivity Rules is reachable over the public internet and any private connections already configured to the region. <!-- docs/cloud/connectivity/index.mdx:71 -->
+A Namespace with **zero** Connectivity Rules is reachable over the public internet and any private connections already configured to the region. <!-- /cloud/connectivity#definition -->
 
-When one or more rules are attached, Temporal Cloud **immediately blocks** any traffic that does not match a rule. <!-- docs/cloud/connectivity/index.mdx:73 -->
+When one or more rules are attached, Temporal Cloud **immediately blocks** any traffic that does not match a rule. <!-- /cloud/connectivity#definition -->
 
-The Web UI is **not** subject to connectivity rule enforcement. <!-- docs/cloud/connectivity/index.mdx:61-63 -->
+The Web UI is **not** subject to connectivity rule enforcement — it stays reachable over the public internet even on a private-only Namespace. <!-- /cloud/connectivity#connectivity-rules -->
 
 ### When you need a Connectivity Rule
 
@@ -70,63 +75,66 @@ The Web UI is **not** subject to connectivity rule enforcement. <!-- docs/cloud/
 |---|---|---|
 | AWS PrivateLink | Optional -- add only to enforce private-only access | PrivateLink becomes usable when VPC endpoint is `Available` without any rule |
 | GCP PSC | **Required** | PSC endpoint stays `Pending` until a matching rule is created |
-<!-- docs/cloud/connectivity/index.mdx:79-83 -->
+<!-- /cloud/connectivity#when-you-need-a-connectivity-rule -->
 
 ### Rule parameters
 
-**Public rule**: no parameters needed. Only one public rule allowed per account. <!-- docs/cloud/connectivity/index.mdx:84, 111 -->
+**Public rule**: one optional parameter, `--enable-stable-ips` — Namespaces attached to this rule resolve their Namespace Endpoint to a published, fixed set of IP addresses you can allowlist. <!-- /cloud/connectivity#definition --> Only **one public rule per account**. <!-- /cloud/connectivity#permissions-and-limits -->
 
 **AWS PrivateLink private rule** requires:
-- `--connection-id`: VPC endpoint identifier (`vpce-...` value), not the endpoint service or DNS name. <!-- docs/cloud/connectivity/index.mdx:88 -->
-- `--region`: Region prefixed with `aws-` (e.g. `aws-us-east-1`). Must match Namespace region. <!-- docs/cloud/connectivity/index.mdx:89 -->
+- `--connection-id`: VPC endpoint identifier (`vpce-...` value), not the endpoint service or DNS name. <!-- /cloud/connectivity#definition -->
+- `--region`: Region prefixed with `aws-` (e.g. `aws-us-east-1`). Must match Namespace region. <!-- /cloud/connectivity#definition -->
 
 **GCP PSC private rule** requires:
-- `--connection-id`: PSC connection identifier (numeric string, e.g. `1234567890123456789`). <!-- docs/cloud/connectivity/index.mdx:92 -->
-- `--region`: Region prefixed with `gcp-` (e.g. `gcp-us-east1`). Must match Namespace region. <!-- docs/cloud/connectivity/index.mdx:93 -->
-- `--gcp-project-id`: GCP project where the PSC connection was created. <!-- docs/cloud/connectivity/index.mdx:95 -->
+- `--connection-id`: PSC connection identifier (numeric string, e.g. `1234567890123456789`). <!-- /cloud/connectivity#definition -->
+- `--region`: Region prefixed with `gcp-` (e.g. `gcp-us-east1`). Must match Namespace region. <!-- /cloud/connectivity#definition -->
+- `--gcp-project-id`: GCP project where the PSC connection was created. <!-- /cloud/connectivity#definition -->
+
+> **Connectivity Rules cannot be updated in place.** To change a rule — e.g. add Stable IPs to an existing public rule — delete it, create a new one with the desired parameters, and re-attach it to every Namespace that used it. Creating a second public rule alongside an existing one returns an error. <!-- /cloud/connectivity#definition -->
 
 ### Permissions and limits
 
-- Only **Account Admins and Account Owners** can create/manage connectivity rules. <!-- docs/cloud/connectivity/index.mdx:107 -->
-- Default: 5 private rules per Namespace, 50 private rules per account. <!-- docs/cloud/connectivity/index.mdx:109 -->
-- Contact support to raise limits. <!-- docs/cloud/connectivity/index.mdx:109 -->
+- Only **Account Admins and Account Owners** can create/manage connectivity rules (visible to Account Developers and above). <!-- /cloud/connectivity#permissions-and-limits -->
+- Default: 5 private rules per Namespace, 50 private rules per account. Contact support to raise limits. <!-- /cloud/connectivity#permissions-and-limits -->
 
 ### tcld connectivity-rule commands
 
-Alias: `cr`. <!-- docs/cloud/tcld/connectivity-rule.mdx:20 -->
+Alias: `cr`. <!-- /cloud/tcld/connectivity-rule#create -->
 
 Create a private rule (AWS):
 
 ```bash
 tcld connectivity-rule create --connectivity-type private --connection-id "vpce-00939a7ed9EXAMPLE" --region "aws-us-east-1"
 ```
-<!-- docs/cloud/connectivity/index.mdx:120 -->
+<!-- /cloud/connectivity#creating-a-connectivity-rule -->
 
 Create a private rule (GCP):
 
 ```bash
 tcld connectivity-rule create --connectivity-type private --connection-id "1234567890" --region "gcp-us-central1" --gcp-project-id "my-project-123"
 ```
-<!-- docs/cloud/connectivity/index.mdx:126 -->
+<!-- /cloud/connectivity#creating-a-connectivity-rule -->
 
-Create a public rule (once per account):
+Create a public rule (once per account; add `--enable-stable-ips` for allowlistable fixed IPs):
 
 ```bash
 tcld connectivity-rule create --connectivity-type public
 ```
-<!-- docs/cloud/connectivity/index.mdx:132 -->
+<!-- /cloud/connectivity#creating-a-connectivity-rule -->
 
 Other subcommands:
 
 | Subcommand | Purpose |
 |---|---|
-| `tcld connectivity-rule get --connectivity-rule-id <id>` | Get a rule <!-- docs/cloud/tcld/connectivity-rule.mdx:70-76 --> |
-| `tcld connectivity-rule delete --connectivity-rule-id <id>` | Delete a rule <!-- docs/cloud/tcld/connectivity-rule.mdx:60-66 --> |
-| `tcld connectivity-rule list` | List all rules (optionally filter by `--namespace`) <!-- docs/cloud/tcld/connectivity-rule.mdx:82-90 --> |
+| `tcld connectivity-rule get --connectivity-rule-id <id>` | Get a rule <!-- /cloud/tcld/connectivity-rule#get --> |
+| `tcld connectivity-rule delete --connectivity-rule-id <id>` | Delete a rule <!-- /cloud/tcld/connectivity-rule#delete --> |
+| `tcld connectivity-rule list` | List all rules (optionally filter by `--namespace`) <!-- /cloud/tcld/connectivity-rule#list --> |
 
-`--connectivity-type` values: `private`, `public`. <!-- docs/cloud/tcld/connectivity-rule.mdx:40 -->
+`--connectivity-type` values: `private`, `public`. <!-- /cloud/tcld/connectivity-rule#create -->
 
 ### Attaching rules to a Namespace
+
+> ⚠️ **Attaching a rule is destructive to existing access.** Once any Connectivity Rule is set, the Namespace is reachable **only** via the connections named in its rules. Removing a rule that workers are using interrupts their traffic. To migrate without lockout: attach a public rule alongside the private rules, move all workers onto private connections, then remove the public rule. <!-- /cloud/connectivity#attach-connectivity-rules-to-a-namespace -->
 
 ```bash
 tcld namespace set-connectivity-rules \
@@ -134,18 +142,18 @@ tcld namespace set-connectivity-rules \
     --connectivity-rule-ids "rule-id-1" \
     --connectivity-rule-ids "rule-id-2"
 ```
-<!-- docs/cloud/connectivity/index.mdx:162-163 -->
+<!-- /cloud/connectivity#attach-connectivity-rules-to-a-namespace -->
 
-Alias: `tcld n scrs`. <!-- docs/cloud/tcld/namespace.mdx:1899 -->
+Alias: `tcld n scrs`. <!-- /cloud/tcld/namespace#set-connectivity-rules -->
 
-Rules are attached **as a set** -- to remove one rule while keeping others, re-specify only the rules to keep. <!-- docs/cloud/connectivity/index.mdx:171-175 -->
+Rules are attached **as a set** -- to remove one rule while keeping others, re-specify only the rules to keep. <!-- /cloud/connectivity#attach-connectivity-rules-to-a-namespace -->
 
 Remove all rules (makes Namespace public again):
 
 ```bash
 tcld namespace set-connectivity-rules --namespace "my-namespace.abc123" --remove-all
 ```
-<!-- docs/cloud/connectivity/index.mdx:180 -->
+<!-- /cloud/connectivity#attach-connectivity-rules-to-a-namespace -->
 
 Rules can also be set at Namespace creation time with `--connectivity-rule-ids`:
 
@@ -157,16 +165,16 @@ tcld namespace create \
     --connectivity-rule-ids <rule_id1> \
     --connectivity-rule-ids <rule_id2>
 ```
-<!-- docs/cloud/tcld/namespace.mdx:185-191 -->
+<!-- /cloud/tcld/namespace#create -->
 
 View rules for a Namespace:
 
 ```bash
 tcld connectivity-rule list -n "my-namespace.abc123"
 ```
-<!-- docs/cloud/connectivity/index.mdx:204-205 -->
+<!-- /cloud/connectivity#list-connectivity-rules-by-namespace -->
 
-Or view them as part of `tcld namespace get`. <!-- docs/cloud/connectivity/index.mdx:196-198 -->
+Or view them as part of `tcld namespace get`. <!-- /cloud/connectivity#get-namespace -->
 
 ---
 
@@ -174,12 +182,13 @@ Or view them as part of `tcld namespace get`. <!-- docs/cloud/connectivity/index
 
 ### PSC endpoint stuck in Pending
 
-- Most common cause: no Connectivity Rule exists for the connection ID. <!-- docs/cloud/connectivity/gcp-connectivity.mdx:87 -->
-- Check that `--connection-id`, `--region`, and `--gcp-project-id` in the Connectivity Rule match the endpoint exactly. <!-- docs/cloud/connectivity/gcp-connectivity.mdx:89 -->
+- Most common cause: no Connectivity Rule exists for the connection ID. <!-- /cloud/connectivity/gcp-connectivity#creating-a-private-service-connect-connection -->
+- Check that `--connection-id`, `--region`, and `--gcp-project-id` in the Connectivity Rule match the endpoint exactly. <!-- /cloud/connectivity/gcp-connectivity#creating-a-private-service-connect-connection -->
+- The endpoint's region must be a supported Temporal Cloud region. <!-- /cloud/connectivity/gcp-connectivity#creating-a-private-service-connect-connection -->
 
 ### PrivateLink TLS handshake fails
 
-- If using API key auth over PrivateLink/PSC with the wrong TLS server name, the handshake fails with `connection reset by peer` even though `nc` shows the port is open. <!-- docs/cloud/connectivity/index.mdx:228 -->
+- If using API key auth over PrivateLink/PSC with the wrong TLS server name, the handshake fails with `connection reset by peer` even though `nc` shows the port is open. <!-- /cloud/connectivity#update-dns-or-clients-to-use-private-connectivity -->
 - Verify the TLS server name override matches the auth-method table above.
 
 ### Network connectivity check
@@ -187,6 +196,6 @@ Or view them as part of `tcld namespace get`. <!-- docs/cloud/connectivity/index
 ```bash
 nc -zv <endpoint_host> 7233
 ```
-<!-- docs/cloud/connectivity/index.mdx:335 -->
+<!-- /cloud/connectivity#update-dns-or-clients-to-use-private-connectivity -->
 
 For full connectivity diagnosis, see the triage `../triage/connectivity.md` reference.
