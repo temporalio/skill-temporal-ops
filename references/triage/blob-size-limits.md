@@ -42,7 +42,7 @@ A payload represents the serialized binary data for the input and output of Work
 
 ## gRPC message size limit (4 MB)
 
-All communication between the Temporal Client, Workers, and the Temporal Service uses gRPC, which enforces a **4 MB** limit on each request. This limit applies to the full request, including all payload data and command metadata. <!-- docs/troubleshooting/blob-size-limit-error.mdx:86-87 -->
+All communication between the Temporal Client, Workers, and the Temporal Service uses gRPC, which enforces a **4 MB** limit on each request. This limit is **fixed at 4 MB on Temporal Cloud**. On self-hosted it is technically configurable, but raising it requires changes across multiple layers (gRPC server config, event history limits, and the underlying Postgres row-size limit), so the recommended path is to fix the workflow design rather than raise the limit. <!-- docs/troubleshooting/blob-size-limit-error.mdx:86-87 -->
 
 A Workflow can hit this limit even when every individual payload is under 2 MB. Scheduling several Activities with moderate-sized inputs, or hundreds of Activities with tiny inputs in the same Workflow Task, can push the combined request past 4 MB. Activity results are also subject to this limit. <!-- docs/troubleshooting/blob-size-limit-error.mdx:91-93 -->
 
