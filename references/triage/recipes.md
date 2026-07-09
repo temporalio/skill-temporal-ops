@@ -37,6 +37,14 @@ Confidence checkpoints follow the skill convention in [runtime-errors.md](runtim
        --namespace <ns>
    ```
 
+   For deeper worker-level insights, use `temporal worker describe` to see individual worker status, build IDs, and deployment info:
+
+   ```bash
+   temporal worker describe \
+       --task-queue <q> \
+       --namespace <ns>
+   ```
+
    If no recent pollers (`LastAccessTime` aged out after 5 minutes per [worker-health.md → What "no pollers" looks like](worker-health.md#what-no-pollers-looks-like)), stop here and route to worker-health.md. If `describe` itself fails, back off to [connectivity.md](connectivity.md), [certificates.md](certificates.md), [authentication.md](authentication.md), or [rate-limits.md](rate-limits.md).
 
 3. **Read the pending sections on `describe`.** Per [workflow-stuck.md → What to look at first](workflow-stuck.md#the-primary-inspection-command-temporal-workflow-describe), the partitioning checks after status are: which pending sections are present (`Pending Activities`, `Pending Child Workflows`, `Pending Nexus Operations`, `pendingWorkflowTask`), and whether `historyLength` is climbing between successive describes.

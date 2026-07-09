@@ -216,6 +216,18 @@ Each `WorkflowTaskFailed` corresponds to a value of the `WorkflowTaskFailedCause
 | Pending Nexus Operations Limit Exceeded <!-- docs/references/errors.mdx:227-233 --> | Reached pending Nexus Operation cap | Same as above |
 | Bad Search Attributes <!-- docs/references/errors.mdx:107-113 --> | Invalid Search Attributes cause Workflow Tasks "to continue to retry without success." | Fix Workflow code or attribute definitions |
 
+### Detecting WFT-failure loops at scale with Task Issue detection
+
+Rather than inspecting individual Workflows, use the `TemporalReportedIssue` search attribute to find all Workflows currently experiencing Workflow Task failures:
+
+```bash
+temporal workflow list \
+    --query "TemporalReportedIssue IS NOT NULL" \
+    --namespace <ns>
+```
+
+The `TemporalReportedIssue` search attribute is automatically set by the server when it detects a Workflow Task issue (e.g., repeated `WorkflowTaskFailed` events). This surfaces problems proactively without needing to inspect each Workflow individually.
+
 ### Why a Workflow stays Running through WFT-failure loops
 
 Workflow Tasks do not fail the Workflow Execution. The server retries failed Workflow Tasks so that once the Worker code is fixed and redeployed, the Workflow resumes. This is by design: the Event History is durable, and a bad deploy that causes a WFT to fail can be rolled back or patched without losing the Workflow's progress. The visible effect is that the Workflow stays `Running`, the Event History grows a tail of `WorkflowTaskFailed` events, and the attempt count climbs.
@@ -326,6 +338,7 @@ For stuck pending *activities*, Activity Operations are the surgical tool: pause
 | Waiting on a signal that never arrives | [Pending signals, cancellations, and updates](#pending-signals-cancellations-and-updates); use `temporal workflow stack` |
 | Pending Nexus Operation with `State: Blocked` or `BackingOff` | [Pending Nexus Operations](#pending-nexus-operations) |
 | `pendingWorkflowTask.attempt` > 1, `WorkflowTaskFailed` events accumulating | [Pending Workflow Task and WorkflowTaskFailed loops](#pending-workflow-task-and-workflowtaskfailed-loops) |
+| `TemporalReportedIssue` search attribute set on Workflow(s) | [Detecting WFT-failure loops at scale](#detecting-wft-failure-loops-at-scale-with-task-issue-detection) |
 | WFT failure cause is `NonDeterministicError` | [non-determinism.md](non-determinism.md) |
 | Last non-bookkeeping event is `TimerStarted`, fire time is in the future | [Timer-based waits](#timer-based-waits) — not stuck |
 | WFT fails with `Pending Activities Limit Exceeded` / `Pending Child Workflows Limit Exceeded` / `Pending Signals Limit Exceeded` / `Pending Nexus Operations Limit Exceeded` | [Pending-operation per-Workflow limits](#pending-operation-per-workflow-limits) |

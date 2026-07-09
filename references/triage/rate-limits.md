@@ -101,7 +101,6 @@ Two sources of signal: the gRPC error itself and the Cloud metrics endpoint.
 
 The same label is used in self-hosted cluster metrics: the `deadline-exceeded` troubleshooting page recommends `sum(rate(service_errors_resource_exhausted{}[1m])) by (resource_exhausted_cause)` to check for `RpsLimit`, `ConcurrentLimit`, and `SystemOverloaded` causes. <!-- docs/troubleshooting/deadline-exceeded-error.mdx:65-68 -->
 
-<!-- VERIFY: exact enumeration of Cloud `resource_exhausted_cause` label values is not pinned in docs/ at a single location. The set is visible in the metric once scraped; avoid enumerating specific cause values here. -->
 
 ### From Cloud metrics
 
@@ -133,7 +132,7 @@ These are the common false positives — they look superficially similar but are
 - **Workflow stuck with pending activities / children / signals.** The workflow made a Command (`ScheduleActivityTask`, `StartChildWorkflowExecution`, etc.), but nothing moves forward. This is a worker / queue / dependency issue, not a RESOURCE_EXHAUSTED condition. See [workflow-stuck.md](workflow-stuck.md).
 - **`context deadline exceeded`.** The caller's own deadline fired before the server responded. This can *coincide* with a saturated namespace (the server-side `temporal_cloud_v0_resource_exhausted_error_count` may be non-zero), but the wire code received by the client is `DEADLINE_EXCEEDED` <!-- grpc: DEADLINE_EXCEEDED -->, not `RESOURCE_EXHAUSTED`. See [runtime-errors.md](runtime-errors.md) and the dedicated Cloud-side guidance <!-- docs/troubleshooting/deadline-exceeded-error.mdx:62-69 -->.
 - **`temporal_long_request_failure` spikes on poll RPCs.** The performance-bottlenecks guide calls out that high `temporal_long_request_failure` may be caused by rate limiting ("often indicated by a `ResourceExhausted` status code"). <!-- docs/troubleshooting/performance-bottlenecks.mdx:186 --> But that metric is counted on the client side and aggregates all causes; confirm via the server-side throttle metric above before concluding the limiter is the root cause.
-- **Per-Workflow concurrency caps.** A single Workflow Execution hitting the 2000 incomplete Activities / Signals / Child Workflows limit <!-- docs/evaluate/temporal-cloud/limits.mdx:242-247 --> fails the Command at the programming-model level; it is not a Namespace-level rate limit and not diagnosed via this file.
+- **Per-Workflow concurrency caps.** A single Workflow Execution hitting the 2000 incomplete Activities / Signals / Child Workflows / external Workflow Cancellation requests limit <!-- docs/evaluate/temporal-cloud/limits.mdx:242-247 --> fails the Command at the programming-model level; it is not a Namespace-level rate limit and not diagnosed via this file.
 
 Per the managing-APS guide: "In Temporal Cloud, the effect of rate limiting is increased latency, not lost work. Workers might take longer to complete Workflows." <!-- docs/best-practices/managing-aps-limits.mdx:68-70 --> Combined with the Cloud limits note about failures if throttling persists beyond the SDK's retry budget <!-- docs/evaluate/temporal-cloud/limits.mdx:98 -->, the distinction matters: short bursts of `RESOURCE_EXHAUSTED` are normal and self-recovering; sustained throttling plus application-visible failures is what warrants capacity action.
 
