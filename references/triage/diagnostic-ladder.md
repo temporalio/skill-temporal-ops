@@ -131,9 +131,11 @@ The full form, including flag citations and the mTLS variant, is in [authenticat
 temporal operator cluster health   # docs/cli/operator.mdx:56, 78-80
 ```
 
-Supply whatever `--address`, `--namespace`, and auth flags you established at layer 4. The command is documented as "View information about the health of a Temporal Service". <!-- docs/cli/operator.mdx:74-80 -->
+Supply whatever `--address`, `--namespace`, and auth flags you established at layer 4. The command calls `grpc.health.v1.Health/Check`. <!-- docs/cli/operator.mdx:74-80 -->
 
-**Healthy signal:** `SERVING`. The Temporal troubleshooting guide uses this same command as the first "is the frontend up?" probe on self-hosted. <!-- docs/troubleshooting/deadline-exceeded-error.mdx:29-56 -->
+**Self-hosted:** use `temporal operator cluster health` directly. **Cloud:** use `temporal workflow list --limit 1` as the frontend-reachability smoke test instead — `cluster health` is scoped to self-hosted in the docs. <!-- docs/troubleshooting/deadline-exceeded-error.mdx:29-56 -->
+
+**Healthy signal:** `SERVING` (self-hosted) or a successful list response (Cloud). The Temporal troubleshooting guide uses `cluster health` as the first "is the frontend up?" probe on self-hosted. <!-- docs/troubleshooting/deadline-exceeded-error.mdx:29-56 -->
 
 **Failure signatures:**
 
@@ -201,7 +203,7 @@ Each command below is the minimal check for its layer. Full invocations with all
 | 2. TCP | `nc -zvw10 <host> 7233` <!-- man: nc(1) --> | `succeeded!` | [connectivity.md → Connection refused](connectivity.md#connection-refused) |
 | 3. TLS | `openssl s_client -connect <host>:7233 -servername <host>` <!-- man: openssl(1) --> | `Verify return code: 0 (ok)` | [certificates.md → Handshake failure](certificates.md#handshake-failure) |
 | 4. Auth | `temporal workflow list --limit 1 …` | list returns (possibly empty) | [authentication.md → Discriminating with a CLI smoke test](authentication.md#discriminating-with-a-cli-smoke-test) |
-| 5. Frontend | `temporal operator cluster health` <!-- docs/cli/operator.mdx:78-80 --> | `SERVING` | [runtime-errors.md → Deadline exceeded](runtime-errors.md#deadline-exceeded) |
+| 5. Frontend | Self-hosted: `temporal operator cluster health`; Cloud: `temporal workflow list --limit 1` <!-- docs/cli/operator.mdx:78-80 --> | `SERVING` (self-hosted) or successful response (Cloud) | [runtime-errors.md → Deadline exceeded](runtime-errors.md#deadline-exceeded) |
 | 6. Workers | `temporal task-queue describe --task-queue <q>` | pollers listed with recent `LastAccessTime` | [worker-health.md → Inspecting a Task Queue with `temporal task-queue describe`](worker-health.md#inspecting-a-task-queue-with-temporal-task-queue-describe) |
 | 7. Workflow | `temporal workflow describe --workflow-id <id>` | status `Running` with a legitimate pending reason | [workflow-stuck.md → The primary inspection command: `temporal workflow describe`](workflow-stuck.md#the-primary-inspection-command-temporal-workflow-describe) |
 
