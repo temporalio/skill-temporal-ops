@@ -65,7 +65,7 @@ Interpreting results:
 
 ## Endpoint formats
 
-Using the wrong endpoint family is one of the most common causes of "cannot connect" reports. Each row below is grounded in the docs; the flag names and env vars are from `docs/cli/cmd-options.mdx` and `docs/cli/index.mdx`.
+Using the wrong endpoint family is one of the most common causes of "cannot connect" reports. 
 
 | Purpose | Endpoint pattern | Port | Source |
 |---|---|---|---|
@@ -128,11 +128,11 @@ Classification of common layer-1/2 failures after PrivateLink/PSC is supposed to
 nc -zvw10 vpce-0123456789abcdef-abc.us-east-1.vpce.amazonaws.com 7233   # man: nc(1)
 ```
 
-This command form is taken directly from the Cloud connectivity guide <!-- docs/cloud/connectivity/index.mdx:333-335 -->.
+<!-- docs/cloud/connectivity/index.mdx:333-335 -->.
 
 ## Quick diagnostic scripts
 
-Run from the failing environment (the pod, container, or host where the problem reproduces). These scripts chain the layer-1/2 checks with a final `temporal` call to confirm the whole stack end-to-end. The `temporal` flags used are grounded in `docs/cli/cmd-options.mdx`.
+Run from the failing environment (the pod, container, or host where the problem reproduces). These scripts chain the layer-1/2 checks with a final `temporal` call to confirm the whole stack end-to-end. 
 
 ### mTLS variant
 
