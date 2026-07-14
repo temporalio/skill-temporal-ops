@@ -111,6 +111,49 @@ Uses `--query` in place of `--workflow-id`, same as cancel/terminate.
 
 ---
 
+## Workflow Signal
+
+Send an asynchronous notification (Signal) to a running Workflow Execution by
+its Workflow ID. The Signal is written to the Event History. When you include
+`--input`, that data is available for the Workflow Execution to
+consume. <!-- docs/cli/workflow.mdx:450-452 -->
+
+### Single Workflow
+
+```
+temporal workflow signal \
+    --workflow-id YourWorkflowId \
+    --name YourSignal \
+    --input '{"YourInputKey": "YourInputValue"}'
+```
+<!-- docs/cli/workflow.mdx:454-459 -->
+
+### Bulk via visibility Query
+
+```
+temporal workflow signal \
+    --query YourQuery \
+    --name YourSignal
+```
+<!-- docs/cli/workflow.mdx:474 -->
+
+### Flags
+
+| Flag | Req | Type | Description |
+|------|-----|------|-------------|
+| `--name`, `--type` | Yes | string | Signal name. | <!-- docs/cli/workflow.mdx:473 -->
+| `--workflow-id`, `-w` | No | string | Workflow ID. Must set either `--workflow-id` or `--query`. | <!-- docs/cli/workflow.mdx:478 -->
+| `--run-id`, `-r` | No | string | Run ID. Only use with `--workflow-id`. Cannot use with `--query`. | <!-- docs/cli/workflow.mdx:477 -->
+| `--query`, `-q` | No | string | SQL-like `QUERY` List Filter. Must set either `--workflow-id` or `--query`. | <!-- docs/cli/workflow.mdx:474 -->
+| `--input`, `-i` | No | string[] | Input value (JSON). Can't be combined with `--input-file`. May be passed multiple times. | <!-- docs/cli/workflow.mdx:469 -->
+| `--input-file` | No | string[] | Path(s) to input file(s). Can't be combined with `--input`. | <!-- docs/cli/workflow.mdx:471 -->
+| `--reason` | No | string | Reason for batch operation. Only use with `--query`. Defaults to user name. | <!-- docs/cli/workflow.mdx:475 -->
+| `--rps` | No | float | Limit batch's requests per second. Only allowed if query is present. | <!-- docs/cli/workflow.mdx:476 -->
+| `--yes`, `-y` | No | bool | Don't prompt to confirm. Only allowed when `--query` is present. | <!-- docs/cli/workflow.mdx:479 -->
+| `--headers` | No | string[] | Workflow headers in `KEY=VALUE` format. | <!-- docs/cli/workflow.mdx:468 -->
+
+---
+
 ## Workflow Reset
 
 Reset a Workflow Execution so it can resume from a point in its Event History
@@ -140,10 +183,25 @@ For batch resets, limit your resets to `FirstWorkflowTask`, `LastWorkflowTask`,
 or `BuildId`. Do not use Workflow IDs, run IDs, or event IDs with this
 command. <!-- docs/cli/workflow.mdx:386-387 -->
 
-<!-- RESOLVED (genuinely ambiguous): docs/cli/workflow.mdx has no flags table for
-     `temporal workflow reset` itself (only for the `with-workflow-update-options`
-     subcommand). The flags exist in CLI help output but are not in the docs
-     reference page. Flag details omitted to avoid fabrication. -->
+### Flags
+
+`--reason` is required. <!-- docs/cli/workflow.mdx:372-395 -->
+
+| Flag | Req | Type | Description |
+|------|-----|------|-------------|
+| `--reason` | Yes | string | Reason for reset. |
+| `--workflow-id`, `-w` | No | string | Workflow ID. Required for non-batch reset operations. |
+| `--run-id`, `-r` | No | string | Run ID. |
+| `--event-id`, `-e` | No | int | Event ID to reset to. Must occur after `WorkflowTaskStarted`. |
+| `--type`, `-t` | No | string-enum | Event type for the reset. Accepted values: `FirstWorkflowTask`, `LastWorkflowTask`, `LastContinuedAsNew`, `BuildId`. |
+| `--build-id` | No | string | Build ID. Use only with the `BuildId` `--type`. |
+| `--reapply-exclude` | No | string-enum[] | Exclude these event types from re-application. Accepted values: `All`, `Signal`, `Update`. |
+| `--query`, `-q` | No | string | SQL-like `QUERY` List Filter (batch reset). |
+| `--yes`, `-y` | No | bool | Don't prompt to confirm. Only allowed when `--query` is present. |
+
+<!-- The docs reference page provides no per-flag table for `reset` itself (only
+     for the `with-workflow-update-options` subcommand); the flags above are cited
+     to the `reset` command section. -->
 
 ### Subcommand: reset with-workflow-update-options
 
@@ -478,6 +536,7 @@ temporal activity pause \
 | `--activity-id`, `-a` | No | string | The Activity ID to pause. Required. | <!-- docs/cli/activity.mdx:228 -->
 | `--workflow-id`, `-w` | Yes | string | Workflow ID. | <!-- docs/cli/activity.mdx:232 -->
 | `--run-id`, `-r` | No | string | Run ID. | <!-- docs/cli/activity.mdx:231 -->
+| `--identity` | No | string | Identity of the user or client submitting this request. | <!-- docs/cli/activity.mdx:233 -->
 | `--reason` | No | string | Reason for pausing the Activity. | <!-- docs/cli/activity.mdx:230 -->
 
 ---
