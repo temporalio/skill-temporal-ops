@@ -210,7 +210,7 @@ Key flags: <!-- docs/cli/workflow.mdx:434-441 -->
 | `--follow`, `-f` | Follow progress in real time (not for JSON output) |
 | `--reverse` | Fetch newest events first (cannot combine with `--follow`) |
 | `--detailed` | Display events as detailed sections |
-| `--output json` | JSON output (usable for SDK replay) |
+| `--output json` | JSON output (global flag; usable for SDK replay) |
 
 Export history for replay: <!-- docs/cli/workflow.mdx:424-426 -->
 
@@ -286,11 +286,38 @@ The describe output includes the following statistics: <!-- docs/cli/task-queue.
 
 To disable statistics and show only poller info, use `--disable-stats`. <!-- docs/cli/task-queue.mdx:191 -->
 
+To include the Task Queue's current rate-limit configuration, use `--report-config`. <!-- docs/cli/task-queue.mdx:194 -->
+
 ### What to look for
 
 - **No pollers**: No Workers are running (or recently running) for this Task Queue. Workflows on this queue will not make progress.
 - **Stale `LastAccessTime`**: Workers may be overloaded or shutting down.
 - **Growing `ApproximateBacklogCount` / positive `BacklogIncreaseRate`**: Workers cannot keep up with the incoming task rate. Scale up Workers or investigate slow activities.
+
+### Worker fleet status (EXPERIMENTAL)
+
+`temporal worker list` lists workers registered in a namespace. <!-- docs/cli/worker.mdx:487-500 -->
+
+```
+temporal worker list \
+    --query "TaskQueue = 'YourTaskQueue'"
+```
+
+| Flag | Description |
+|------|-------------|
+| `--query`, `-q` | SQL-like List Filter to select workers |
+| `--limit` | Maximum number of workers to display |
+
+`temporal worker describe` returns information about a specific worker. <!-- docs/cli/worker.mdx:473-485 -->
+
+```
+temporal worker describe \
+    --worker-instance-key YourKey
+```
+
+| Flag | Description |
+|------|-------------|
+| `--worker-instance-key` | **(required)** Worker instance key to describe |
 
 ---
 
@@ -308,6 +335,7 @@ Key flags: <!-- docs/cli/workflow.mdx:692-699 -->
 | Flag | Description |
 |------|-------------|
 | `--workflow-id`, `-w` | **(required)** Workflow ID |
+| `--run-id`, `-r` | Run ID |
 | `--depth` | Depth for child Workflow fetches. `-1` fetches all depths. |
 | `--fold` | Fold away child Workflows with specified statuses. Values: `running`, `completed`, `failed`, `canceled`, `terminated`, `timedout`, `continueasnew`. |
 | `--no-fold` | Disable folding; fetch and display all child Workflows within depth. |
