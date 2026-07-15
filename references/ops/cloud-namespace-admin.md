@@ -48,7 +48,7 @@ tcld namespace create \
 |---|---|---|---|
 | `--namespace` | `-n` | Yes | Becomes part of the Namespace ID |
 | `--region` | `--re` | Yes | One for standard, two for HA. See Regions docs |
-| `--auth-method` | | No | `mtls` (default) or `api_key` <!-- docs/cloud/tcld/namespace.mdx:122 --> |
+| `--auth-method` | | No | `mtls` (default), `api_key`, `restricted`, or `api_key_or_mtls` <!-- docs/cloud/tcld/namespace.mdx:78,489 --> |
 | `--ca-certificate` | `-c` | Conditional | Required if `--auth-method mtls` and no `--ca-certificate-file` |
 | `--ca-certificate-file` | `--cf` | Conditional | Path to PEM file |
 | `--certificate-filter-file` | `--cff` | No | JSON file defining cert filters |
@@ -108,7 +108,12 @@ tcld namespace list
 ```
 <!-- docs/cloud/tcld/namespace.mdx:476-478 -->
 
-No modifiers. Returns JSON with `namespaces` array and `nextPageToken`. <!-- docs/cloud/get-started/namespaces.mdx:121-128 -->
+| Flag | Alias | Required | Notes |
+|---|---|---|---|
+| `--page-size` | | No | Namespaces per page; must be >0 and ≤ max page size <!-- docs/cloud/tcld/namespace.mdx:299 --> |
+| `--page-token` | | No | Page token from a previous response <!-- docs/cloud/tcld/namespace.mdx:295 --> |
+
+Returns JSON with a `namespaces` array and `nextPageToken`. <!-- docs/cloud/get-started/namespaces.mdx:121-128 -->
 
 ---
 
@@ -134,16 +139,22 @@ Deletion is permanent. All Workflow Executions and Task Queues are removed immed
 
 Enable via `--enable-delete-protection` / `--edp` at create time. <!-- docs/cloud/tcld/namespace.mdx:193-199 -->
 
-To toggle on an existing namespace:
+Toggle on an existing namespace (`lifecycle`, alias `lc`):
 
 ```bash
 tcld namespace lifecycle set \
     --namespace <namespace_id> \
     --enable-delete-protection <Boolean>
 ```
-<!-- docs/cloud/get-started/namespaces.mdx:468-471 -->
+<!-- docs/cloud/tcld/namespace.mdx:237 -->
 
-<!-- RESOLVED: tcld namespace lifecycle set is documented in docs/cloud/get-started/namespaces.mdx:468 but not in the tcld CLI reference (namespace.mdx). The command exists per the concepts page; the tcld reference page omits it. -->
+Read the current delete-protection state:
+
+```bash
+tcld namespace lifecycle get \
+    --namespace <namespace_id>
+```
+<!-- docs/cloud/tcld/namespace.mdx:206,215 -->
 
 ---
 
@@ -204,8 +215,7 @@ tcld namespace failover \
 |---|---|---|---|
 | `--namespace` | `-n` | Yes | |
 | `--region` | `--re` | Yes | Region to fail over TO |
-| `--ca-certificate` | `-c` | Conditional | Required unless `--ca-certificate-file` specified <!-- docs/cloud/tcld/namespace.mdx:432-436 --> |
-| `--cloud-provider` | | No | `aws` (default) or `gcp` <!-- docs/cloud/tcld/namespace.mdx:443-444 --> |
+| `--cloud-provider` | | No | `aws` (default) or `gcp` <!-- docs/cloud/tcld/namespace.mdx:851 --> |
 | `--request-id` | `-r` | No | |
 
 ---
@@ -239,6 +249,81 @@ tcld namespace retention set \
 |---|---|---|---|
 | `--namespace` | `-n` | Yes | |
 | `--retention-days` | `--rd` | Yes | Range: 1-90 days <!-- docs/cloud/get-started/namespaces.mdx:216 --> |
+
+---
+
+## tcld namespace auth-method
+
+Alias: `am` <!-- docs/cloud/tcld/namespace.mdx:456,460 -->
+
+Gets or sets the authentication method for an existing namespace. Changing the method can break existing client connections; tcld prompts for confirmation on disruptive changes.
+
+### auth-method get
+
+```bash
+tcld namespace auth-method get \
+    --namespace <namespace_id>
+```
+<!-- docs/cloud/tcld/namespace.mdx:493 -->
+
+| Flag | Alias | Required | Notes |
+|---|---|---|---|
+| `--namespace` | `-n` | Yes | |
+
+### auth-method set
+
+```bash
+tcld namespace auth-method set \
+    --namespace <namespace_id> \
+    --auth-method <method>
+```
+<!-- docs/cloud/tcld/namespace.mdx:465 -->
+
+| Flag | Alias | Required | Notes |
+|---|---|---|---|
+| `--namespace` | `-n` | Yes | |
+| `--auth-method` | `--am` | Yes | One of `restricted`, `mtls`, `api_key`, `api_key_or_mtls` <!-- docs/cloud/tcld/namespace.mdx:487-489 --> |
+| `--request-id` | `-r` | No | |
+| `--resource-version` | `-v` | No | ETag; latest if omitted |
+
+---
+
+## tcld namespace export (Workflow History Exports)
+
+Workflow History Export sinks are managed with `tcld namespace export` (alias `es`), under two provider subgroups: `s3` (AWS) and `gcs` (GCP). <!-- docs/cloud/tcld/namespace.mdx:486 -->
+
+Both subgroups expose the same subcommands:
+
+| Subcommand | Alias | Purpose |
+|---|---|---|
+| `create` | `c` | Create a sink (created enabled) <!-- docs/cloud/tcld/namespace.mdx:1011 --> |
+| `validate` | `v` | Validate sink config without creating it <!-- docs/cloud/tcld/namespace.mdx:1045 --> |
+| `update` | `u` | Update sink fields or toggle enabled <!-- docs/cloud/tcld/namespace.mdx:1079 --> |
+| `get` | `g` | Get a sink by name <!-- docs/cloud/tcld/namespace.mdx:1117 --> |
+| `delete` | `d` | Delete a sink by name <!-- docs/cloud/tcld/namespace.mdx:1133 --> |
+| `list` | `l` | List sinks <!-- docs/cloud/tcld/namespace.mdx:1161 --> |
+
+### S3 create/validate flags
+
+| Flag | Alias | Required |
+|---|---|---|
+| `--sink-name` | | Yes <!-- docs/cloud/tcld/namespace.mdx:1023 --> |
+| `--role-arn` | | Yes <!-- docs/cloud/tcld/namespace.mdx:1027 --> |
+| `--s3-bucket-name` | | Yes <!-- docs/cloud/tcld/namespace.mdx:1031 --> |
+| `--kms-arn` | | No <!-- docs/cloud/tcld/namespace.mdx:1035 --> |
+| `--region` | `--re` | No <!-- docs/cloud/tcld/namespace.mdx:1039 --> |
+
+### GCS create/validate flags
+
+| Flag | Alias | Required |
+|---|---|---|
+| `--sink-name` | | Yes <!-- docs/cloud/tcld/namespace.mdx:1204 --> |
+| `--service-account-email` | | Yes <!-- docs/cloud/tcld/namespace.mdx:1208 --> |
+| `--gcs-bucket` | | Yes <!-- docs/cloud/tcld/namespace.mdx:1212 --> |
+
+`update` additionally takes `--enabled` (toggle `true`/`false`) and `--resource-version` / `-v`; provider flags are optional on update. <!-- docs/cloud/tcld/namespace.mdx:1079-1113 -->
+
+`get`, `delete`, and `list` are shared across both subgroups. `get` and `delete` identify the sink with `--sink-name` (`delete` also accepts `--resource-version` / `-v`); `list` accepts `--page-size` and `--page-token`. <!-- docs/cloud/tcld/namespace.mdx:1117-1179 -->
 
 ---
 
@@ -276,7 +361,7 @@ tcld namespace update-high-availability \
 | Flag | Alias | Required | Notes |
 |---|---|---|---|
 | `--namespace` | `-n` | Yes | |
-| `--disable-auto-failover` | `-daf` | No | `true` or `false` (default). Controls automatic failovers. <!-- docs/cloud/tcld/namespace.mdx:1775-1779 --> |
+| `--disable-auto-failover` | | No | `true` or `false` (default). Use `--disable-auto-failover=false` to (re-)enable Temporal-managed failover. <!-- docs/cloud/tcld/namespace.mdx:873 --> |
 
 ---
 
@@ -423,37 +508,16 @@ Manages certificate filters that authorize client certificates based on DN field
 
 | Subcommand | Alias | Purpose |
 |---|---|---|
-| `add` | | Add certificate filters <!-- docs/cloud/tcld/namespace.mdx:1133 --> |
-| `import` | `imp` | Set (replace all) certificate filters <!-- docs/cloud/tcld/namespace.mdx:1339 --> |
-| `export` | `exp` | Export current filters to file <!-- docs/cloud/tcld/namespace.mdx:1273 --> |
-| `clear` | | Clear all filters (allows any client cert that chains to a configured CA) <!-- docs/cloud/tcld/namespace.mdx:1216-1224 --> |
+| `add` | `a` | Add certificate filters <!-- docs/cloud/tcld/namespace.mdx:604,608 --> |
+| `import` | `imp` | Set (replace all) certificate filters <!-- docs/cloud/tcld/namespace.mdx:514 --> |
+| `export` | `exp` | Export current filters to file <!-- docs/cloud/tcld/namespace.mdx:550 --> |
+| `clear` | `c` | Clear all filters (allows any client cert that chains to a configured CA) <!-- docs/cloud/tcld/namespace.mdx:580,584 --> |
 
 Filter fields (at least one required): `commonName`, `organization`, `organizationalUnit`, `subjectAlternativeName` <!-- docs/cloud/tcld/namespace.mdx:1350-1354 -->
 
 Filter input via `--certificate-filter-file` / `-f` or `--certificate-filter-input` / `-i`. Cannot specify both. <!-- docs/cloud/tcld/namespace.mdx:1364-1365 -->
 
 JSON format: `{ "filters": [ { "commonName": "test1" } ] }` <!-- docs/cloud/tcld/namespace.mdx:153 -->
-
----
-
-## tcld namespace export (Workflow History Exports)
-
-Manages Workflow History Export sinks to S3. Alias: `es` <!-- docs/cloud/tcld/namespace.mdx:486 -->
-
-| Subcommand | Purpose |
-|---|---|
-| `tcld namespace export s3 create` | Create an export sink <!-- docs/cloud/tcld/namespace.mdx:497 --> |
-| `tcld namespace export s3 get` | Get sink details <!-- docs/cloud/tcld/namespace.mdx:549 --> |
-| `tcld namespace export s3 delete` | Delete a sink <!-- docs/cloud/tcld/namespace.mdx:579 --> |
-| `tcld namespace export s3 list` | List all sinks <!-- docs/cloud/tcld/namespace.mdx:619 --> |
-| `tcld namespace export s3 update` | Modify a sink <!-- docs/cloud/tcld/namespace.mdx:649 --> |
-| `tcld namespace export s3 validate` | Validate a sink <!-- docs/cloud/tcld/namespace.mdx:708 --> |
-
-Key flags for create/validate:
-- `--sink-name` (required) <!-- docs/cloud/tcld/namespace.mdx:521 -->
-- `--s3-bucket-name` (required) <!-- docs/cloud/tcld/namespace.mdx:534 -->
-- `--role-arn` (required) <!-- docs/cloud/tcld/namespace.mdx:527 -->
-- `--kms-arn` (optional) <!-- docs/cloud/tcld/namespace.mdx:545 -->
 
 ---
 
