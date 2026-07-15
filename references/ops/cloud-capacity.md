@@ -107,7 +107,7 @@ For requests in excess of 4 TRUs in regions outside of the US, submit a support 
 - Load testing
 - Migrating workloads
 
-When switching back to On-Demand mode, your APS limit resets to the running average from the last 7 days. Plan for this if your workload is sensitive to the transition. <!-- docs/best-practices/managing-aps-limits.mdx:205-207 -->
+When switching back to On-Demand mode, your APS limit resets to the running average from the last 7 days. If Temporal Support has set a custom limit for your namespace, this limit is persisted across capacity mode changes. <!-- docs/best-practices/managing-aps-limits.mdx:208-212 -->
 
 ---
 
@@ -117,21 +117,34 @@ Capacity modes can be set and adjusted by **Global Admin** and **Namespace Admin
 
 ### CLI
 
+Update capacity:
+
 ```
 tcld namespace capacity update \
   --namespace <namespace_name> \
   --capacity-mode <on_demand|provisioned> \
-  --capacity-value <tru value> \
+  [--capacity-value <tru value>] \
   [--request-id <request_id>] \
   [--resource-version <resource-version>]
 ```
 
-<!-- docs/cloud/capacity-modes.mdx:208 -->
+<!-- docs/cloud/tcld/namespace.mdx#update -->
 
-- `--capacity-mode`: `on_demand` for automatic scaling, `provisioned` for fixed allocation. <!-- docs/cloud/capacity-modes.mdx:212-213 -->
-- `--capacity-value`: throughput value in TRUs. <!-- docs/cloud/capacity-modes.mdx:214 -->
+- `--capacity-mode` (`--cm`): `on_demand` for automatic scaling, `provisioned` for fixed allocation. <!-- docs/cloud/capacity-modes.mdx:212-213 -->
+- `--capacity-value` (`--cv`): throughput value in TRUs. Required and must be greater than 0 when `--capacity-mode` is `provisioned`; ignored for `on_demand`. <!-- docs/cloud/tcld/namespace.mdx#update -->
 - `--request-id`: optional; server assigns one if not specified. <!-- docs/cloud/capacity-modes.mdx:218 -->
 - `--resource-version`: optional; CLI uses the latest version if not set. <!-- docs/cloud/capacity-modes.mdx:219 -->
+
+Get current capacity (alias `g`):
+
+```
+tcld namespace capacity get \
+  --namespace <namespace_name>
+```
+
+<!-- docs/cloud/tcld/namespace.mdx#get -->
+
+- `--namespace` (`-n`): required. <!-- docs/cloud/tcld/namespace.mdx#get -->
 
 If using API key authentication with `--api-key`, add it directly after `tcld` and before `capacity update`. <!-- docs/cloud/capacity-modes.mdx:221 -->
 
@@ -229,5 +242,5 @@ When your Action rate exceeds your APS (or RPS/OPS) limit, Temporal Cloud thrott
 | On-Demand scaling window | Past 7 days <!-- docs/cloud/capacity-modes.mdx:110 --> |
 | On-Demand formula | lesser of 4 x APS Mean or 2 x APS P90 <!-- docs/cloud/capacity-modes.mdx:110 --> |
 | Who can change capacity | Global Admin, Namespace Admin <!-- docs/cloud/capacity-modes.mdx:179 --> |
-| CLI command | `tcld namespace capacity update` <!-- docs/cloud/capacity-modes.mdx:208 --> |
+| CLI commands | `tcld namespace capacity get`, `tcld namespace capacity update` <!-- docs/cloud/tcld/namespace.mdx#get --> |
 | Throttling error | `ResourceExhausted` gRPC error <!-- docs/evaluate/temporal-cloud/limits.mdx:97 --> |
