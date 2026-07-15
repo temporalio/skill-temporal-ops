@@ -79,7 +79,7 @@ The Web UI is **not** subject to connectivity rule enforcement — it stays reac
 
 ### Rule parameters
 
-**Public rule**: one optional parameter, `--enable-stable-ips` — Namespaces attached to this rule resolve their Namespace Endpoint to a published, fixed set of IP addresses you can allowlist. <!-- /cloud/connectivity#definition --> Only **one public rule per account**. <!-- /cloud/connectivity#permissions-and-limits -->
+**Public rule**: Only **one public rule per account**. <!-- /cloud/connectivity#definition --> <!-- /cloud/connectivity#permissions-and-limits -->
 
 **AWS PrivateLink private rule** requires:
 - `--connection-id`: VPC endpoint identifier (`vpce-...` value), not the endpoint service or DNS name. <!-- /cloud/connectivity#definition -->
@@ -90,7 +90,7 @@ The Web UI is **not** subject to connectivity rule enforcement — it stays reac
 - `--region`: Region prefixed with `gcp-` (e.g. `gcp-us-east1`). Must match Namespace region. <!-- /cloud/connectivity#definition -->
 - `--gcp-project-id`: GCP project where the PSC connection was created. <!-- /cloud/connectivity#definition -->
 
-> **Connectivity Rules cannot be updated in place.** To change a rule — e.g. add Stable IPs to an existing public rule — delete it, create a new one with the desired parameters, and re-attach it to every Namespace that used it. Creating a second public rule alongside an existing one returns an error. <!-- /cloud/connectivity#definition -->
+> **Connectivity Rules cannot be updated in place.** To change a rule, delete it, create a new one with the desired parameters, and re-attach it to every Namespace that used it. Creating a second public rule alongside an existing one returns an error. <!-- /cloud/connectivity#definition -->
 
 ### Permissions and limits
 
@@ -115,7 +115,7 @@ tcld connectivity-rule create --connectivity-type private --connection-id "12345
 ```
 <!-- /cloud/connectivity#creating-a-connectivity-rule -->
 
-Create a public rule (once per account; add `--enable-stable-ips` for allowlistable fixed IPs):
+Create a public rule (once per account):
 
 ```bash
 tcld connectivity-rule create --connectivity-type public
