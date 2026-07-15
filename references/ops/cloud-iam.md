@@ -270,8 +270,6 @@ tcld user set-account-role --user-id <user-id> --account-role <role>
 | `--request-id` | `-r` | No | <!-- docs/cloud/tcld/user.mdx:275 --> |
 | `--resource-version` | `-v` | No | ETag <!-- docs/cloud/tcld/user.mdx:281 --> |
 
-Account Owner and Finance Admin roles cannot be assigned through tcld. <!-- docs/cloud/get-started/users.mdx:71-72 -->
-
 ### Set Namespace Permissions
 
 ```bash
