@@ -114,10 +114,10 @@ temporal operator namespace create \
 | `--description` | No | **string** | Namespace description. | <!-- docs/cli/operator.mdx:208 -->
 | `--email` | No | **string** | Owner email. | <!-- docs/cli/operator.mdx:209 -->
 | `--global` | No | **bool** | Enable multi-region data replication. | <!-- docs/cli/operator.mdx:210 -->
-| `--history-archival-state` | No | **string-enum** | Accepted values: `disabled`, `enabled`. | <!-- docs/cli/operator.mdx:211 -->
+| `--history-archival-state` | No | **string-enum** | Accepted values: `disabled`, `enabled`. Default `disabled`. | <!-- docs/cli/operator.mdx:211 -->
 | `--history-uri` | No | **string** | Archive history to this URI. Once enabled, can't be changed. | <!-- docs/cli/operator.mdx:212 -->
-| `--retention` | No | **duration** | Time to preserve closed Workflows before deletion. | <!-- docs/cli/operator.mdx:213 -->
-| `--visibility-archival-state` | No | **string-enum** | Accepted values: `disabled`, `enabled`. | <!-- docs/cli/operator.mdx:214 -->
+| `--retention` | No | **duration** | Time to preserve closed Workflows before deletion. Default `72h`. | <!-- docs/cli/operator.mdx:213 -->
+| `--visibility-archival-state` | No | **string-enum** | Accepted values: `disabled`, `enabled`. Default `disabled`. | <!-- docs/cli/operator.mdx:214 -->
 | `--visibility-uri` | No | **string** | Archive visibility to this URI. Once enabled, can't be changed. | <!-- docs/cli/operator.mdx:215 -->
 
 Note: URI values for archival states can't be changed once enabled. <!-- docs/cli/operator.mdx:199 -->
@@ -281,7 +281,7 @@ temporal operator nexus endpoint delete --name your-endpoint
 |------|----------|------|-------------|
 | `--name` | Yes | **string** | Endpoint name. | <!-- docs/cli/operator.mdx:383 -->
 
-### Get endpoint
+### Get endpoint (EXPERIMENTAL)
 
 ```bash
 temporal operator nexus endpoint get --name your-endpoint
@@ -359,7 +359,7 @@ See `docs/cli/operator.mdx` lines 520-558 for the full list.
 | Delete namespace | `temporal operator namespace delete` | `tcld namespace delete` |
 | Describe namespace | `temporal operator namespace describe` | `tcld namespace get` |
 | List namespaces | `temporal operator namespace list` | `tcld namespace list` |
-| Update namespace | `temporal operator namespace update` | `tcld namespace update` |
+| Update namespace | `temporal operator namespace update` | No single equivalent; use per-attribute subcommands (`retention set`, `capacity update`, `auth-method set`, `tags`, …) <!-- docs/cloud/tcld/namespace.mdx#retention #capacity #auth-method #tags --> |
 | Create search attribute | `temporal operator search-attribute create` | `tcld namespace search-attributes add` |
 | List search attributes | `temporal operator search-attribute list` | No tcld subcommand; use Cloud UI or Cloud Ops API <!-- docs/cloud/tcld/namespace.mdx:1444-1445 (only add and rename exist) --> |
 | Remove search attribute | `temporal operator search-attribute remove` | `tcld namespace search-attributes rename` <!-- Note: Cloud renames rather than removes; deletion requires Support --> |
