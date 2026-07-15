@@ -129,6 +129,7 @@ Then re-run the operation that was failing.
 | Namespace has no replica | Must be upgraded with HA (`tcld namespace add-region` or Web UI) before any failover | <!-- /cloud/high-availability/enable#upgrade --> <!-- /cloud/tcld/namespace#add-region --> |
 | Replica must be on the same continent as the primary; `sa-east-1` is the only region on its continent, so it has no eligible Multi-region replica | No replica region to fail over to | <!-- /cloud/high-availability/ha-connectivity#available-regions-privatelink-endpoints-and-dns-record-overrides --> <!-- /cloud/high-availability#high-availability-features --> |
 | Only one replica may be added per Namespace, so it is either Multi-region (same cloud, different region) or Multi-cloud (different cloud provider) - not both | Limits which replica topologies exist to fail over to | <!-- /cloud/high-availability#high-availability-features --> |
+| Replica must be in `Activated` state to fail over to | A replica that is still `Activating`, has `Activation Failed`, or is in any other non-`Activated` state cannot be a failover target | <!-- /cloud/high-availability/failovers/manage#trigger-failover --> |
 | 7-day wait after `tcld namespace delete-region` before re-enabling HA in that region | A just-removed region can't be re-added as a failover target yet | <!-- /cloud/high-availability/enable#changing --> |
 
 **Fix:** correct the matched discriminator (command form, target state, permissions, or auto-failover setting), or resolve the blocking constraint.
