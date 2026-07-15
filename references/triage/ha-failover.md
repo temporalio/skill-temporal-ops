@@ -110,18 +110,19 @@ Then re-run the operation that was failing.
 **Discriminate:**
 
 1. **Failover is in progress.** Check the replica state first: if the replica shows `Failover In Progress`, the failover was accepted and is executing. Wait for it to complete, then verify with the [ground truth](#start-here-establish-ground-truth) steps. A failover that has been accepted is guaranteed to complete (see Verify below).
-2. **Manual `tcld` invocation was malformed.** The command is:
+2. **Replica is in `Failed` state.** If the replica shows `Failed`, the failover was attempted but did not succeed. Temporal on-call has been paged and will reach out. Inform the user that Temporal is aware and actively working on remediation. No user action is needed.
+3. **Manual `tcld` invocation was malformed.** The command is:
    ```bash
    tcld namespace failover \
        --namespace <namespace_id>.<account_id> \
        --region <target_region>
    ```
    <!-- /cloud/tcld/namespace#failover --> <!-- /cloud/high-availability/failovers/manage#trigger-failover --> `--namespace` and `--region` are required. With API-key auth, `--api-key` must come immediately after `tcld`, before `namespace failover`.
-3. **Target region isn't an `Activated` replica.** The target must be a region holding a replica that is ready to be failed over to (state `Activated`). <!-- /cloud/high-availability/failovers/manage#trigger-failover --> An unhealthy replica makes the Web UI disable "Trigger a failover"; common causes are data-sync issues, replication lag, network issues, and failed health checks. <!-- /cloud/high-availability/monitoring#replication-status -->
-4. **The Namespace can't support this failover (constraint).** See the constraints table below — a missing replica, region eligibility, or a replication-type conflict can make the failover impossible to request.
-5. **Permissions.** `FailoverNamespaceRegion` requires Namespace Admin. <!-- /cloud/manage-access/permissions-reference --> Account Owner and Global Admin hold Namespace Admin on all Namespaces. <!-- /cloud/manage-access/roles-and-permissions -->
-6. **Automatic Failover didn't fire.** Automatic Failover is driven by Temporal Cloud health checks on error rates, latencies, and infrastructure indicators. <!-- /cloud/high-availability/failovers#conditions-that-trigger-an-automatic-failover --> If it's disabled (`tcld namespace update-high-availability --disable-auto-failover=true`), Temporal won't initiate failovers — the user must trigger manually, and the published Temporal Cloud RTO does not apply. <!-- /cloud/high-availability/enable#automatic-failovers --> <!-- /cloud/tcld/namespace#update-high-availability -->
-7. **Expecting an automatic failback that won't come.** After a user-triggered failover Temporal does *not* fail back automatically; the user must trigger it. Automatic failback only follows an Automatic Failover. <!-- /cloud/high-availability/failovers/manage#failbacks -->
+4. **Target region isn't an `Activated` replica.** The target must be a region holding a replica that is ready to be failed over to (state `Activated`). <!-- /cloud/high-availability/failovers/manage#trigger-failover --> Note: high replication lag does not make a replica unhealthy or block failover - it just means the failover is more likely to skip graceful and go straight to forced. <!-- /cloud/high-availability/monitoring#replication-status -->
+5. **The Namespace can't support this failover (constraint).** See the constraints table below — a missing replica, region eligibility, or a replication-type conflict can make the failover impossible to request.
+6. **Permissions.** `FailoverNamespaceRegion` requires Namespace Admin. <!-- /cloud/manage-access/permissions-reference --> Account Owner and Global Admin hold Namespace Admin on all Namespaces. <!-- /cloud/manage-access/roles-and-permissions -->
+7. **Automatic Failover didn't fire.** Automatic Failover is driven by Temporal Cloud health checks on error rates, latencies, and infrastructure indicators. <!-- /cloud/high-availability/failovers#conditions-that-trigger-an-automatic-failover --> If it's disabled (`tcld namespace update-high-availability --disable-auto-failover=true`), Temporal won't initiate failovers — the user must trigger manually, and the published Temporal Cloud RTO does not apply. <!-- /cloud/high-availability/enable#automatic-failovers --> <!-- /cloud/tcld/namespace#update-high-availability -->
+8. **Expecting an automatic failback that won't come.** After a user-triggered failover Temporal does *not* fail back automatically; the user must trigger it. Automatic failback only follows an Automatic Failover. <!-- /cloud/high-availability/failovers/manage#failbacks -->
 
 **Constraints that can block a failover from being possible:**
 
