@@ -61,7 +61,10 @@ tcld apikey list
 
 Alias: `l` <!-- docs/cloud/tcld/apikey.mdx:135 -->
 
-No additional flags required.
+| Flag | Alias | Required | Notes |
+|------|-------|----------|-------|
+| `--owner-id` | `-oid` | No | Filter API keys by owner ID <!-- docs/cloud/tcld/apikey.mdx:87-89 --> |
+| `--owner-type` | `-ot` | No | Filter by owner type: `user` \| `service-account` <!-- docs/cloud/tcld/apikey.mdx:93-95 --> |
 
 ### Delete
 
@@ -180,7 +183,7 @@ tcld user invite \
 | Flag | Alias | Required | Notes |
 |------|-------|----------|-------|
 | `--user-email` | `-e` | Yes | Can be supplied multiple times <!-- docs/cloud/tcld/user.mdx:113-116 --> |
-| `--account-role` | `--ar` | Yes | `admin` \| `developer` \| `read` <!-- docs/cloud/tcld/user.mdx:119-125 --> |
+| `--account-role` | `--ar` | Yes | Case-insensitive: `Admin` \| `Developer` \| `Read` \| `Owner` \| `FinanceAdmin` \| `MetricsRead` <!-- docs/cloud/tcld/user.mdx:84-86 --> |
 | `--namespace-permission` | `-p` | No | Format: `namespace=permission-type`. Can be repeated. Permissions: `Admin` \| `Write` \| `Read` <!-- docs/cloud/tcld/user.mdx:129-137 --> |
 | `--request-id` | `-r` | No | <!-- docs/cloud/tcld/user.mdx:141 --> |
 
@@ -261,13 +264,11 @@ tcld user set-account-role --user-id <user-id> --account-role <role>
 
 | Flag | Alias | Required | Notes |
 |------|-------|----------|-------|
-| `--account-role` | `-ar` | Yes | `admin` \| `developer` \| `read` <!-- docs/cloud/tcld/user.mdx:243-244 --> |
+| `--account-role` | `-ar` | Yes | Case-insensitive: `Admin` \| `Developer` \| `Read` \| `Owner` \| `FinanceAdmin` \| `MetricsRead` <!-- docs/cloud/tcld/user.mdx:186-188 --> |
 | `--user-email` | `-e` | Conditional | <!-- docs/cloud/tcld/user.mdx:250 --> |
 | `--user-id` | `--id` | Conditional | <!-- docs/cloud/tcld/user.mdx:264 --> |
 | `--request-id` | `-r` | No | <!-- docs/cloud/tcld/user.mdx:275 --> |
 | `--resource-version` | `-v` | No | ETag <!-- docs/cloud/tcld/user.mdx:281 --> |
-
-Account Owner and Finance Admin roles cannot be assigned through tcld. <!-- docs/cloud/get-started/users.mdx:71-72 -->
 
 ### Set Namespace Permissions
 
@@ -284,7 +285,7 @@ Alias: `snp` <!-- docs/cloud/tcld/user.mdx:293 -->
 |------|-------|----------|-------|
 | `--user-email` | | Conditional | <!-- docs/cloud/tcld/user.mdx:297 --> |
 | `--user-id` | | Conditional | <!-- docs/cloud/tcld/user.mdx:307 --> |
-| `--namespace-permission` | `-p` | Yes | Format: `namespace=permission-type`. Can be repeated. Permissions: `Admin` \| `Write` \| `Read` <!-- docs/cloud/tcld/user.mdx:331-338 --> |
+| `--namespace-permission` | `-p` | No | Format: `namespace=permission-type`. Can be repeated. Permissions: `Admin` \| `Write` \| `Read`. Empty removes all namespace permissions <!-- docs/cloud/tcld/user.mdx:222-224 --> |
 | `--request-id` | `-r` | No | <!-- docs/cloud/tcld/user.mdx:319 --> |
 | `--resource-version` | `-v` | No | ETag <!-- docs/cloud/tcld/user.mdx:325 --> |
 
@@ -298,15 +299,19 @@ Alias: `snp` <!-- docs/cloud/tcld/user.mdx:293 -->
 
 | Role (tcld value) | Notes |
 |--------------------|-------|
-| `admin` | Global Administrator <!-- docs/cloud/tcld/user.mdx:125 --> |
-| `developer` | <!-- docs/cloud/tcld/user.mdx:125 --> |
-| `read` | Read-only <!-- docs/cloud/tcld/user.mdx:125 --> |
-| `owner` | Account Owner; user-group only, cannot be assigned via `tcld user` <!-- docs/cloud/tcld/user-group.mdx:62, docs/cloud/get-started/users.mdx:71-72 --> |
-| `financeadmin` | Finance Admin; user-group only, cannot be assigned via `tcld user` <!-- docs/cloud/tcld/user-group.mdx:62, docs/cloud/get-started/users.mdx:71-72 --> |
+| `admin` | Global Administrator <!-- docs/cloud/tcld/user.mdx:86 --> |
+| `developer` | <!-- docs/cloud/tcld/user.mdx:86 --> |
+| `read` | Read-only <!-- docs/cloud/tcld/user.mdx:86 --> |
+| `owner` | Account Owner <!-- docs/cloud/tcld/user.mdx:86, docs/cloud/tcld/user-group.mdx:62 --> |
+| `financeadmin` | Finance Admin <!-- docs/cloud/tcld/user.mdx:86, docs/cloud/tcld/user-group.mdx:62 --> |
+| `metricsread` | Metrics read access <!-- docs/cloud/tcld/user.mdx:86 --> |
 | `none` | User-group only; removes account-level role <!-- docs/cloud/tcld/user-group.mdx:62 --> |
 
-The `owner`, `financeadmin`, and `none` values appear only in `tcld user-group` commands.
-`tcld user invite` and `tcld user set-account-role` accept only `admin` | `developer` | `read`. <!-- docs/cloud/tcld/user.mdx:125,244 -->
+Account-role values are case-insensitive in `tcld user` commands; canonical forms are
+`Admin`, `Developer`, `Read`, `Owner`, `FinanceAdmin`, `MetricsRead`. <!-- docs/cloud/tcld/user.mdx:86,188 -->
+`tcld user invite` and `tcld user set-account-role` accept all six of these values; the server may
+still reject a role that is not valid for a given identity. `none` is accepted only by
+`tcld user-group` commands. <!-- docs/cloud/tcld/user.mdx:86,188, docs/cloud/tcld/user-group.mdx:62 -->
 
 ### Namespace-Level Permissions
 
@@ -340,8 +345,8 @@ tcld user-group create \
 
 | Flag | Alias | Required | Notes |
 |------|-------|----------|-------|
-| `--display-name` | | No | Display name of the group <!-- docs/cloud/tcld/user-group.mdx:58 --> |
-| `--account-role` | | No | `admin` \| `read` \| `developer` \| `owner` \| `financeadmin` \| `none` <!-- docs/cloud/tcld/user-group.mdx:62 --> |
+| `--display-name` | | Yes | Display name of the group <!-- docs/cloud/tcld/user-group.mdx:58 --> |
+| `--account-role` | | Yes | `admin` \| `read` \| `developer` \| `owner` \| `financeadmin` \| `none` <!-- docs/cloud/tcld/user-group.mdx:62 --> |
 | `--namespace-role` | `-nr` | No | Repeatable. Format: `<namespaceid>-<role>` where role is `admin` \| `read` \| `write`. Example: `mynamespace.abc123-read` <!-- docs/cloud/tcld/user-group.mdx:66-67 --> |
 
 Alias: `c` <!-- docs/cloud/tcld/user-group.mdx:52 -->
@@ -473,6 +478,15 @@ tcld service-account list
 ```
 <!-- docs/cloud/get-started/service-accounts.mdx:118-119 -->
 
+### Get
+
+```bash
+tcld service-account get --service-account-id "<id>"
+```
+<!-- docs/cloud/tcld/service-account.mdx:115-127 -->
+
+Alias: `g`. `--service-account-id` (alias `--id`) is required. <!-- docs/cloud/tcld/service-account.mdx:121-127 -->
+
 ### Delete
 
 ```bash
@@ -494,7 +508,7 @@ tcld service-account update --id "<id>" -d "<new description>"
 tcld service-account set-account-role --id "<id>" --ar "<role>"
 
 # Update namespace permissions
-tcld service-account set-namespace-permissions --id "<id>" --np "<namespace>=<permission>"
+tcld service-account set-namespace-permissions --id "<id>" -p "<namespace>=<permission>"
 ```
 <!-- docs/cloud/get-started/service-accounts.mdx:177-185 -->
 
