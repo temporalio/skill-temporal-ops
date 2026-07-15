@@ -67,6 +67,7 @@ Alias for the subcommand: `leaf` <!-- docs/cloud/tcld/generate-certificates.mdx:
 |---|---|---|
 | `--organization` | `--org` | Organization name <!-- docs/cloud/tcld/generate-certificates.mdx:110 --> |
 | `--organization-unit` | _(none)_ | Optional OU name <!-- docs/cloud/tcld/generate-certificates.mdx:119 --> |
+| `--common-name` | _(none)_ | Optional common name <!-- docs/cloud/tcld/generate-certificates.mdx:77 --> |
 | `--validity-period` | `-d` | Duration in `d/h` format <!-- docs/cloud/tcld/generate-certificates.mdx:131 --> |
 | `--ca-certificate-file` | `--ca-cert` | Path to the signing CA `.pem` <!-- docs/cloud/tcld/generate-certificates.mdx:143 --> |
 | `--ca-key-file` | `--ca-key` | Path to the signing CA `.key` <!-- docs/cloud/tcld/generate-certificates.mdx:155 --> |
@@ -166,6 +167,7 @@ Removal can target by certificate content or fingerprint:
 | `--ca-certificate` | `-c` | Base64-encoded PEM string <!-- docs/cloud/tcld/namespace.mdx:956 --> |
 | `--ca-certificate-file` | `-f` | Path to PEM file <!-- docs/cloud/tcld/namespace.mdx:969 --> |
 | `--ca-certificate-fingerprint` | `--fp` | Certificate fingerprint (takes precedence; if set, cert/file flags are ignored) <!-- docs/cloud/tcld/namespace.mdx:987-993 --> |
+| `--all` | _(none)_ | Remove all CA certificates; cannot be combined with the cert/file/fingerprint flags; blocked when auth method is `mtls` or `api_key_or_mtls` <!-- docs/cloud/tcld/namespace.mdx:416 --> |
 
 ---
 
@@ -245,6 +247,8 @@ tcld namespace certificate-filters clear \
 ```
 <!-- docs/cloud/tcld/namespace.mdx:1214-1269 -->
 
+Alias: `c` <!-- docs/cloud/tcld/namespace.mdx:584 -->
+
 Caution: clearing filters allows any client certificate that chains up to a configured CA certificate to connect. <!-- docs/cloud/tcld/namespace.mdx:1219-1224 -->
 
 ---
@@ -296,7 +300,7 @@ This is the rollover process documented for both UI and tcld. <!-- docs/cloud/ge
 
 When creating a Namespace, `--auth-method` selects the authentication mode. <!-- docs/cloud/tcld/namespace.mdx:122 -->
 
-Valid values: `mtls`, `api_key`, `api_key_or_mtls` <!-- docs/cloud/tcld/namespace.mdx:122 -->
+Valid values: `mtls`, `api_key`, `restricted`, `api_key_or_mtls` <!-- docs/cloud/tcld/namespace.mdx:489 -->
 
 - `mtls` (default): requires `--ca-certificate` or `--ca-certificate-file` <!-- docs/cloud/tcld/namespace.mdx:124 -->
 - `api_key`: no certificate flags needed <!-- docs/cloud/tcld/namespace.mdx:125 -->
