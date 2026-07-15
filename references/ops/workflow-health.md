@@ -210,7 +210,7 @@ Key flags: <!-- docs/cli/workflow.mdx:434-441 -->
 | `--follow`, `-f` | Follow progress in real time (not for JSON output) |
 | `--reverse` | Fetch newest events first (cannot combine with `--follow`) |
 | `--detailed` | Display events as detailed sections |
-| `--output json` | JSON output (global flag; usable for SDK replay) |
+| `--output json` | JSON output (usable for SDK replay) |
 
 Export history for replay: <!-- docs/cli/workflow.mdx:424-426 -->
 
