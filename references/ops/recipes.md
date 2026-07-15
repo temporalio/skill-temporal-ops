@@ -17,7 +17,7 @@ tcld namespace create \
     --region <region> \
     --auth-method api_key \
     --retention-days 30 \
-    --enable-delete-protection true
+    --enable-delete-protection=true
 ```
 <!-- docs/cloud/tcld/namespace.mdx:129-134, docs/cloud/tcld/namespace.mdx:122, docs/cloud/tcld/namespace.mdx:233 -->
 <!-- docs/cloud/get-started/namespaces.mdx:468-471 -->
@@ -29,7 +29,7 @@ Optional flags:
 - `--search-attribute "name=type"` (types: `Bool`, `Datetime`, `Double`, `Int`, `Keyword`, `Text`). <!-- docs/cloud/tcld/namespace.mdx:240-241 -->
 - `--tag "key=value"` (up to 10 tags per namespace). <!-- docs/cloud/get-started/namespaces.mdx:480 -->
 - `--user-namespace-permission "email=permission"` (permissions: `Admin`, `Write`, `Read`). <!-- docs/cloud/tcld/namespace.mdx:277-279 -->
-- `--enable-delete-protection false` to skip delete protection (enabled by default in the command above). <!-- docs/cloud/get-started/namespaces.mdx:468-471 -->
+- Omit `--enable-delete-protection` (or pass `--enable-delete-protection=false`) to skip delete protection; it is disabled by default. <!-- docs/cloud/get-started/namespaces.mdx:468-471 -->
 
 ### Step 2: Create a service account for Workers
 
@@ -522,23 +522,18 @@ Audit Logs appear in Pub/Sub within 10 minutes. <!-- docs/cloud/audit-logs-gcp.m
 
 The Audit Logs page of the Cloud UI shows the current status: an **On** badge if functioning normally, or an error summary if an issue is detected. <!-- docs/cloud/audit-logs.mdx:168-171 -->
 
-### Accessing logs via CLI and API
+### Accessing logs via API
 
-Audit Logs are accessible for the past 30 days without a sink. Two paths:
+Audit Logs are accessible for the past 30 days without a sink.
 
-**CLI (quickest for ad-hoc checks):**
+**[Cloud Ops API](https://docs.temporal.io/ops) (retrieving log records):** Use `StartTimeInclusive`, `EndTimeExclusive`, `PageSize` (max 1000, default 100), and `PageToken` for pagination. <!-- docs/cloud/audit-logs.mdx:209, 212-215 -->
+
+tcld does not retrieve log records; it only manages export sinks. List the configured sinks with:
 
 ```bash
-tcld audit-log list \
-    --start-time <RFC3339> \
-    --end-time <RFC3339> \
-    --page-size 100
+tcld account audit-log kinesis list
+tcld account audit-log pubsub list
 ```
-<!-- docs/cloud/audit-logs.mdx:209 -->
-
-Filter by category with `--category` (e.g., `namespace`, `apikey`, `user`). Paginate with `--page-token` from the previous response. <!-- docs/cloud/audit-logs.mdx:212-215 -->
-
-**Cloud Ops API (programmatic access):** Use `StartTimeInclusive`, `EndTimeExclusive`, `PageSize` (max 1000, default 100), and `PageToken` for pagination. <!-- docs/cloud/audit-logs.mdx:209, 212-215 -->
 
 ---
 
