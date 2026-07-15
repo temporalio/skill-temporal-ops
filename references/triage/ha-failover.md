@@ -109,7 +109,7 @@ Then re-run the operation that was failing.
 
 **Discriminate:**
 
-1. **Failover is in progress.** A failover that has been accepted is executing. The replica still shows `Activated` during a failover - there is no visible "in progress" state. Check whether the user received an async operation ID from the failover request. If they did, the failover is guaranteed to complete (see Verify below) - wait for it to finish, then verify with the [ground truth](#start-here-establish-ground-truth) steps.
+1. **Failover is in progress.** Check whether the user received an async operation ID from the failover request. If they did, the failover was accepted and is guaranteed to complete (see Verify below) - wait for it to finish, then verify with the [ground truth](#start-here-establish-ground-truth) steps.
 2. **Replica is in a failed state.** If the replica shows a failed state, the failover was attempted but did not succeed. Temporal on-call has been paged and will reach out. Inform the user that Temporal is aware and actively working on remediation. No user action is needed.
 3. **Manual `tcld` invocation was malformed.** The command is:
    ```bash
