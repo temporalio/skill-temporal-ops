@@ -219,10 +219,13 @@ All replica changes are subject to a cooldown period before further changes can 
 |---|---|
 | `tcld migration start --endpoint-id <id> --source-namespace <ns> --target-namespace <ns>` | Begin migration <!-- docs/cloud/migrate/automated.mdx:305 --> |
 | `tcld migration get --id <migration-id>` | Check migration status <!-- docs/cloud/migrate/automated.mdx:317 --> |
+| `tcld migration list` (alias `l`) | List all migrations (no flags) <!-- docs/cloud/tcld/migration.mdx:41 --> |
 | `tcld migration handover --id <migration-id> --to-replica-id cloud` | Hand over to Cloud <!-- docs/cloud/migrate/automated.mdx:332 --> |
 | `tcld migration handover --id <migration-id> --to-replica-id on-prem` | Hand back to self-hosted <!-- docs/cloud/migrate/automated.mdx:335 --> |
 | `tcld migration confirm --id <migration-id>` | Finalize (irreversible) <!-- docs/cloud/migrate/automated.mdx:362 --> |
 | `tcld migration abort --id <migration-id>` | Abort and roll back <!-- docs/cloud/migrate/automated.mdx:369 --> |
+
+`start`, `handover`, `confirm`, and `abort` accept an optional `--request-id`/`-r`; the server assigns one if unset. <!-- docs/cloud/tcld/migration.mdx:53 -->
 
 ---
 
