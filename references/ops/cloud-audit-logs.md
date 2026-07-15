@@ -156,6 +156,44 @@ If using Terraform for deployment, the manual prerequisites (topic and service a
 
 ---
 
+## Managing sinks via tcld
+
+Sinks can also be managed with `tcld account audit-log` (alias `al`), under two provider subgroups: `kinesis` (alias `k`) and `pubsub` (alias `ps`). <!-- docs/cloud/tcld/account.mdx:170-179 -->
+
+Both subgroups expose the same subcommands:
+
+| Subcommand | Alias | Purpose |
+|---|---|---|
+| `create` | `c` | Create a sink (created enabled) <!-- docs/cloud/tcld/account.mdx:192 --> |
+| `validate` | `v` | Validate sink config without creating it <!-- docs/cloud/tcld/account.mdx:220 --> |
+| `update` | `u` | Update sink fields or toggle enabled <!-- docs/cloud/tcld/account.mdx:248 --> |
+| `get` | `g` | Get a sink by name <!-- docs/cloud/tcld/account.mdx:286 --> |
+| `delete` | `d` | Delete a sink by name <!-- docs/cloud/tcld/account.mdx:296 --> |
+| `list` | `l` | List sinks <!-- docs/cloud/tcld/account.mdx:312 --> |
+
+### Kinesis create/validate flags
+
+| Flag | Alias | Required |
+|---|---|---|
+| `--sink-name` | | Yes <!-- docs/cloud/tcld/account.mdx:198 --> |
+| `--role-name` | `--rn` | Yes <!-- docs/cloud/tcld/account.mdx:202 --> |
+| `--destination-uri` | `--du` | Yes <!-- docs/cloud/tcld/account.mdx:208 --> |
+| `--region` | `--re` | Yes <!-- docs/cloud/tcld/account.mdx:214 --> |
+
+### Pub/Sub create/validate flags
+
+| Flag | Alias | Required |
+|---|---|---|
+| `--sink-name` | | Yes <!-- docs/cloud/tcld/account.mdx:345 --> |
+| `--service-account-email` | `--sae` | Yes <!-- docs/cloud/tcld/account.mdx:349 --> |
+| `--topic-name` | `--tn` | Yes <!-- docs/cloud/tcld/account.mdx:355 --> |
+
+`update` additionally takes `--enabled` (toggle `true`/`false`) and `--resource-version` / `-v`; provider flags are optional on update. <!-- docs/cloud/tcld/account.mdx:258-262 -->
+
+`get`, `delete`, and `list` are shared across both subgroups. `get` and `delete` identify the sink with `--sink-name` (`delete` also accepts `--resource-version` / `-v`); `list` accepts `--page-size` and `--page-token`. <!-- docs/cloud/tcld/account.mdx:286-322 -->
+
+---
+
 ## Troubleshooting
 
 ### Sink status
