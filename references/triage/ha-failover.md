@@ -109,8 +109,8 @@ Then re-run the operation that was failing.
 
 **Discriminate:**
 
-1. **Failover is in progress.** A failover that has been accepted is executing. The replica still shows `Active` in the customer API during a failover - there is no visible "in progress" state. Check whether the user received an async operation ID from the failover request. If they did, the failover is guaranteed to complete (see Verify below) - wait for it to finish, then verify with the [ground truth](#start-here-establish-ground-truth) steps.
-2. **Replica is in `Failed` state.** If the replica shows `Failed`, the failover was attempted but did not succeed. Temporal on-call has been paged and will reach out. Inform the user that Temporal is aware and actively working on remediation. No user action is needed.
+1. **Failover is in progress.** A failover that has been accepted is executing. The replica still shows `Activated` during a failover - there is no visible "in progress" state. Check whether the user received an async operation ID from the failover request. If they did, the failover is guaranteed to complete (see Verify below) - wait for it to finish, then verify with the [ground truth](#start-here-establish-ground-truth) steps.
+2. **Replica is in a failed state.** If the replica shows a failed state, the failover was attempted but did not succeed. Temporal on-call has been paged and will reach out. Inform the user that Temporal is aware and actively working on remediation. No user action is needed.
 3. **Manual `tcld` invocation was malformed.** The command is:
    ```bash
    tcld namespace failover \
@@ -118,7 +118,7 @@ Then re-run the operation that was failing.
        --region <target_region>
    ```
    <!-- /cloud/tcld/namespace#failover --> <!-- /cloud/high-availability/failovers/manage#trigger-failover --> `--namespace` and `--region` are required. With API-key auth, `--api-key` must come immediately after `tcld`, before `namespace failover`.
-4. **Target region isn't an `Active` replica.** The target must be a region holding a replica that is ready to be failed over to (state `Active`). <!-- /cloud/high-availability/failovers/manage#trigger-failover -->
+4. **Target region isn't an `Activated` replica.** The target must be a region holding a replica that is ready to be failed over to (state `Activated`). <!-- /cloud/high-availability/failovers/manage#trigger-failover -->
 5. **The Namespace can't support this failover (constraint).** See the constraints table below — a missing replica, region eligibility, or a replication-type conflict can make the failover impossible to request.
 6. **Permissions.** `FailoverNamespaceRegion` requires Namespace Admin. <!-- /cloud/manage-access/permissions-reference --> Account Owner and Global Admin hold Namespace Admin on all Namespaces. <!-- /cloud/manage-access/roles-and-permissions -->
 7. **Automatic Failover didn't fire.** Automatic Failover is driven by Temporal Cloud health checks on error rates, latencies, and infrastructure indicators. <!-- /cloud/high-availability/failovers#conditions-that-trigger-an-automatic-failover --> If it's disabled (`tcld namespace update-high-availability --disable-auto-failover=true`), Temporal won't initiate failovers — the user must trigger manually, and the published Temporal Cloud RTO does not apply. <!-- /cloud/high-availability/enable#automatic-failovers --> <!-- /cloud/tcld/namespace#update-high-availability -->
@@ -131,7 +131,7 @@ Then re-run the operation that was failing.
 | Namespace has no replica | Must be upgraded with HA (`tcld namespace add-region` or Web UI) before any failover | <!-- /cloud/high-availability/enable#upgrade --> <!-- /cloud/tcld/namespace#add-region --> |
 | Replica must be on the same continent as the primary; `sa-east-1` is the only region on its continent, so it has no eligible Multi-region replica | No replica region to fail over to | <!-- /cloud/high-availability/ha-connectivity#available-regions-privatelink-endpoints-and-dns-record-overrides --> <!-- /cloud/high-availability#high-availability-features --> |
 | Only one replica may be added per Namespace, so it is either Multi-region (same cloud, different region) or Multi-cloud (different cloud provider) - not both | Limits which replica topologies exist to fail over to | <!-- /cloud/high-availability#high-availability-features --> |
-| Replica must be in `Active` state to fail over to | A replica that is still `Adding`, is in `Failed` state, or is in any other non-`Active` state cannot be a failover target | <!-- /cloud/high-availability/failovers/manage#trigger-failover --> |
+| Replica must be in `Activated` state to fail over to | A replica that is still activating, is in a failed state, or is in any other non-`Activated` state cannot be a failover target | <!-- /cloud/high-availability/failovers/manage#trigger-failover --> |
 | 7-day wait after `tcld namespace delete-region` before re-enabling HA in that region | A just-removed region can't be re-added as a failover target yet | <!-- /cloud/high-availability/enable#changing --> |
 
 **Fix:** correct the matched discriminator (command form, target state, permissions, or auto-failover setting), or resolve the blocking constraint.
