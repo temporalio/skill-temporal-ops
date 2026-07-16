@@ -16,19 +16,19 @@ Alias: `ak` <!-- docs/cloud/tcld/apikey.mdx:19 -->
 ```bash
 tcld apikey create --name <name> \
     --description "<description>" \
-    --duration <duration>        # e.g. 24h; ignored if --expiry set; default 0s
+    --duration <duration>        # e.g. 24h; ignored if --expiry set; required unless --expiry
     # --expiry <RFC3339>         # e.g. '2023-11-28T09:23:24-08:00'
     # --request-id <request_id>
 ```
-<!-- docs/cloud/tcld/apikey.mdx:30-102 -->
+<!-- docs/cloud/tcld/apikey.mdx:29-67; tcld app/apikey.go -->
 
 | Flag | Alias | Required | Notes |
 |------|-------|----------|-------|
-| `--name` | `-n` | Yes | Display name of the API key <!-- docs/cloud/tcld/apikey.mdx:40 --> |
-| `--description` | `-desc` | No | <!-- docs/cloud/tcld/apikey.mdx:52 --> |
-| `--duration` | `-d` | No | Duration from now until expiry. Ignored if `--expiry` is set. Default `0s` <!-- docs/cloud/tcld/apikey.mdx:64-68 --> |
-| `--expiry` | `-e` | No | Absolute expiry timestamp (RFC3339) <!-- docs/cloud/tcld/apikey.mdx:78 --> |
-| `--request-id` | `-r` | No | Server assigns one if not set <!-- docs/cloud/tcld/apikey.mdx:92 --> |
+| `--name` | `-n` | Yes | Display name of the API key <!-- docs/cloud/tcld/apikey.mdx:35-39 --> |
+| `--description` | `-desc` | No | <!-- docs/cloud/tcld/apikey.mdx:41-45 --> |
+| `--duration` | `-d` | Conditional | Duration from now until expiry. Ignored if `--expiry` is set. Required when `--expiry` is omitted; must be positive (no `0s` default) <!-- docs/cloud/tcld/apikey.mdx:47-51; tcld app/apikey.go --> |
+| `--expiry` | `-e` | Conditional | Absolute expiry timestamp (RFC3339). Required when `--duration` is omitted <!-- docs/cloud/tcld/apikey.mdx:53-55 --> |
+| `--request-id` | `-r` | No | Server assigns one if not set <!-- docs/cloud/tcld/apikey.mdx:63-67 --> |
 
 To create an API key for a **Service Account**, add `--service-account-id <id>`:
 <!-- docs/cloud/get-started/api-keys.mdx:258-267 -->
@@ -135,34 +135,35 @@ To authenticate SDK or CLI connections to Temporal Cloud using an API key:
 ```bash
 export TEMPORAL_API_KEY=<key-secret>
 temporal workflow list \
-    --address <namespace>.<account>.tmprl.cloud:7233 \
-    --namespace <namespace_id>.<account_id>
+    --address <namespace>.<account_id>.tmprl.cloud:7233 \
+    --namespace <namespace>.<account_id>
 ```
+<!-- docs/cloud/get-started/api-keys.mdx:370-391 -->
 
 ### tcld authentication
 
-<!-- docs/cloud/get-started/api-keys.mdx:407-410 -->
-
-Pass the key with `--api-key` flag or set the `TEMPORAL_API_KEY` environment variable:
+Pass the key with `--api-key` or set `TEMPORAL_CLOUD_API_KEY` (tcld source/README).
+Public docs sometimes say `TEMPORAL_API_KEY` for tcld; that env var is for Temporal CLI/SDKs, not tcld.
+<!-- tcld app/flags.go; tcld README; docs/cloud/get-started/api-keys.mdx:413-418 -->
 
 ```bash
 tcld --api-key <key-secret> apikey list
 # or
-export TEMPORAL_API_KEY=<key-secret>
+export TEMPORAL_CLOUD_API_KEY=<key-secret>
 tcld apikey list
 ```
 
 ### Namespace gRPC endpoint format
 
-<!-- docs/cloud/get-started/api-keys.mdx:347-349 -->
+Recommended Namespace Endpoint (Temporal CLI, SDKs, Workers):
 
 ```
-<namespace>.<account>.tmprl.cloud:7233
+<namespace>.<account_id>.tmprl.cloud:7233
 ```
+<!-- docs/cloud/get-started/api-keys.mdx:354-356, 377-390 -->
 
-For Temporal CLI, the `--address` format for API key connections uses:
-`<region>.<cloud_provider>.api.temporal.io:7233`
-<!-- docs/cloud/get-started/api-keys.mdx:370-371 -->
+Regional endpoint (`<region>.<cloud_provider>.api.temporal.io:7233`) is an alternate for advanced HA routing, not the default API-key CLI address.
+<!-- docs/cloud/namespaces (access endpoints) -->
 
 ---
 
@@ -309,9 +310,12 @@ Alias: `snp` <!-- docs/cloud/tcld/user.mdx:293 -->
 
 Account-role values are case-insensitive in `tcld user` commands; canonical forms are
 `Admin`, `Developer`, `Read`, `Owner`, `FinanceAdmin`, `MetricsRead`. <!-- docs/cloud/tcld/user.mdx:86,188 -->
-`tcld user invite` and `tcld user set-account-role` accept all six of these values; the server may
-still reject a role that is not valid for a given identity. `none` is accepted only by
-`tcld user-group` commands. <!-- docs/cloud/tcld/user.mdx:86,188, docs/cloud/tcld/user-group.mdx:62 -->
+`tcld user invite` and `tcld user set-account-role` accept all six of these values at the CLI.
+Assignment policy is enforced by the server / account permissions, not by tcld:
+Global Admin cannot assign Account Owner; Finance Admin is assignable by Account Owner
+(and to Service Accounts by Global Admin). Owner changes may also require Support depending
+on account policy. `none` is accepted only by `tcld user-group` commands.
+<!-- docs/cloud/tcld/user.mdx:86,188; docs/cloud/manage-access/users.mdx; docs/cloud/tcld/user-group.mdx:71-73 -->
 
 ### Namespace-Level Permissions
 
@@ -345,14 +349,15 @@ tcld user-group create \
 
 | Flag | Alias | Required | Notes |
 |------|-------|----------|-------|
-| `--display-name` | | Yes | Display name of the group <!-- docs/cloud/tcld/user-group.mdx:58 --> |
-| `--account-role` | | Yes | `admin` \| `read` \| `developer` \| `owner` \| `financeadmin` \| `none` <!-- docs/cloud/tcld/user-group.mdx:62 --> |
-| `--namespace-role` | `-nr` | No | Repeatable. Format: `<namespaceid>-<role>` where role is `admin` \| `read` \| `write`. Example: `mynamespace.abc123-read` <!-- docs/cloud/tcld/user-group.mdx:66-67 --> |
+| `--display-name` | | Yes | Display name of the group <!-- docs/cloud/tcld/user-group.mdx:67-69 --> |
+| `--account-role` | | Yes | `admin` \| `read` \| `developer` \| `owner` \| `financeadmin` \| `none` <!-- docs/cloud/tcld/user-group.mdx:71-73 --> |
+| `--namespace-role` | `-nr` | No | Repeatable. Format: `<namespaceid>-<role>` where role is `admin` \| `read` \| `write`. Example: `mynamespace.abc123-read` <!-- tcld app/user_group.go nsRoleToAccess --> |
 
-Alias: `c` <!-- docs/cloud/tcld/user-group.mdx:52 -->
+Alias: `c` <!-- docs/cloud/tcld/user-group.mdx:65 -->
 
 **Important**: the `--namespace-role` format uses a **hyphen** separator (`<namespaceid>-<role>`), not `=`.
-This differs from `tcld user` commands which use `<namespace>=<permission>`. <!-- docs/cloud/tcld/user-group.mdx:67 -->
+This differs from `tcld user` commands which use `<namespace>=<permission>`. Auto-generated tcld docs currently omit the format string; behavior is defined in tcld `nsRoleToAccess`.
+<!-- tcld app/user_group.go -->
 
 ### Get
 
@@ -434,22 +439,23 @@ Alias: `sa` <!-- docs/cloud/tcld/user-group.mdx:141 -->
 
 | Flag | Alias | Required | Notes |
 |------|-------|----------|-------|
-| `--group-id` | `-id` | Yes | <!-- docs/cloud/tcld/user-group.mdx:145 --> |
-| `--account-role` | | No | `admin` \| `read` \| `developer` \| `owner` \| `financeadmin` \| `none` <!-- docs/cloud/tcld/user-group.mdx:149 --> |
-| `--namespace-role` | `-nr` | No | Repeatable. Same `<namespaceid>-<role>` format as create <!-- docs/cloud/tcld/user-group.mdx:153-154 --> |
-| `--append` | `-a` | No | Append namespace roles instead of replacing all existing roles <!-- docs/cloud/tcld/user-group.mdx:157-158 --> |
-| `--remove` | `-r` | No | Remove the given namespace roles instead of replacing <!-- docs/cloud/tcld/user-group.mdx:161-162 --> |
+| `--group-id` | `-id` | Yes | <!-- docs/cloud/tcld/user-group.mdx:87-91 --> |
+| `--account-role` | | Conditional | Required for replace mode. Omit with `--append`/`--remove` (those modes reject setting account role). Values: `admin` \| `read` \| `developer` \| `owner` \| `financeadmin` \| `none` <!-- docs/cloud/tcld/user-group.mdx:93-97; tcld app/user_group.go setAccess --> |
+| `--namespace-role` | `-nr` | No | Repeatable. Same `<namespaceid>-<role>` format as create <!-- tcld app/user_group.go --> |
+| `--append` | `-a` | No | Append namespace roles instead of replacing all existing roles <!-- docs/cloud/tcld/user-group.mdx:105-109 --> |
+| `--remove` | `-r` | No | Remove the given namespace roles instead of replacing <!-- docs/cloud/tcld/user-group.mdx:111-115 --> |
 
-Without `--append` or `--remove`, set-access **replaces** all existing roles. <!-- docs/cloud/tcld/user-group.mdx:157-158, 161-162 -->
+Without `--append` or `--remove`, set-access **replaces** all existing roles and requires `--account-role`.
+<!-- tcld app/user_group.go setAccess -->
 
 ---
 
 ## Service Accounts (`tcld service-account`)
 
-<!-- docs/cloud/get-started/service-accounts.mdx:48 -->
+<!-- docs/cloud/manage-access/service-accounts.mdx:47 -->
 
 Service Accounts are non-human identities that use API keys to authenticate.
-Use `tcld service-account --help` for a full list of subcommands. <!-- docs/cloud/get-started/service-accounts.mdx:48 -->
+Use `tcld service-account --help` for a full list of subcommands. <!-- docs/cloud/manage-access/service-accounts.mdx:47 -->
 
 ### Create
 
@@ -457,26 +463,26 @@ Use `tcld service-account --help` for a full list of subcommands. <!-- docs/clou
 tcld service-account create -n "<name>" -d "<description>" --ar "<account-role>"
 # Optional: --np "<namespace>=<permission>"
 ```
-<!-- docs/cloud/get-started/service-accounts.mdx:88-89 -->
+<!-- docs/cloud/manage-access/service-accounts.mdx:87-89 -->
 
-Returns a `ServiceAccountId` used for subsequent operations. <!-- docs/cloud/get-started/service-accounts.mdx:96-97 -->
+Returns a `ServiceAccountId` used for subsequent operations. <!-- docs/cloud/manage-access/service-accounts.mdx:93-95 -->
 
 ### Create Scoped (Namespace-scoped)
 
 ```bash
 tcld service-account create-scoped -n "<name>" --np "<namespace>=<permission>"
 ```
-<!-- docs/cloud/get-started/service-accounts.mdx:230-231 -->
+<!-- docs/cloud/manage-access/service-accounts.mdx:226-230 -->
 
-Namespace-scoped Service Accounts always have a `Read` Account Role and are restricted to a single namespace. <!-- docs/cloud/get-started/service-accounts.mdx:195-198 -->
-Cannot be reassigned to a different namespace after creation. <!-- docs/cloud/get-started/service-accounts.mdx:200 -->
+Namespace-scoped Service Accounts always have a `Read` Account Role and are restricted to a single namespace. <!-- docs/cloud/manage-access/service-accounts.mdx:194-197 -->
+Cannot be reassigned to a different namespace after creation. <!-- docs/cloud/manage-access/service-accounts.mdx:199 -->
 
 ### List
 
 ```bash
 tcld service-account list
 ```
-<!-- docs/cloud/get-started/service-accounts.mdx:118-119 -->
+<!-- docs/cloud/manage-access/service-accounts.mdx:116-120 -->
 
 ### Get
 
@@ -492,13 +498,13 @@ Alias: `g`. `--service-account-id` (alias `--id`) is required. <!-- docs/cloud/t
 ```bash
 tcld service-account delete --service-account-id "<id>"
 ```
-<!-- docs/cloud/get-started/service-accounts.mdx:147-148 -->
+<!-- docs/cloud/manage-access/service-accounts.mdx:142-146 -->
 
-Deleting a Service Account automatically deletes all associated API keys. <!-- docs/cloud/get-started/service-accounts.mdx:128-129 -->
+Deleting a Service Account automatically deletes all associated API keys. <!-- docs/cloud/manage-access/service-accounts.mdx:127-128 -->
 
 ### Update
 
-Three update commands exist: <!-- docs/cloud/get-started/service-accounts.mdx:177-179 -->
+Three update commands exist: <!-- docs/cloud/manage-access/service-accounts.mdx:173-177 -->
 
 ```bash
 # Update name or description
@@ -510,11 +516,11 @@ tcld service-account set-account-role --id "<id>" --ar "<role>"
 # Update namespace permissions
 tcld service-account set-namespace-permissions --id "<id>" -p "<namespace>=<permission>"
 ```
-<!-- docs/cloud/get-started/service-accounts.mdx:177-185 -->
+<!-- docs/cloud/manage-access/service-accounts.mdx:173-183 -->
 
 ### Namespace-Scoped Lifecycle
 
-When a namespace is deleted, all associated Namespace-scoped Service Accounts and their API keys are automatically deleted. <!-- docs/cloud/get-started/service-accounts.mdx:238-239 -->
+When a namespace is deleted, all associated Namespace-scoped Service Accounts and their API keys are automatically deleted. <!-- docs/cloud/manage-access/service-accounts.mdx:237-238 -->
 
 ---
 
@@ -553,10 +559,10 @@ Subcommands for configuring audit log sinks: <!-- docs/cloud/tcld/account.mdx:28
 tcld account metrics enable    # Enable metrics endpoint
 tcld account metrics disable   # Disable metrics endpoint
 ```
-<!-- docs/cloud/tcld/account.mdx:594-614 -->
+<!-- docs/cloud/tcld/account.mdx:49-55 -->
 
 End-entity certificates must be configured before enabling.
-Managed via `tcld account metrics accepted-client-ca` subcommands: `add`, `list`, `set`, `remove`. <!-- docs/cloud/tcld/account.mdx:338-341,349-350 -->
+Managed via `tcld account metrics accepted-client-ca` subcommands: `add`, `list`, `set`, `remove`. <!-- docs/cloud/tcld/account.mdx:57-66 -->
 
 ---
 
@@ -564,9 +570,9 @@ Managed via `tcld account metrics accepted-client-ca` subcommands: `add`, `list`
 
 | Context | Flag | Format | Example |
 |---------|------|--------|---------|
-| `tcld user` commands | `--namespace-permission` | `<namespace>=<permission>` | `ns1.abc123=Admin` <!-- docs/cloud/tcld/user.mdx:135 --> |
-| `tcld user-group` commands | `--namespace-role` | `<namespaceid>-<role>` | `mynamespace.abc123-read` <!-- docs/cloud/tcld/user-group.mdx:67 --> |
+| `tcld user` commands | `--namespace-permission` | `<namespace>=<permission>` | `ns1.abc123=Admin` <!-- docs/cloud/tcld/user.mdx:224 --> |
+| `tcld user-group` commands | `--namespace-role` | `<namespaceid>-<role>` | `mynamespace.abc123-read` <!-- tcld app/user_group.go --> |
 
 The permission values also differ in case:
-- `tcld user`: `Admin` | `Write` | `Read` (title case) <!-- docs/cloud/tcld/user.mdx:137 -->
-- `tcld user-group`: `admin` | `read` | `write` (lower case) <!-- docs/cloud/tcld/user-group.mdx:67 -->
+- `tcld user`: `Admin` | `Write` | `Read` (title case) <!-- docs/cloud/tcld/user.mdx:224 -->
+- `tcld user-group`: `admin` | `read` | `write` (lower case) <!-- tcld app/user_group.go -->
