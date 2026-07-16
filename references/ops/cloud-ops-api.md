@@ -50,7 +50,7 @@ For production HTTP automation, still pin an explicit version so behavior does n
 
 ## Go SDK
 
-For Go developers, use the [Go SDK](https://github.com/temporalio/cloud-sdk-go). Module path is `go.temporal.io/cloud-sdk`. The SDK is currently experimental.
+For Go developers, use the [Go SDK](https://github.com/temporalio/cloud-sdk-go). Module path is `go.temporal.io/cloud-sdk`. SDK is under active development; pin a version.
 
 Install:
 
