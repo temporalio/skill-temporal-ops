@@ -103,13 +103,14 @@ See also [certificates.md → TLS / cert error reference](certificates.md#tls--c
 
 ```bash
 temporal workflow list --limit 1 \
-  --address <region>.<cloud_provider>.api.temporal.io:7233 \
+  --address <namespace>.<account>.tmprl.cloud:7233 \
   --namespace <namespace>.<account> \
   --api-key "$TEMPORAL_API_KEY"
 # Command form: authentication.md → Discriminating with a CLI smoke test
+# Use API Regional Endpoint when dual-auth / region pin requires it
 ```
 
-The full form, including flag citations and the mTLS variant, is in [authentication.md → Discriminating with a CLI smoke test](authentication.md#discriminating-with-a-cli-smoke-test). API-key connections require the Regional Endpoint, not the Namespace Endpoint — see [authentication.md → Required address form for API-key connections](authentication.md#required-address-form-for-api-key-connections).
+The full form, including flag citations and the mTLS variant, is in [authentication.md → Discriminating with a CLI smoke test](authentication.md#discriminating-with-a-cli-smoke-test). API-key-only Namespaces default to the Namespace Endpoint; API Regional is for pin / dual-auth / some private-connectivity cases — see [authentication.md → Address form for API-key connections](authentication.md#address-form-for-api-key-connections).
 
 **Healthy signal:** the command returns a list (possibly empty) without error.
 
