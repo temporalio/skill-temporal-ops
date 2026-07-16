@@ -6,7 +6,7 @@ Non-determinism is a subtype of the WFT-failure loop documented in [workflow-stu
 
 Out of scope here (link, don't absorb):
 - Workflow stuck in general, including other WFT-failure causes → [workflow-stuck.md](workflow-stuck.md)
-- Replaying an Event History locally under the VS Code debugger → [replay-with-vscode.md](replay-with-vscode.md)
+- Replaying an Event History locally under a debugger → [replay.md](replay.md)
 - Worker not polling the Workflow Task Queue at all → [worker-health.md](worker-health.md)
 - gRPC `RESOURCE_EXHAUSTED` <!-- grpc: RESOURCE_EXHAUSTED --> on the client that tries to describe or reset → [rate-limits.md](rate-limits.md)
 - The bottom-up layer model for routing between files → [diagnostic-ladder.md](diagnostic-ladder.md)
@@ -127,10 +127,10 @@ Per-SDK replay APIs (names transcribed from the testing-suite pages; cross-check
 
 - **Go.** `worker.NewWorkflowReplayer()` + `replayer.ReplayWorkflowHistory(logger, history)`. <!-- docs/develop/go/best-practices/testing-suite.mdx:477-479 -->
 - **Python.** `Replayer(workflows=[YourWorkflow])` + `replayer.replay_workflow(WorkflowHistory.from_json(history_json_str))`, or `replayer.replay_workflows(histories)` for bulk. <!-- docs/develop/python/best-practices/testing-suite.mdx:198-208 -->
-- **TypeScript.** `Worker.runReplayHistory(options, history)` for single histories, `Worker.runReplayHistories(...)` for bulk. <!-- docs/develop/typescript/best-practices/testing-suite.mdx:531, 565 -->
-- **Java.** `WorkflowReplayer.replayWorkflowExecution(file, MyWorkflow.class)` for single histories, `WorkflowReplayer.replayWorkflowExecutions(...)` for bulk. <!-- docs/develop/java/best-practices/testing-suite.mdx:589, 597 -->
+- **TypeScript.** `Worker.runReplayHistory(options, history)` for single histories, `Worker.runReplayHistories(...)` for bulk. <!-- docs/develop/typescript/best-practices/testing-suite.mdx:533, 570 -->
+- **Java.** `WorkflowReplayer.replayWorkflowExecution(file, MyWorkflow.class)` for single histories, `WorkflowReplayer.replayWorkflowExecutions(...)` for bulk. <!-- docs/develop/java/best-practices/testing-suite.mdx:759-760, 752-753 -->
 
-For an interactive reproducer with breakpoints over the same replayer APIs, see [replay-with-vscode.md](replay-with-vscode.md).
+For an interactive reproducer with breakpoints over the same replayer APIs, see [replay.md](replay.md).
 
 Export the run's history with:
 
@@ -216,7 +216,7 @@ Confirm with the business owner before resetting: the Events after the reset poi
 | `WorkflowTaskFailed` Events with `cause` = Nondeterminism in the Event History | This file |
 | `pendingWorkflowTask.attempt` climbing, but `WorkflowTaskFailed` Events show a different `cause` | [workflow-stuck.md §Pending Workflow Task and WorkflowTaskFailed loops](workflow-stuck.md#pending-workflow-task-and-workflowtaskfailed-loops) |
 | Worker logs show a class like `DeterminismViolationError` (TypeScript) or a nondeterminism error (other SDKs) | [Per-SDK error shape](#per-sdk-error-shape), [Reproducing ND locally](#reproducing-nd-locally-via-replay) |
-| Need to reproduce the ND locally with breakpoints | [replay-with-vscode.md](replay-with-vscode.md) |
+| Need to reproduce the ND locally with breakpoints | [replay.md](replay.md) |
 | Need a CI regression test around a fixed ND bug | [Reproducing ND locally via replay](#reproducing-nd-locally-via-replay) — use the SDK's bulk replayer |
 | Planning a future-proof deploy strategy | [Remediation: Worker Versioning (preferred)](#remediation-worker-versioning-preferred) |
 | Live incident, pre-existing Workflows are stuck, deploy-the-fix is not enough | [Remediation: fix and redeploy, or reset past the divergence](#remediation-fix-and-redeploy-or-reset-past-the-divergence) |

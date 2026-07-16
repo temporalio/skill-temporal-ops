@@ -187,7 +187,7 @@ For the full inspection flow — describe output shape, status interpretation, p
 
 **Failure signatures:**
 
-- `WorkflowTaskFailed` events recurring with `cause` = Nondeterminism — [non-determinism.md → The WFT-failure signature of non-determinism](non-determinism.md#the-wft-failure-signature-of-non-determinism). Reproduce locally via [replay-with-vscode.md](replay-with-vscode.md).
+- `WorkflowTaskFailed` events recurring with `cause` = Nondeterminism — [non-determinism.md → The WFT-failure signature of non-determinism](non-determinism.md#the-wft-failure-signature-of-non-determinism). Reproduce locally via [replay.md](replay.md).
 - `WorkflowTaskFailed` loops with a non-Nondeterminism cause (e.g. Workflow Worker Unhandled Failure) — [workflow-stuck.md → Pending Workflow Task and WorkflowTaskFailed loops](workflow-stuck.md#pending-workflow-task-and-workflowtaskfailed-loops).
 - `ActivityTaskScheduled` with no matching retry / terminal event after describe — loop back to layer 6; the task was never picked up. [workflow-stuck.md → Pending activities](workflow-stuck.md#pending-activities).
 - Pending Activity with climbing attempts and `last_failure` populated — the Activity is running and failing; fix the Activity or its retry policy. Same section.

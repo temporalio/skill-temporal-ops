@@ -7,7 +7,7 @@ Prerequisite: the client can reach the Temporal Service, authenticate, and issue
 Out of scope here (link, don't absorb):
 - Task Queue has no pollers / workers not polling → [worker-health.md](worker-health.md)
 - Replaying recorded history diverges from the compiled Workflow (non-determinism) → [non-determinism.md](non-determinism.md)
-- Replaying an Event History locally under a debugger → [replay-with-vscode.md](replay-with-vscode.md)
+- Replaying an Event History locally under a debugger → [replay.md](replay.md)
 - gRPC `RESOURCE_EXHAUSTED` <!-- grpc: RESOURCE_EXHAUSTED --> when the client call to describe/signal/query was itself rate-limited → [rate-limits.md](rate-limits.md)
 - `context deadline exceeded` on the client side → [runtime-errors.md](runtime-errors.md)
 
@@ -342,7 +342,7 @@ For stuck pending *activities*, Activity Operations are the surgical tool: pause
 | WFT failure cause is `NonDeterministicError` | [non-determinism.md](non-determinism.md) |
 | Last non-bookkeeping event is `TimerStarted`, fire time is in the future | [Timer-based waits](#timer-based-waits) — not stuck |
 | WFT fails with `Pending Activities Limit Exceeded` / `Pending Child Workflows Limit Exceeded` / `Pending Signals Limit Exceeded` / `Pending Nexus Operations Limit Exceeded` | [Pending-operation per-Workflow limits](#pending-operation-per-workflow-limits) |
-| Need to reproduce the failure locally under a debugger | [replay-with-vscode.md](replay-with-vscode.md) |
+| Need to reproduce the failure locally under a debugger | [replay.md](replay.md) |
 | `temporal workflow describe` itself fails (cannot reach / authenticate / authorize) | [connectivity.md](connectivity.md), [certificates.md](certificates.md), [authentication.md](authentication.md), [rate-limits.md](rate-limits.md) |
 
 See the whole-stack picture in [diagnostic-ladder.md](diagnostic-ladder.md).
