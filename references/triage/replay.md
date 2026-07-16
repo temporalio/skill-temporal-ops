@@ -2,9 +2,9 @@
 
 This file is about the *tooling* that reproduces a recorded Workflow Execution in a debugger. For what replay divergence *means* as a concept — why the Worker Task fails, how the server classifies the cause, and how to remediate — see [non-determinism.md](non-determinism.md).
 
-A Replay is "the method by which a Workflow Execution resumes making progress. During a Replay the Commands that are generated are checked against an existing Event History." <!-- docs/encyclopedia/workflow/workflow-execution/workflow-execution.mdx:71 --> Running a recorded history through a local replayer against your Worker source tree is the canonical way to reproduce a non-determinism error under a debugger, verify a fix, and pin a CI regression test.
+A Replay is "the method by which a Workflow Execution resumes making progress. During a Replay the Commands that are generated are checked against an existing Event History." <!-- docs/encyclopedia/workflow/workflow-execution/workflow-execution.mdx:71 --> Running a recorded history through a local replayer against your Worker source tree replays the Workflow Execution "to replicate errors" <!-- docs/develop/go/best-practices/testing-suite.mdx:595 --> — how you reproduce a non-determinism error under a debugger and, via the bulk replayer, pin a CI regression test.
 
-The **SDK replayer** is the primary tool and the one to reach for in almost every case: it is documented for every supported SDK, runs headless, attaches to any debugger, and drops into CI as a regression guard. The **VS Code extension** is a TypeScript-only convenience wrapper around the same replayer — covered briefly at the end.
+The **SDK replayer** is the general-purpose tool — documented for every supported SDK, it runs headless, attaches to any debugger, and drops into CI as a regression guard. The **VS Code extension** is a TypeScript-only convenience wrapper around the same replayer — covered briefly at the end.
 
 Out of scope (link, don't absorb):
 
@@ -25,7 +25,7 @@ Out of scope (link, don't absorb):
 
 ## Prerequisites
 
-- The Workflow source tree at the commit that was deployed when the recorded Workflow Execution ran. Replaying current `main` against an older recording will produce divergence *for a different reason than the bug you're triaging*.
+- The Workflow source tree at the commit that was deployed when the recorded Workflow Execution ran. Replaying current `main` against an older recording can produce divergence *for a different reason than the bug you're triaging*.
 - The SDK installed and importable in that workspace (the replayer is part of the SDK, not a standalone binary).
 - A way to fetch the Event History of the run — either the `temporal` CLI or the SDK client's history-fetch API.
 
@@ -142,7 +142,7 @@ The documented behavior when replay detects non-determinism:
 - **Java**: `WorkflowReplayer.replayWorkflowExecution` throws; the versioning doc describes the condition as "This would cause the Workflow to fail with a nondeterminism error." <!-- docs/develop/java/workflows/versioning.mdx:71 --><!-- VERIFY: exact Java exception class is not stated in the docs snapshot. -->
 - **Python**: `Replayer.replay_workflow` raises; "If any replay fails, the code raises an exception." <!-- docs/develop/python/best-practices/testing-suite.mdx:190 -->
 
-Under a debugger — whether the VS Code extension or a native IDE attach on the SDK replayer — the process halts where the SDK throws. The stack frame where execution stops is *the Worker machinery that detected the mismatch*, not the Workflow line that emitted the bad Command. To locate the offending Workflow line, compare:
+Under a debugger — whether the VS Code extension or a native IDE attach on the SDK replayer — the process halts where the SDK throws, which is typically inside *the Worker machinery that detected the mismatch* rather than on the Workflow line that emitted the bad Command. To locate the offending Workflow line, compare:
 
 - The last Command the code was about to emit (the frame just below the SDK entry in the stack), and
 - The next non-bookkeeping Event in the recorded history (see [non-determinism.md §Identifying ND from the Event History](non-determinism.md#identifying-nd-from-the-event-history)).
@@ -153,9 +153,9 @@ For remediation paths (Worker Versioning, per-SDK patching, reset past the diver
 
 ## Interpreting a replay that succeeds
 
-If replay succeeds locally against the checked-out source, but production Workers keep failing with the same Workflow Execution, the deployed Worker code is different from the local checkout. Find the deployed build (via Worker Versioning metadata if used, or your deploy system) and reproduce from that commit. See [non-determinism.md §Reproducing ND locally via replay](non-determinism.md#reproducing-nd-locally-via-replay).
+If replay succeeds locally against the checked-out source, but production Workers keep failing with the same Workflow Execution, the deployed Worker code almost certainly differs from the local checkout. Find the deployed build (via Worker Versioning metadata if used, or your deploy system) and reproduce from that commit. See [non-determinism.md §Reproducing ND locally via replay](non-determinism.md#reproducing-nd-locally-via-replay).
 
-A local-replay success on the *current* source with production still failing is also the signal that Worker Versioning would have prevented this class of incident. See [non-determinism.md §Remediation: Worker Versioning (preferred)](non-determinism.md#remediation-worker-versioning-preferred).
+A local-replay success on the *current* source with production still failing is also the classic case Worker Versioning is meant to prevent. See [non-determinism.md §Remediation: Worker Versioning (preferred)](non-determinism.md#remediation-worker-versioning-preferred).
 
 ## The VS Code extension (TypeScript only, interactive)
 

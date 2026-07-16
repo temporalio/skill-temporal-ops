@@ -243,7 +243,7 @@ Confidence checkpoints follow the skill convention in [runtime-errors.md](runtim
 
 2. **Capture the worker error text.** Per [non-determinism.md → Per-SDK error shape](non-determinism.md#per-sdk-error-shape), only TypeScript has a doc-pinned class (`DeterminismViolationError`); other SDKs emit per-SDK errors. The message usually names the offending Command vs. expected Event — that's what pins the divergence.
 
-3. **Reproduce locally against the *deployed* commit** (not `main`) — per [replay.md → Prerequisites](replay.md#prerequisites), replaying newer source against an older recording produces divergence for a different reason than the bug being triaged.
+3. **Reproduce locally against the *deployed* commit** (not `main`) — per [replay.md → Prerequisites](replay.md#prerequisites), replaying newer source against an older recording can produce divergence for a different reason than the bug being triaged.
 
    - **Interactive (TypeScript only):** VS Code extension — [replay.md → The VS Code extension](replay.md#the-vs-code-extension-typescript-only-interactive). Point it at `history.json`.
    - **Headless / CI (any supported SDK):** SDK replayer — [replay.md → Step 2](replay.md#step-2--run-the-sdk-replayer-all-supported-sdks). For Go/Java, set `TEMPORAL_DEBUG=true` while stepping ([replay.md → TEMPORAL_DEBUG](replay.md#temporal_debug-suppress-the-deadlock-detector-while-stepping)).
