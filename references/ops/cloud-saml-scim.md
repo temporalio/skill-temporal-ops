@@ -105,7 +105,7 @@ SCIM lets you integrate your identity provider with Temporal Cloud to automate u
 - User deletion / offboarding
 - User membership in groups
 
-SCIM requires SAML. Pricing:
+SCIM requires SAML. Pricing: <!-- docs/evaluate/temporal-cloud/pricing.mdx:374-375 -->
 
 - **Business:** SCIM is a paid add-on (+$500/mo)
 - **Enterprise / Mission Critical:** SCIM included
@@ -133,10 +133,10 @@ SCIM requires SAML. Pricing:
 | Subject | Who manages create/delete | Who manages group membership | Who assigns Temporal roles |
 |---------|---------------------------|------------------------------|----------------------------|
 | **Cloud-managed users** | Cloud UI/API invite and delete, until user lifecycle management is disabled | Cloud (or SCIM if later synced into groups) | Cloud UI / `tcld` / Terraform |
-| **SCIM-managed users** | IdP only — **cannot** delete via Cloud UI/API; offboard in the IdP | IdP only | Roles still assigned in Cloud (directly or via synced groups) |
+| **SCIM-managed users** | IdP-owned; offboard in the IdP. Once **user lifecycle management** is disabled, Cloud UI/API can no longer create/delete users | IdP only | Roles still assigned in Cloud (directly or via synced groups) |
 | **SCIM-synced groups** | IdP creates/updates/deletes groups | IdP only | Assign roles in Cloud **after** sync (UI / `tcld` / Terraform). IdP does **not** map Temporal roles |
 
-Until user lifecycle management is disabled, you can still invite and remove **Cloud-managed** users outside of SCIM. SCIM users remain IdP-owned for delete/offboard.
+Whether users can be added or removed from the Cloud UI/API is governed by the account-level **user lifecycle management** setting: while enabled, you can still invite and remove users outside of SCIM; once disabled, user create/delete is IdP-only. Account Roles can always be changed from the Cloud interface. <!-- docs/cloud/manage-access/scim.mdx:59-62 -->
 
 ### Okta onboarding flow
 
