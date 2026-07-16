@@ -80,7 +80,7 @@ https://cloud.temporal.io/login/saml?connection=ACCOUNT_ID-saml
 Create a support ticket with:
 
 - The sign-in URL from your application
-- The X.509 SAML sign-in certificate (PEM or Base64 are both acceptable on the ticket; Temporal/ocld accepts base64 x509 or SAML metadata XML)
+- The X.509 SAML sign-in certificate (PEM or Base64 are both acceptable on the ticket; ocld accepts `--x509-cert` / `--x509-cert-file`, or `--saml-metadata-file` for SAML metadata XML)
 - One or more IdP domains to map to the SAML connection
 
 The IdP domain is generally the same as your email domain. Multiple IdP domains can be provided.
@@ -97,10 +97,13 @@ Ops configure SAML on the Temporal side via Auth0 and `ocld`. Typical flow:
    ct ocld <env> account create-saml-connection \
      -a <ACCOUNT_ID> \
      --sign-in-url '<idp-sso-url>' \
-     --x509-signing-cert '<base64-x509-or-metadata-xml>'
+     --x509-cert '<base64-x509>' \
+     --idp-domain '<example.com>'
    ```
 
-2. **Enable SAML Organization** on the account so domain-based enterprise login routes to that connection.
+   Alternatives to `--x509-cert` / `-c`: `--x509-cert-file` / `-cf` (path to cert) or `--saml-metadata-file` / `-smf` (SAML metadata XML). `--idp-domain` / `-d` is required and may be repeated for multiple domains.
+
+2. **Enable SAML Organization** (`--enable-saml-organization`) on the account so domain-based enterprise login routes to that connection.
 3. **Optional — SAML-only enforcement** (separate from enabling SAML):
 
    | Setting | Effect |
