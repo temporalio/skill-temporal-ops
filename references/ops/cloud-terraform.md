@@ -132,7 +132,7 @@ The Namespace ID is in the format `namespaceid.acctid`, available at the top of 
 
 Resource: `temporalcloud_nexus_endpoint` <!-- docs/cloud/terraform-provider.mdx:344 -->
 
-Required identity: Developer role (or higher) and Namespace Admin permission on the Endpoint's target Namespace. <!-- docs/cloud/terraform-provider.mdx:288-289; saas-control-plane authorizePrincipalForTargetNamespace -->
+Required identity: Developer role (or higher) and Namespace Admin permission on the Endpoint's target Namespace. <!-- docs/cloud/terraform-provider.mdx:288-289 -->
 
 ### Create
 
@@ -259,7 +259,7 @@ terraform output -json apikey_token
 
 ### Update
 
-You can update `display_name`, `description`, and `disabled` in place. Changing `owner_id`, `owner_type`, or `expiry_time` forces resource replacement. Updating does not rotate the token. <!-- provider schema PlanModifiers; saas-control-plane entities/apikey ValidateUpdate -->
+You can update `display_name`, `description`, and `disabled` in place. Changing `owner_id`, `owner_type`, or `expiry_time` forces resource replacement. Updating does not rotate the token. <!-- provider schema PlanModifiers -->
 
 ### Import
 
