@@ -69,18 +69,20 @@ Using the wrong endpoint family is one of the most common causes of "cannot conn
 
 | Purpose | Endpoint pattern | Port | Source |
 |---|---|---|---|
-| Cloud Namespace Endpoint (recommended for workers and `temporal` CLI data-plane) | `<namespace>.<account>.tmprl.cloud` | 7233 | <!-- docs/cloud/get-started/namespaces.mdx:331 --> |
-| Cloud Regional Endpoint (explicit region routing; required for API-key connections per the API-keys guide) | `<region>.<cloud_provider>.api.temporal.io` | 7233 | <!-- docs/cloud/get-started/namespaces.mdx:335 --><!-- docs/cloud/get-started/api-keys.mdx:370 --> |
-| Cloud control-plane (Cloud Ops API, `tcld`, Terraform provider) | `saas-api.tmprl.cloud` | 443 | <!-- docs/cloud/operation-api.mdx:135 --><!-- docs/cloud/connectivity/index.mdx:346 --> |
-| Self-hosted frontend | `<your-frontend-host>` | `7233` default <!-- docs/cli/server.mdx:50 --> | deployment-specific |
-| Local dev server | `localhost` | `7233` default <!-- docs/cli/server.mdx:50 --><!-- docs/cli/index.mdx:121 --> | `temporal server start-dev` <!-- docs/cli/server.mdx:40 --> |
+| Cloud Namespace Endpoint (recommended default for workers, SDKs, and `temporal` CLI data-plane — mTLS and API-key-only) | `<namespace>.<account>.tmprl.cloud` | 7233 | <!-- docs/cloud/get-started/namespaces.mdx — access-namespaces --> <!-- docs/cloud/get-started/api-keys.mdx — namespace-authentication --> |
+| Cloud API Regional Endpoint (explicit region pin; dual-auth API-key path; some private-connectivity setups) | `<region>.<cloud_provider>.api.temporal.io` | 7233 | <!-- docs/cloud/get-started/namespaces.mdx — access-namespaces --> |
+| Cloud HA Regional Endpoint (pin to a specific HA replica region) | `<cloud>-<region>.region.tmprl.cloud` | 7233 | <!-- docs/cloud/high-availability/ha-connectivity.mdx --> |
+| Cloud control-plane (Cloud Ops API, `tcld`, Terraform provider) | `saas-api.tmprl.cloud` | 443 | <!-- docs/cloud/operation-api.mdx --> |
+| Self-hosted frontend | `<your-frontend-host>` | `7233` default <!-- docs/cli/command-reference/server.mdx --> | deployment-specific |
+| Local dev server | `localhost` | `7233` default | `temporal server start-dev` |
 
 Notes:
 
-- The **Namespace Endpoint** is recommended for Temporal Clients (SDK, workers, `temporal` CLI) because it transparently follows HA failovers without a client change <!-- docs/cloud/get-started/namespaces.mdx:331-334 -->.
-- The **Regional Endpoint** is the form used for **API-key** authenticated connections to Cloud <!-- docs/cloud/get-started/api-keys.mdx:370 -->, and also for mTLS clients that want to pin a region. When using mTLS against the Regional Endpoint, the client must set the TLS server name to the Namespace Endpoint value <!-- docs/cloud/get-started/namespaces.mdx:338 --> (see [certificates.md → server name override](certificates.md#server-name-override)).
+- The **Namespace Endpoint** is the recommended default for Temporal Clients (SDK, workers, `temporal` CLI) for both mTLS and API-key-only Namespaces, because it transparently follows HA failovers without a client change <!-- docs/cloud/get-started/namespaces.mdx — access-namespaces --> <!-- docs/cloud/get-started/api-keys.mdx — namespace-authentication -->.
+- The **API Regional Endpoint** is for explicit region pinning, some private-connectivity setups, and **dual-auth pre-release** (which does not support API key auth to a Namespace Endpoint) <!-- docs/cloud/get-started/namespaces.mdx — access-namespaces -->. When using **mTLS** against an API Regional, HA Regional, or VPCE address, the client must set the TLS server name to the Namespace Endpoint value (see [certificates.md → server name override](certificates.md#server-name-override)).
+- Do not conflate the API Regional form (`*.api.temporal.io`) with the HA Regional form (`*.region.tmprl.cloud`) — both are “regional” in docs, but they are different hostnames.
 - `saas-api.tmprl.cloud` is **not** a workflow data-plane endpoint — pointing a worker or `temporal workflow …` command at it will not work.
-- The `--address` flag (env `TEMPORAL_ADDRESS`) takes `host:port`, not a URL <!-- docs/cli/cmd-options.mdx:137-139 --><!-- docs/cli/index.mdx:269 -->.
+- The `--address` flag (env `TEMPORAL_ADDRESS`) takes `host:port`, not a URL <!-- docs/cli/setup-cli.mdx -->.
 
 **Private connectivity (PrivateLink / PSC):** When using private endpoints without private DNS, the TLS server name override varies by auth method: <!-- /cloud/connectivity#update-dns-or-clients-to-use-private-connectivity -->
 
@@ -170,14 +172,15 @@ temporal workflow list --limit 1 \
 
 ### API-key variant
 
-For API-key authentication, the Cloud docs specify the **Regional Endpoint** form (`<region>.<cloud_provider>.api.temporal.io:7233`) rather than the Namespace Endpoint <!-- docs/cloud/get-started/api-keys.mdx:370 -->.
+For API-key-only Namespaces, default to the **Namespace Endpoint**. Use the API Regional form for region pin / dual-auth / some private-connectivity setups <!-- docs/cloud/get-started/api-keys.mdx — namespace-authentication -->.
 
 ```bash
 #!/bin/bash
 NS="your-namespace.account-id"
-ADDRESS="<region>.<cloud_provider>.api.temporal.io:7233"   # docs/cloud/get-started/api-keys.mdx:370
+ADDRESS="<namespace>.<account>.tmprl.cloud:7233"   # default for API-key-only
+# ADDRESS="<region>.<cloud_provider>.api.temporal.io:7233"  # region pin / dual-auth
 HOST="${ADDRESS%:*}"
-export TEMPORAL_API_KEY="..."   # docs/cli/index.mdx:278
+export TEMPORAL_API_KEY="..."
 
 echo "=== DNS resolution ==="
 nslookup "$HOST"                 # man: nslookup(1)
@@ -194,7 +197,6 @@ temporal workflow list --limit 1 \
   --address "$ADDRESS" \
   --namespace "$NS" \
   --api-key "$TEMPORAL_API_KEY"
-# --api-key: docs/cli/cmd-options.mdx:141
 ```
 
 A lighter end-to-end probe, with fewer moving parts, is `temporal operator cluster health --address <address>` <!-- docs/cli/operator.mdx:56 --> — if it returns `SERVING`, the client reached a Temporal frontend through all of DNS, TCP, TLS, and gRPC.

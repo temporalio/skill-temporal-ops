@@ -48,17 +48,23 @@ Do not use `FORBIDDEN` or `FAILED_PRECONDITION` as auth codes. They are either n
 
 ### How the Temporal CLI and SDKs pick up the key
 
-The Temporal CLI reads the API key either from the `--api-key` flag <!-- docs/cli/cmd-options.mdx:141 --> or from the `TEMPORAL_API_KEY` environment variable <!-- docs/cli/index.mdx:278 -->. The Cloud docs: "The CLI automatically picks up the `TEMPORAL_API_KEY` environment variable from your shell." <!-- docs/cloud/get-started/api-keys.mdx:365 -->
+The Temporal CLI reads the API key either from the `--api-key` flag <!-- docs/cli/setup-cli.mdx --> or from the `TEMPORAL_API_KEY` environment variable <!-- docs/cli/setup-cli.mdx -->. The Cloud docs: "The CLI automatically picks up the `TEMPORAL_API_KEY` environment variable from your shell." <!-- docs/cloud/get-started/api-keys.mdx — using-apikeys -->
 
-`tcld` uses the same two forms — `--api-key` flag or `TEMPORAL_API_KEY` env var. <!-- docs/cloud/get-started/api-keys.mdx:407-410 -->
+`tcld` and the Terraform provider use a **different** env var: `--api-key` or `TEMPORAL_CLOUD_API_KEY` (confirmed in `tcld` source `app/flags.go`). Do not tell a `tcld` user to set `TEMPORAL_API_KEY` — and do not tell an SDK / `temporal` CLI user that `TEMPORAL_CLOUD_API_KEY` is enough. Public api-keys docs that claim `tcld` reads `TEMPORAL_API_KEY` are stale vs current `tcld`.
 
-The Terraform provider uses a separate env var (`TEMPORAL_CLOUD_API_KEY`) — do not confuse it with `TEMPORAL_API_KEY`. This file only covers `TEMPORAL_API_KEY`.
+This section covers data-plane API-key auth (`TEMPORAL_API_KEY` / `--api-key` on `temporal` CLI and SDKs).
 
-### Required address form for API-key connections
+### Address form for API-key connections
 
-API-key connections must use the **Regional Endpoint** form, not the Namespace Endpoint. From the Cloud API-keys guide: "For API key connections, use the format `<region>.<cloud_provider>.api.temporal.io:7233`." <!-- docs/cloud/get-started/api-keys.mdx:370 --> The Namespace Endpoint (`<namespace>.<account>.tmprl.cloud`) is the correct form for mTLS. See the endpoint table in [connectivity.md → endpoint formats](connectivity.md#endpoint-formats) for the full comparison.
+For **API-key-only** Namespaces, the Cloud API-keys guide and SDK develop docs recommend the **Namespace Endpoint**: `<namespace>.<account>.tmprl.cloud:7233`. <!-- docs/cloud/get-started/api-keys.mdx — namespace-authentication --> <!-- docs/cloud/get-started/api-keys.mdx — using-apikeys -->
 
-If a user reports `UNAUTHENTICATED` with an API key while also pointing `--address` at `<namespace>.<account>.tmprl.cloud:7233`, the endpoint is the first thing to check. <!-- VERIFY: exact server-side status text when a Namespace Endpoint is used with an API key varies by release; observe the returned code rather than pinning a string. -->
+Use the **API Regional Endpoint** (`<region>.<cloud_provider>.api.temporal.io:7233`) when:
+
+- The client needs an explicit region pin
+- Private connectivity without private DNS (SNI / server name may need the regional API hostname — see [connectivity.md](connectivity.md#endpoint-formats))
+- The Namespace is in **dual-auth pre-release** (`api_key_or_mtls`): dual-auth does **not** support authenticating with an API key to a Namespace Endpoint <!-- docs/cloud/get-started/namespaces.mdx — access-namespaces -->
+
+See the endpoint table in [connectivity.md → endpoint formats](connectivity.md#endpoint-formats) for the full comparison.
 
 ### Things to check when `UNAUTHENTICATED` is returned with an API key
 
@@ -69,7 +75,7 @@ Per the Cloud troubleshooting note: "Invalid API key errors: Check that you copi
 - **Key disabled.** A disabled key cannot authenticate — per the Cloud docs: "When disabled, an API key cannot authenticate with Temporal Cloud." <!-- docs/cloud/get-started/api-keys.mdx:167 --> Check with `tcld apikey list` <!-- docs/cloud/tcld/apikey.mdx:130 --> or `tcld apikey get --id <apikey_id>` <!-- docs/cloud/tcld/apikey.mdx:108 -->.
 - **Key deleted.** Per the Cloud docs: "Deleting an API key stops it from authenticating with Temporal Cloud." <!-- docs/cloud/get-started/api-keys.mdx:190 -->
 - **Key expired.** API keys expire based on the `--duration` or `--expiry` set at creation time <!-- docs/cloud/tcld/apikey.mdx:62-89 -->. The FAQ caps expiry at 2 years. <!-- docs/cloud/get-started/api-keys.mdx:447-449 -->
-- **Wrong address family.** See above — use the Regional Endpoint.
+- **Wrong address family.** See above — default to Namespace Endpoint for API-key-only; use API Regional when pinning, private connectivity, or dual-auth requires it.
 - **API keys disabled at the account level.** A Global Administrator or Account Owner can disable the *creation* of new API keys with the **Disable Create API Keys** control; existing keys continue to work until disabled, deleted, or expired. <!-- docs/cloud/get-started/api-keys.mdx:108-110 --> This does not on its own turn a working key into `UNAUTHENTICATED`.
 
 ### API-key lifecycle commands
@@ -115,13 +121,12 @@ Key behavioral note: "Deleting or disabling a key removes its ability to authent
 
 ```bash
 temporal workflow list --limit 1 \
-  --address <region>.<cloud_provider>.api.temporal.io:7233 \
+  --address <namespace>.<account>.tmprl.cloud:7233 \
   --namespace <namespace>.<account> \
   --api-key "$TEMPORAL_API_KEY"
-# --address:  <!-- docs/cli/cmd-options.mdx:137 -->
-# --namespace: <!-- docs/cli/cmd-options.mdx:420 -->
-# --api-key:  <!-- docs/cli/cmd-options.mdx:141 -->
-# Address form for API-key: <!-- docs/cloud/get-started/api-keys.mdx:370 -->
+# Default address for API-key-only: Namespace Endpoint
+# <!-- docs/cloud/get-started/api-keys.mdx — using-apikeys -->
+# Use <region>.<cloud_provider>.api.temporal.io:7233 instead for region pin / dual-auth / some private-connectivity setups
 ```
 
 Interpret the result:
