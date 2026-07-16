@@ -48,7 +48,7 @@ Do not use `FORBIDDEN` or `FAILED_PRECONDITION` as auth codes. They are either n
 
 ### How the Temporal CLI and SDKs pick up the key
 
-The Temporal CLI reads the API key either from the `--api-key` flag <!-- docs/cli/cmd-options.mdx --> or from the `TEMPORAL_API_KEY` environment variable <!-- docs/cli/setup-cli.mdx -->. The Cloud docs: "The CLI automatically picks up the `TEMPORAL_API_KEY` environment variable from your shell." <!-- docs/cloud/get-started/api-keys.mdx — using-apikeys -->
+The Temporal CLI reads the API key either from the `--api-key` flag <!-- docs/cli/setup-cli.mdx --> or from the `TEMPORAL_API_KEY` environment variable <!-- docs/cli/setup-cli.mdx -->. The Cloud docs: "The CLI automatically picks up the `TEMPORAL_API_KEY` environment variable from your shell." <!-- docs/cloud/get-started/api-keys.mdx — using-apikeys -->
 
 `tcld` and the Terraform provider use a **different** env var: `--api-key` or `TEMPORAL_CLOUD_API_KEY` (confirmed in `tcld` source `app/flags.go`). Do not tell a `tcld` user to set `TEMPORAL_API_KEY` — and do not tell an SDK / `temporal` CLI user that `TEMPORAL_CLOUD_API_KEY` is enough. Public api-keys docs that claim `tcld` reads `TEMPORAL_API_KEY` are stale vs current `tcld`.
 

@@ -66,7 +66,7 @@ The Namespace Endpoint follows HA failovers transparently. When a client pins to
 - Dual-auth (`api_key_or_mtls`) Namespace + API key + Namespace Endpoint — pre-release dual-auth does not support API key auth to the Namespace Endpoint; use the API Regional Endpoint. <!-- docs/cloud/get-started/namespaces.mdx — access-namespaces -->
 - mTLS + Regional / VPCE address **without** SNI override — the TLS handshake will fail with `x509: certificate is valid for <SANs>, not <requested host>`. See [certificates.md → Hostname mismatch](certificates.md#hostname-mismatch).
 - Empty `HostPort` / address with a Cloud namespace set — no explicit Cloud endpoint; the client will attempt a local-dev default that won't reach Cloud.
-- URL form (`https://…`) in `--address` / `TEMPORAL_ADDRESS` — the flag takes `host:port`, not a URL. <!-- docs/cli/cmd-options.mdx -->
+- URL form (`https://…`) in `--address` / `TEMPORAL_ADDRESS` — the flag takes `host:port`, not a URL. <!-- docs/cli/setup-cli.mdx -->
 
 ## Namespace format
 

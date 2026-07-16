@@ -73,7 +73,7 @@ Using the wrong endpoint family is one of the most common causes of "cannot conn
 | Cloud API Regional Endpoint (explicit region pin; dual-auth API-key path; some private-connectivity setups) | `<region>.<cloud_provider>.api.temporal.io` | 7233 | <!-- docs/cloud/get-started/namespaces.mdx — access-namespaces --> |
 | Cloud HA Regional Endpoint (pin to a specific HA replica region) | `<cloud>-<region>.region.tmprl.cloud` | 7233 | <!-- docs/cloud/high-availability/ha-connectivity.mdx --> |
 | Cloud control-plane (Cloud Ops API, `tcld`, Terraform provider) | `saas-api.tmprl.cloud` | 443 | <!-- docs/cloud/operation-api.mdx --> |
-| Self-hosted frontend | `<your-frontend-host>` | `7233` default <!-- docs/cli/server.mdx --> | deployment-specific |
+| Self-hosted frontend | `<your-frontend-host>` | `7233` default <!-- docs/cli/command-reference/server.mdx --> | deployment-specific |
 | Local dev server | `localhost` | `7233` default | `temporal server start-dev` |
 
 Notes:
@@ -82,7 +82,7 @@ Notes:
 - The **API Regional Endpoint** is for explicit region pinning, some private-connectivity setups, and **dual-auth pre-release** (which does not support API key auth to a Namespace Endpoint) <!-- docs/cloud/get-started/namespaces.mdx — access-namespaces -->. When using **mTLS** against an API Regional, HA Regional, or VPCE address, the client must set the TLS server name to the Namespace Endpoint value (see [certificates.md → server name override](certificates.md#server-name-override)).
 - Do not conflate the API Regional form (`*.api.temporal.io`) with the HA Regional form (`*.region.tmprl.cloud`) — both are “regional” in docs, but they are different hostnames.
 - `saas-api.tmprl.cloud` is **not** a workflow data-plane endpoint — pointing a worker or `temporal workflow …` command at it will not work.
-- The `--address` flag (env `TEMPORAL_ADDRESS`) takes `host:port`, not a URL <!-- docs/cli/cmd-options.mdx -->.
+- The `--address` flag (env `TEMPORAL_ADDRESS`) takes `host:port`, not a URL <!-- docs/cli/setup-cli.mdx -->.
 
 **Private connectivity (PrivateLink / PSC):** When using private endpoints without private DNS, the TLS server name override varies by auth method: <!-- /cloud/connectivity#update-dns-or-clients-to-use-private-connectivity -->
 
