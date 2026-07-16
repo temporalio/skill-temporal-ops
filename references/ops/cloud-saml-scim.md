@@ -2,6 +2,8 @@
 
 SAML enables single sign-on (SSO) by allowing your identity provider to authenticate users into Temporal Cloud. SCIM automatically creates, updates, and removes users and groups in Temporal Cloud based on changes in your identity provider. <!-- docs/cloud/manage-access/index.mdx -->
 
+Temporal-side SAML/SCIM enablement is performed by Temporal Support (internal IAM/cloud-iam), not via `tcld`.
+
 ---
 
 ## SAML SSO
@@ -75,51 +77,23 @@ https://cloud.temporal.io/login/saml?connection=ACCOUNT_ID-saml
 5. In the **Feedback** section, select **Finish**.
 6. On the application page > **Sign On** tab > **View SAML setup instructions**. Copy IdP settings and download the active certificate.
 
-### Finish SAML configuration (customer ticket)
+### Finish SAML configuration
 
 Create a support ticket with:
 
 - The sign-in URL from your application
-- The X.509 SAML sign-in certificate (PEM or Base64 are both acceptable on the ticket; ocld accepts `--x509-cert` / `--x509-cert-file`, or `--saml-metadata-file` for SAML metadata XML)
+- The X.509 SAML sign-in certificate (PEM or Base64 are both acceptable)
 - One or more IdP domains to map to the SAML connection
 
 The IdP domain is generally the same as your email domain. Multiple IdP domains can be provided.
 
 After Temporal confirms configuration is complete, go to the Cloud login page, enter your email, choose **Enterprise identity**, then click **Continue**. Do **not** use **Continue with Google** or **Continue with Microsoft** for SAML SSO.
 
-### Temporal-side SAML (Auth0 + ocld)
+### SAML-only enforcement
 
-Ops configure SAML on the Temporal side via Auth0 and `ocld`. Typical flow:
+Enabling SAML alone does **not** block other login methods. SAML-only is a **separate setting**, configured by Temporal Support when requested.
 
-1. **Create the Auth0 SAML connection** (connection name must be `ACCOUNT_ID-saml`):
-
-   ```bash
-   ct ocld <env> account create-saml-connection \
-     -a <ACCOUNT_ID> \
-     --sign-in-url '<idp-sso-url>' \
-     --x509-cert '<base64-x509>' \
-     --idp-domain '<example.com>'
-   ```
-
-   Alternatives to `--x509-cert` / `-c`: `--x509-cert-file` / `-cf` (path to cert) or `--saml-metadata-file` / `-smf` (SAML metadata XML). `--idp-domain` / `-d` is required and may be repeated for multiple domains.
-
-2. **Enable SAML Organization** (`--enable-saml-organization`) on the account so domain-based enterprise login routes to that connection.
-3. **Optional — SAML-only enforcement** (separate from enabling SAML):
-
-   | Setting | Effect |
-   |---------|--------|
-   | SAML enabled only | Enterprise SAML works; email+password+MFA and social login (Google/Microsoft) remain available |
-   | `EnableSAMLOnlyConnection` / `--enable-saml-only-connection` | **Only** SAML login is allowed — blocks email+password+MFA and social login |
-
-   Enabling SAML alone does **not** block other auth methods. Set SAML-only explicitly when the customer requires IdP-only access.
-
-4. **Delete** a connection when decommissioning:
-
-   ```bash
-   ct ocld <env> account delete-saml-connection -a <ACCOUNT_ID>
-   ```
-
-5. Support can also use the **configure-saml** UI for assisted setup when appropriate.
+When SAML-only is enabled, **only** SAML login is allowed — it blocks email+password+MFA and social login (Google/Microsoft).
 
 ---
 
@@ -151,20 +125,18 @@ SCIM requires SAML. Pricing:
 ### Prerequisites
 
 1. Configure SAML SSO first.
-2. Identify your organization's IdP administrator and specify their contact details in the support ticket (invite that admin for Directory Sync only — they do not need broad Cloud admin rights for SCIM setup).
+2. Identify your organization's IdP administrator and specify their contact details in the support ticket (that admin completes Directory Sync setup; they do not need broad Cloud admin rights for SCIM setup alone).
 3. Submit a support ticket to enable SCIM.
 
 ### Cloud-managed vs SCIM-managed lifecycle
 
 | Subject | Who manages create/delete | Who manages group membership | Who assigns Temporal roles |
 |---------|---------------------------|------------------------------|----------------------------|
-| **Cloud-managed users** | Cloud UI/API invite and delete, until `DisableUserLifecycleManagement` | Cloud (or SCIM if later synced into groups) | Cloud UI / tcld / Terraform |
+| **Cloud-managed users** | Cloud UI/API invite and delete, until user lifecycle management is disabled | Cloud (or SCIM if later synced into groups) | Cloud UI / `tcld` / Terraform |
 | **SCIM-managed users** | IdP only — **cannot** delete via Cloud UI/API; offboard in the IdP | IdP only | Roles still assigned in Cloud (directly or via synced groups) |
-| **SCIM-synced groups** | IdP creates/updates/deletes groups | IdP only | Assign roles in Cloud **after** sync (UI / tcld / Terraform). IdP does **not** map Temporal roles |
+| **SCIM-synced groups** | IdP creates/updates/deletes groups | IdP only | Assign roles in Cloud **after** sync (UI / `tcld` / Terraform). IdP does **not** map Temporal roles |
 
 Until user lifecycle management is disabled, you can still invite and remove **Cloud-managed** users outside of SCIM. SCIM users remain IdP-owned for delete/offboard.
-
-**Ops escape hatch:** `ct ocld <env> user descim` clears WorkOS SCIM linkage on a user (not customer-facing). Use when support must untangle a stuck SCIM identity.
 
 ### Okta onboarding flow
 
@@ -176,21 +148,8 @@ Until user lifecycle management is disabled, you can still invite and remove **C
 
 - User and group change events are applied within **10 minutes** of being made in the IdP.
 - User lifecycle management with SCIM also allows user roles to be derived from group membership (roles assigned on the group in Cloud).
-- Once a group has been synced in Temporal Cloud, assign roles to the group via the **Cloud UI**, **tcld**, or **Terraform**. See [User Group Management](https://github.com/temporalio/tcld?tab=readme-ov-file#user-group-management).
-
-### Temporal-side SCIM (WorkOS + ocld)
-
-Ops enable and tune Directory Sync via WorkOS:
-
-```bash
-ct ocld <env> account wos configure -a <ACCOUNT_ID> --enabled=true --cadence=5m
-```
-
-Notes:
-
-- Invite the IdP admin for **Directory Sync** setup only (setup link / bearer token flow).
+- Once a group has been synced in Temporal Cloud, assign roles to the group via the **Cloud UI**, **`tcld`**, or **Terraform**. See [User Group Management](https://github.com/temporalio/tcld?tab=readme-ov-file#user-group-management).
 - Disabling SCIM does **not** remove already-synced users or groups.
-- Lost bearer token: reset the directory and resend the setup link — do not expect the old token to keep working.
 
 ---
 
@@ -215,12 +174,10 @@ Multiple accounts can coexist on the same email domain, each with its own SAML c
 - **Password reset:** If logged in: **My Profile** > **Password and Authentication** > **Reset Password**. If not logged in: enter email, click **Continue**, then **Forgot password**.
 - **Email domain changes:** If your organization changed its email domain, create a support ticket with your previous and new email addresses and your Account Id.
 
-### Debug / pitfalls
+### Common pitfalls
 
 | Symptom / trap | Cause / fix |
 |----------------|-------------|
-| Social login (Google/Microsoft) still visible after SAML | SAML ≠ SAML-only. Enable `EnableSAMLOnlyConnection` / `--enable-saml-only-connection` to block non-SAML methods |
-| Wrong login path | Prefer Enterprise identity → Continue, or `/login/saml?connection=ACCOUNT_ID-saml`. Do not confuse with generic `?connection=ACCOUNT_ID-saml` on the wrong entrypoint |
-| SuperLogin | Internal support login path — not a customer SAML fix; avoid conflating with customer SSO troubleshooting |
-| Dead zone | Misconfigured connection/domain mapping leaves users unable to complete either social or SAML login — verify connection name `ACCOUNT_ID-saml`, IdP domains, and cert |
-| Stale permissions after role/group change | Expect delay from poll + bundle + cache; SCIM events apply within ~10 minutes, then Cloud auth caches may lag further |
+| Social login (Google/Microsoft) still visible after SAML | SAML ≠ SAML-only. Ask Temporal Support to enable SAML-only if you need to block non-SAML methods |
+| Wrong login path | Prefer **Enterprise identity** → **Continue**, or the Sign on URL with `connection=ACCOUNT_ID-saml` (Entra). Do not use Continue with Google/Microsoft for SAML |
+| Stale permissions after role/group change | SCIM events apply within ~10 minutes; role/permission visibility in Cloud may lag briefly after that |
