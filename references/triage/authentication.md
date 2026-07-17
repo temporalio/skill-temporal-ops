@@ -21,12 +21,21 @@ Out of scope here (link, don't absorb):
 
 ## Authentication vs authorization
 
-Temporal Cloud distinguishes two post-TLS checks, and the gRPC status code tells you which one failed:
+Temporal Cloud distinguishes authentication from authorization, but **API keys and mTLS do not share the same authorization model**.
 
-- **Authentication** — *who you are*. The API key is valid and active, or the mTLS client cert chains to an accepted CA and matches any configured certificate filters. Failure → `UNAUTHENTICATED` <!-- grpc: UNAUTHENTICATED -->.
-- **Authorization** — *what you can do*. The identity is known, but the role / Namespace permission / cert-filter-derived identity does not permit the requested action. Failure → `PERMISSION_DENIED` <!-- grpc: PERMISSION_DENIED -->.
+### API keys
+
+- **Authentication** — *who you are*. The API key is valid and active. Failure → `UNAUTHENTICATED` <!-- grpc: UNAUTHENTICATED -->.
+- **Authorization** — *what you can do*. Key → User or Service Account → Cloud RBAC. Failure → `PERMISSION_DENIED` <!-- grpc: PERMISSION_DENIED -->.
 
 The authorization pathway for API keys is documented as "API key (authentication) → Identity (user or Service Account) → RBAC (authorization)" <!-- docs/cloud/get-started/api-keys.mdx:47 -->.
+
+### mTLS
+
+- **Authentication (connection)** — client cert chains to an accepted Namespace CA. Failure is usually a **TLS-layer** error (`tls:` / `x509:`), not gRPC `UNAUTHENTICATED`. See [certificates.md](certificates.md).
+- **Authorization (Namespace access)** — after a clean handshake: no certificate filters → full Namespace data-plane access; with filters → leaf must match or the connection is rejected (exact wire signal is release-dependent — see [certificates.md](certificates.md)).
+
+**mTLS is not tied to Cloud RBAC identities** (User / Service Account / Namespace Read|Write|Admin). Access is CA trust + optional filters. <!-- docs/best-practices/cloud-access-control.mdx:71-73 --> Do not triage mTLS `PERMISSION_DENIED` via `tcld user get`. Check CA, filters, Namespace name (`<ns>.<account>`), and Namespace auth method.
 
 ## UNAUTHENTICATED vs PERMISSION_DENIED
 
@@ -34,15 +43,15 @@ The two gRPC codes in this file, per the gRPC spec <!-- grpc: https://grpc.io/do
 
 | Code | Meaning in the spec | What it tells you on Temporal Cloud |
 |---|---|---|
-| `UNAUTHENTICATED` <!-- grpc: UNAUTHENTICATED --> | The request does not have valid authentication credentials for the operation. | The API key was not sent, not accepted, disabled, or expired; or the mTLS cert was not trusted / not accepted. |
-| `PERMISSION_DENIED` <!-- grpc: PERMISSION_DENIED --> | The caller does not have permission to execute the specified operation. Distinct from `UNAUTHENTICATED`. | The identity is known (API key valid, cert accepted) but lacks the Namespace-level permission (`Read` / `Write` / `Admin`) or the account-level role required for the action. |
+| `UNAUTHENTICATED` <!-- grpc: UNAUTHENTICATED --> | The request does not have valid authentication credentials for the operation. | Almost always an **API key** problem: missing, typo, disabled, deleted, expired, or wrong auth method for the Namespace. Untrusted mTLS certs usually fail at TLS (`UNAVAILABLE` / `x509:`), not here. |
+| `PERMISSION_DENIED` <!-- grpc: PERMISSION_DENIED --> | The caller does not have permission to execute the specified operation. Distinct from `UNAUTHENTICATED`. | **API key:** identity known but lacks the Namespace-level permission (`Read` / `Write` / `Admin`) or the account-level role required for the action (including Owner/Admin inheritance). **mTLS:** often cert-filter mismatch, wrong Namespace, or auth-method mismatch — not missing Cloud RBAC. |
 
 Two traps this distinction prevents:
 
 - **`UNAVAILABLE` is not an auth code.** If your error is gRPC `UNAVAILABLE` <!-- grpc: UNAVAILABLE -->, TLS may have failed before any auth happened. Peel the wrapped cause; if it starts with `tls:`, `x509:`, or `remote error: tls:`, jump to [certificates.md](certificates.md). The troubleshooting guide names an expired TLS certificate as a common root cause of "looks like auth but isn't." <!-- docs/troubleshooting/last-connection-error.mdx:15 -->
 - **`RESOURCE_EXHAUSTED` is not `PERMISSION_DENIED`.** A rate-limited caller is *allowed* to make the call but is being throttled. See [rate-limits.md](rate-limits.md).
 
-Do not use `FORBIDDEN` or `FAILED_PRECONDITION` as auth codes. They are either not gRPC codes at all, or unrelated to auth.
+Do not use `FORBIDDEN` or `FAILED_PRECONDITION` as auth codes. `FORBIDDEN` is not a gRPC code; `FAILED_PRECONDITION` is a gRPC code but is unrelated to Cloud auth decisions.
 
 ## API-key authentication
 
@@ -56,15 +65,15 @@ This section covers data-plane API-key auth (`TEMPORAL_API_KEY` / `--api-key` on
 
 ### Address form for API-key connections
 
-For **API-key-only** Namespaces, the Cloud API-keys guide and SDK develop docs recommend the **Namespace Endpoint**: `<namespace>.<account>.tmprl.cloud:7233`. <!-- docs/cloud/get-started/api-keys.mdx — namespace-authentication --> <!-- docs/cloud/get-started/api-keys.mdx — using-apikeys -->
+For **API-key-only** Namespaces, the Cloud API-keys guide and SDK develop docs recommend the **Namespace Endpoint**: `<namespace>.<account_id>.tmprl.cloud:7233`. <!-- docs/cloud/get-started/api-keys.mdx — namespace-authentication --> <!-- docs/cloud/get-started/api-keys.mdx — using-apikeys -->
 
 Use the **API Regional Endpoint** (`<region>.<cloud_provider>.api.temporal.io:7233`) when:
 
 - The client needs an explicit region pin
 - Private connectivity without private DNS (SNI / server name may need the regional API hostname — see [connectivity.md](connectivity.md#endpoint-formats))
-- The Namespace is in **dual-auth pre-release** (`api_key_or_mtls`): dual-auth does **not** support authenticating with an API key to a Namespace Endpoint <!-- docs/cloud/get-started/namespaces.mdx — access-namespaces -->
+- The Namespace uses **dual auth** (`api_key_or_mtls`, pre-release): API keys cannot use the Namespace Endpoint on these Namespaces — enable via Support; HA is not supported in this mode <!-- docs/cloud/get-started/namespaces.mdx — access-namespaces -->
 
-See the endpoint table in [connectivity.md → endpoint formats](connectivity.md#endpoint-formats) for the full comparison.
+If an API key fails on the Namespace Endpoint, try Regional before assuming the key is bad (especially if the Namespace allows both auth methods). See the endpoint table in [connectivity.md → endpoint formats](connectivity.md#endpoint-formats) for the full comparison.
 
 ### Things to check when `UNAUTHENTICATED` is returned with an API key
 
@@ -75,7 +84,7 @@ Per the Cloud troubleshooting note: "Invalid API key errors: Check that you copi
 - **Key disabled.** A disabled key cannot authenticate — per the Cloud docs: "When disabled, an API key cannot authenticate with Temporal Cloud." <!-- docs/cloud/get-started/api-keys.mdx:167 --> Check with `tcld apikey list` <!-- docs/cloud/tcld/apikey.mdx:130 --> or `tcld apikey get --id <apikey_id>` <!-- docs/cloud/tcld/apikey.mdx:108 -->.
 - **Key deleted.** Per the Cloud docs: "Deleting an API key stops it from authenticating with Temporal Cloud." <!-- docs/cloud/get-started/api-keys.mdx:190 -->
 - **Key expired.** API keys expire based on the `--duration` or `--expiry` set at creation time <!-- docs/cloud/tcld/apikey.mdx:62-89 -->. The FAQ caps expiry at 2 years. <!-- docs/cloud/get-started/api-keys.mdx:447-449 -->
-- **Wrong address family.** See above — default to Namespace Endpoint for API-key-only; use API Regional when pinning, private connectivity, or dual-auth requires it.
+- **Wrong address / auth combo.** See above — default to Namespace Endpoint for API-key-only; use API Regional when pinning, private connectivity, or a dual-auth (`api_key_or_mtls`) Namespace requires it.
 - **API keys disabled at the account level.** A Global Administrator or Account Owner can disable the *creation* of new API keys with the **Disable Create API Keys** control; existing keys continue to work until disabled, deleted, or expired. <!-- docs/cloud/get-started/api-keys.mdx:108-110 --> This does not on its own turn a working key into `UNAUTHENTICATED`.
 
 ### API-key lifecycle commands
@@ -119,14 +128,21 @@ Key behavioral note: "Deleting or disabling a key removes its ability to authent
 
 ### Discriminating with a CLI smoke test
 
+Prefer Namespace Endpoint for API-key-only Namespaces. Use Regional for dual-auth Namespaces or when Namespace Endpoint fails:
+
 ```bash
+# Preferred for API-key-only Namespaces
 temporal workflow list --limit 1 \
-  --address <namespace>.<account>.tmprl.cloud:7233 \
-  --namespace <namespace>.<account> \
+  --address <namespace>.<account_id>.tmprl.cloud:7233 \
+  --namespace <namespace>.<account_id> \
   --api-key "$TEMPORAL_API_KEY"
-# Default address for API-key-only: Namespace Endpoint
-# <!-- docs/cloud/get-started/api-keys.mdx — using-apikeys -->
-# Use <region>.<cloud_provider>.api.temporal.io:7233 instead for region pin / dual-auth / some private-connectivity setups
+
+# Fallback: Regional Endpoint (dual-auth API-key clients, region pin, private connectivity)
+temporal workflow list --limit 1 \
+  --address <region>.<cloud_provider>.api.temporal.io:7233 \
+  --namespace <namespace>.<account_id> \
+  --api-key "$TEMPORAL_API_KEY"
+# --address / --namespace / --api-key flags: docs/cli/setup-cli.mdx
 ```
 
 Interpret the result:
@@ -134,22 +150,21 @@ Interpret the result:
 | CLI result | Where the chain broke | Where to go |
 |---|---|---|
 | Returns a list (possibly empty) | Auth and authorization both succeeded | Issue is elsewhere — look at the SDK / worker config |
-| `UNAUTHENTICATED` <!-- grpc: UNAUTHENTICATED --> | Key itself is rejected (disabled, deleted, expired, typo, wrong env var, wrong endpoint family) | Re-run the [things-to-check list above](#things-to-check-when-unauthenticated-is-returned-with-an-api-key) |
+| `UNAUTHENTICATED` <!-- grpc: UNAUTHENTICATED --> | Key itself is rejected (disabled, deleted, expired, typo, wrong env var, wrong endpoint / auth combo) | Re-run the [things-to-check list above](#things-to-check-when-unauthenticated-is-returned-with-an-api-key) |
 | `PERMISSION_DENIED` <!-- grpc: PERMISSION_DENIED --> | Key is authenticated but the identity lacks Namespace permission | [Cloud role and permission model](#cloud-role-and-permission-model) |
+| API key rejected on the Namespace Endpoint (mTLS-only or dual-auth Namespace) | Wrong endpoint for the auth combo | Try the API Regional Endpoint |
 | An `x509:` or `tls:` error | Not an auth issue | [certificates.md](certificates.md) |
 
 A lighter probe is `temporal operator cluster health --address <addr>` — if it returns `SERVING`, the client can reach the frontend service. <!-- docs/cli/operator.mdx:56 --> <!-- undocumented: source = runtime output of `temporal operator cluster health`; SERVING is the gRPC health-check response string -->
 
 ## mTLS authentication after TLS completes
 
-If the TLS handshake succeeded (the peer did not send a `tls:` alert and the client did not emit an `x509:` error — see [certificates.md](certificates.md) for those), there are still two post-handshake reasons an mTLS connection can be refused:
+If the TLS handshake succeeded (the peer did not send a `tls:` alert and the client did not emit an `x509:` error — see [certificates.md](certificates.md) for those), remaining mTLS failures are usually:
 
-1. **The client cert chains to an accepted CA but is filtered out by a Namespace certificate filter.** See [Certificate filters](#certificate-filters) below.
-2. **The identity derived from the cert is not authorized for the requested action.** See [Cloud role and permission model](#cloud-role-and-permission-model).
+1. **Certificate filter mismatch** — leaf does not match any filter. See [Certificate filters](#certificate-filters) below.
+2. **Wrong Namespace** (missing `.<account>` suffix, or CA not configured on the target Namespace) or **wrong auth method** (API-key-only Namespace).
 
-Case (1) typically surfaces as `remote error: tls: bad certificate` <!-- go: crypto/tls/alert.go -->, which is a TLS-layer alert but triggered by a post-validation filter check. Because the symptom is a TLS alert, `openssl s_client` output is the right first tool; the *cause* is at the Namespace-filter layer. See [certificates.md → Accepted client CA set](certificates.md#accepted-client-ca-set-mtls-cloud) for `remote error: tls: unknown certificate authority` and `remote error: tls: bad certificate` disambiguation.
-
-Case (2) surfaces as gRPC `PERMISSION_DENIED` <!-- grpc: PERMISSION_DENIED --> *after* a clean TLS handshake.
+Case (1) is an authorization rejection *after* a clean TLS handshake. The exact wire signal is release-dependent — you may see a TLS-layer alert (`remote error: tls: bad certificate`) or a post-handshake gRPC `PERMISSION_DENIED` <!-- grpc: PERMISSION_DENIED -->; read the observed error rather than pinning a string. An untrusted CA fails earlier, at the handshake (`remote error: tls: unknown certificate authority`) → [certificates.md → Accepted client CA set](certificates.md#accepted-client-ca-set-mtls-cloud). <!-- VERIFY: the exact filter-mismatch symptom is not documented; keep this file and certificates.md consistent with confirmed Cloud behavior. -->
 
 ### Certificate filters
 
@@ -200,21 +215,27 @@ Cloud UI path is documented alongside these commands. <!-- docs/cloud/get-starte
 
 Caution on clearing: "Using this command allows _any_ client certificate that chains up to a configured CA certificate to connect to the Namespace." <!-- docs/cloud/tcld/namespace.mdx:1219-1224 -->
 
-### Cert identity not mapped to a role
+### mTLS does not use Cloud roles
 
-mTLS identifies the caller but does not by itself grant Namespace-level permissions. Authorization still flows through the Cloud role / Namespace-permission model in the next section. Symptom: a TLS handshake that succeeds (`Verify return code: 0 (ok)` from `openssl s_client`) followed by `PERMISSION_DENIED` <!-- grpc: PERMISSION_DENIED --> on the first data-plane call.
+After CA (+ optional filter) acceptance, the data plane grants full Namespace access for WorkflowService APIs. There is no User/Service Account principal with Read/Write/Admin RBAC for the cert.
+
+Clean `openssl s_client` (`Verify return code: 0 (ok)`) + a `PERMISSION_DENIED` (or TLS-layer rejection) on the first data-plane call → check filters, Namespace name, or auth method — not `tcld user get`. Cloud RBAC applies to **API keys** (next section), not mTLS data-plane callers.
 
 ## Cloud role and permission model
 
-Cloud access is governed on two independent axes — account-level roles (who can do account operations) and Namespace-level permissions (who can do data-plane operations in a given Namespace). Reference: `docs/cloud/manage-access/roles-and-permissions.mdx`.
+Applies to **API keys** (and UI/SSO users / Service Accounts), not to mTLS data-plane callers.
+
+Cloud access is governed on two axes — account-level roles (who can do account operations) and Namespace-level permissions (who can do data-plane operations in a given Namespace) — with important coupling via inheritance. Reference: `docs/cloud/manage-access/roles-and-permissions.mdx`.
 
 ### Account-level roles
 
-The CLI `--account-role` flag on `tcld user invite` and `tcld user set-account-role` accepts three values:
+The CLI `--account-role` flag on `tcld user invite` and `tcld user set-account-role` accepts:
 
-> Available account roles: `admin` | `developer` | `read`. <!-- docs/cloud/tcld/user.mdx:125 --><!-- docs/cloud/tcld/user.mdx:244 -->
+> `[Admin Developer FinanceAdmin MetricsRead Owner Read]` <!-- docs/cloud/tcld/user.mdx:86,188 -->
 
-The concept documentation lists additional role *names* — Account Owner, Global Admin, Developer, Finance Admin, Read-Only — alongside their primary purposes. <!-- docs/cloud/manage-access/roles-and-permissions.mdx:34-40 --> Treat the CLI flag enum (`admin | developer | read`) as the surface you interact with in tcld; the role concept docs describe what those roles *do*.
+Concept docs use display names (Account Owner, Global Admin, Developer, Finance Admin, Read-Only, Metrics Read). Map CLI `Admin` ↔ Global Admin.
+
+**Inheritance:** Account Owner and Global Admin automatically have Namespace Admin on every Namespace in the account <!-- docs/cloud/manage-access/roles-and-permissions.mdx:17 -->. Developers get Namespace Admin on Namespaces they create (revocable) <!-- docs/cloud/manage-access/roles-and-permissions.mdx:39 -->.
 
 ### Namespace-level permissions
 
@@ -226,24 +247,26 @@ The values are case-sensitive (the docs write them capitalized; the invite examp
 
 What each permission grants is summarized in the concept table: Read observes activity; Write starts / signals / cancels / terminates / resets Workflows and polls Task Queues; Namespace Admin does all of that plus Namespace administration. <!-- docs/cloud/manage-access/roles-and-permissions.mdx:83-87 -->
 
+Also check **Service Account** ownership of the API key (`tcld service-account get`, Cloud UI). Keys inherit the owner's roles. <!-- docs/cloud/get-started/api-keys.mdx -->
+
 ### Inviting and adjusting users with tcld
 
 ```bash
 # Invite a user with account role + per-namespace permissions
 tcld user invite \
   --user-email <user@example.com> \
-  --account-role developer \
+  --account-role Developer \
   --namespace-permission <ns1>=Admin \
   --namespace-permission <ns2>=Write
 # Command:                                        <!-- docs/cloud/tcld/user.mdx:102 -->
 # --user-email (required, NOT --email):           <!-- docs/cloud/tcld/user.mdx:110-117 -->
-# --account-role (required), enum admin|developer|read: <!-- docs/cloud/tcld/user.mdx:119-125 -->
+# --account-role (required), enum Admin|Developer|FinanceAdmin|MetricsRead|Owner|Read: <!-- docs/cloud/tcld/user.mdx:86 -->
 # --namespace-permission (repeatable), format <ns>=<Admin|Write|Read>: <!-- docs/cloud/tcld/user.mdx:129-138 -->
 
 # Change a user's account role after the fact
 tcld user set-account-role \
   --user-email <user@example.com> \
-  --account-role developer
+  --account-role Developer
 # Command: <!-- docs/cloud/tcld/user.mdx:229 -->
 
 # Change a user's Namespace permissions
@@ -265,11 +288,11 @@ User groups follow a parallel shape but a different namespace-role syntax — `<
 
 ### Discriminating with a read-vs-write smoke test
 
-If a user can do one operation but not another in the same session, the question is almost always which Namespace permission they hold:
+If a user can do one operation but not another in the same session, the question is almost always which Namespace permission they hold (API keys / users / Service Accounts only):
 
-- `temporal workflow list --limit 1 ...` — requires `Read` or higher. Success implies the identity is authenticated and has at least `Read` on the Namespace.
+- `temporal workflow list --limit 1 ...` — requires `Read` or higher (or Owner/Admin inheritance). Success implies the identity is authenticated and has at least `Read` on the Namespace.
 - `temporal workflow start ...` or `temporal workflow signal ...` — requires `Write` or higher.
-- Namespace administration (e.g. `tcld namespace get --namespace <ns>`) requires the appropriate account role and/or Namespace `Admin`, and hits the control plane, not the data plane. A control-plane-only failure with data-plane access intact points at the account role, not the Namespace permission.
+- `tcld namespace get --namespace <ns>` is control plane and needs Namespace **Read** (or Owner/Admin inheritance) — not Admin-only. A control-plane-only failure with data-plane access intact still points at account role / missing Namespace grant, not broken data-plane auth.
 
 If the read smoke test returns data and the write smoke test returns `PERMISSION_DENIED` <!-- grpc: PERMISSION_DENIED -->, the diagnosis is "identity authenticated, permission insufficient" rather than "broken auth."
 
@@ -278,10 +301,12 @@ If the read smoke test returns data and the write smoke test returns `PERMISSION
 | Error text shape | Layer | Go to |
 |---|---|---|
 | gRPC `UNAUTHENTICATED` <!-- grpc: UNAUTHENTICATED --> with API key | 4 | [API-key authentication](#api-key-authentication) |
+| API key rejected on Namespace Endpoint (mTLS-only / dual-auth Namespace) | 4 | Try the API Regional Endpoint |
 | gRPC `UNAUTHENTICATED` <!-- grpc: UNAUTHENTICATED --> with mTLS | 3–4 boundary | First confirm TLS with `openssl s_client` per [certificates.md](certificates.md); if TLS is clean, this is a post-TLS rejection — see [mTLS authentication after TLS completes](#mtls-authentication-after-tls-completes) |
-| gRPC `PERMISSION_DENIED` <!-- grpc: PERMISSION_DENIED --> on data-plane call | 4 | [Cloud role and permission model](#cloud-role-and-permission-model) |
+| gRPC `PERMISSION_DENIED` on data-plane (API key) | 4 | [Cloud role and permission model](#cloud-role-and-permission-model) |
+| gRPC `PERMISSION_DENIED` on data-plane (mTLS, TLS clean) | 4 | [Certificate filters](#certificate-filters) / wrong Namespace / auth method — **not** Cloud RBAC |
 | gRPC `PERMISSION_DENIED` <!-- grpc: PERMISSION_DENIED --> on `tcld` control-plane call | 4 (control plane) | Account-level role — see [Account-level roles](#account-level-roles) |
-| `remote error: tls: bad certificate` <!-- go: crypto/tls/alert.go --> | 3 / filter | [certificates.md → Accepted client CA set](certificates.md#accepted-client-ca-set-mtls-cloud) and then [Certificate filters](#certificate-filters) here |
+| `remote error: tls: bad certificate` <!-- go: crypto/tls/alert.go --> | 3–4 | [certificates.md → Accepted client CA set](certificates.md#accepted-client-ca-set-mtls-cloud) — rejected cert (untrusted CA or filter mismatch) |
 | `remote error: tls: unknown certificate authority` <!-- go: crypto/tls/alert.go --> | 3 | [certificates.md → Accepted client CA set](certificates.md#accepted-client-ca-set-mtls-cloud) |
 | gRPC `UNAVAILABLE` <!-- grpc: UNAVAILABLE --> | 2–3 | Not an auth code — peel the wrapped cause; see [connectivity.md](connectivity.md) and [certificates.md](certificates.md) |
 | gRPC `RESOURCE_EXHAUSTED` <!-- grpc: RESOURCE_EXHAUSTED --> | 4+ | Not an auth code — see [rate-limits.md](rate-limits.md) |
