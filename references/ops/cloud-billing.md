@@ -1,6 +1,6 @@
 # Cloud Billing
 
-Temporal Cloud provides billing and usage information for your account. Use this information to assess spending patterns, inspect your credit ledger, check invoice histories, update payment details, and manage your current plan. <!-- docs/cloud/billing-and-usage/index.mdx:27-29 -->
+Temporal Cloud provides billing and usage information for your account. Use this information to assess spending patterns, inspect your credit ledger, check invoice histories, update payment details, and manage your current plan. <!-- docs/cloud/billing-and-usage/index.mdx:26-28 -->
 
 ---
 
@@ -8,11 +8,11 @@ Temporal Cloud provides billing and usage information for your account. Use this
 
 | Tool | What it provides | Who can view |
 |---|---|---|
-| **Billing Center** | Summary invoices, credits, plan management, account deletion | Account Owners, Finance Admin <!-- docs/cloud/billing-and-usage/index.mdx:39-40 --> |
-| **Billing API** | Namespace-level cost attribution down to hourly granularity, enriched with Tags and Projects; FOCUS-friendly CSV format | Account Owners, Finance Admin <!-- docs/cloud/billing-and-usage/index.mdx:42-43 --> |
-| **Usage Dashboards** | Aggregate Actions on a Namespace level with Action categories | Account Owners, Finance Admin, Global Admin (account level); Namespace access holders (namespace level) <!-- docs/cloud/billing-and-usage/index.mdx:51-52 --> |
-| **Actions in Workflow History** | Actions annotated in Workflow History via Cloud UI (some Actions are not measured in Workflow histories) | Account Owners, Global Admin, Namespace Admin, Developers, Read-Only <!-- docs/cloud/billing-and-usage/index.mdx:54-55 --> |
-| **Actions Metrics** | High-cardinality billable action metric with labels for Category, Action Type, Workflow Type, Namespace (minute granularity) | Metrics Read-Only service account role <!-- docs/cloud/billing-and-usage/index.mdx:57-58 --> |
+| **Billing Center** | Summary invoices, credits, plan management, account deletion | Account Owners, Finance Admin <!-- docs/cloud/billing-and-usage/index.mdx:38-39 --> |
+| **Billing API** | Namespace-level cost attribution down to hourly granularity, enriched with Tags and Projects; FOCUS-friendly CSV format | Account Owners, Finance Admin <!-- docs/cloud/billing-and-usage/index.mdx:41-42 --> |
+| **Usage Dashboards** | Aggregate Actions on a Namespace level with Action categories | Account Owners, Finance Admin, Global Admin (account level); Namespace access holders (namespace level) <!-- docs/cloud/billing-and-usage/index.mdx:45-46 --> |
+| **Actions in Workflow History** | Actions annotated in Workflow History via Cloud UI (some Actions are not measured in Workflow histories) | Account Owners, Global Admin, Namespace Admin, Developers, Read-Only <!-- docs/cloud/billing-and-usage/index.mdx:48-49 --> |
+| **Actions Metrics** | High-cardinality billable action metric with labels for Category, Action Type, Workflow Type, Namespace (minute granularity) | Metrics Read-Only service account role <!-- docs/cloud/billing-and-usage/index.mdx:51-52 --> |
 
 ---
 
@@ -97,11 +97,9 @@ Excluded from the Billable Actions estimate: <!-- docs/cloud/billing-and-usage/a
 
 ## Billing API
 
-**Stage:** Public Preview. <!-- docs/cloud/billing-and-usage/billing-api.mdx:22-25 -->
+The Billing API is part of the Cloud Operations API. It provides Namespace-level cost attribution through on-demand billing reports in CSV format. <!-- docs/cloud/billing-and-usage/billing-api.mdx:19-22 -->
 
-The Billing API is part of the Cloud Operations API. It provides Namespace-level cost attribution through on-demand billing reports in CSV format. <!-- docs/cloud/billing-and-usage/billing-api.mdx:16-17 -->
-
-Reports contain: <!-- docs/cloud/billing-and-usage/billing-api.mdx:34-37 -->
+Reports contain: <!-- docs/cloud/billing-and-usage/billing-api.mdx:30-34 -->
 
 - Accurate Namespace-level cost attribution
 - Hourly, daily, and monthly granularities
@@ -109,14 +107,14 @@ Reports contain: <!-- docs/cloud/billing-and-usage/billing-api.mdx:34-37 -->
 
 ### Report generation flow
 
-Report generation is **asynchronous**. <!-- docs/cloud/billing-and-usage/billing-api.mdx:41 -->
+Report generation is **asynchronous**. <!-- docs/cloud/billing-and-usage/billing-api.mdx:38 -->
 
-1. Create a billing report using `CreateBillingReport`. The response includes a `billing_report_id` and `async_operation_id`. <!-- docs/cloud/billing-and-usage/billing-api.mdx:121 -->
-2. Poll `GetBillingReport` using the `billing_report_id`. <!-- docs/cloud/billing-and-usage/billing-api.mdx:122 -->
-3. When the report state becomes `BILLING_REPORT_STATE_GENERATED`, retrieve the download URL. <!-- docs/cloud/billing-and-usage/billing-api.mdx:123 -->
-4. Download the report before the URL expires. <!-- docs/cloud/billing-and-usage/billing-api.mdx:124 -->
+1. Create a billing report using `CreateBillingReport`. The response includes a `billing_report_id` and `async_operation_id`. <!-- docs/cloud/billing-and-usage/billing-api.mdx:119 -->
+2. Poll `GetBillingReport` using the `billing_report_id`. <!-- docs/cloud/billing-and-usage/billing-api.mdx:120 -->
+3. When the report state becomes `BILLING_REPORT_STATE_GENERATED`, retrieve the download URL. <!-- docs/cloud/billing-and-usage/billing-api.mdx:121 -->
+4. Download the report before the URL expires. <!-- docs/cloud/billing-and-usage/billing-api.mdx:122 -->
 
-Key identifiers: <!-- docs/cloud/billing-and-usage/billing-api.mdx:128-131 -->
+Key identifiers: <!-- docs/cloud/billing-and-usage/billing-api.mdx:124-129 -->
 
 | Identifier | Purpose |
 |---|---|
@@ -125,9 +123,9 @@ Key identifiers: <!-- docs/cloud/billing-and-usage/billing-api.mdx:128-131 -->
 
 ### Allowed date ranges
 
-Date ranges must use billing-month boundaries (MM/YYYY). Requests may include the current billing month. Finalized reports include usage up to `current_time` - 24 hours (rounded up to nearest hour). <!-- docs/cloud/billing-and-usage/billing-api.mdx:52-54 -->
+Date ranges must use billing-month boundaries (MM/YYYY). Requests may include the current billing month. Finalized reports include usage up to `current_time` - 24 hours (rounded down to the granularity level). <!-- docs/cloud/billing-and-usage/billing-api.mdx:49-51 -->
 
-Data range limits by granularity: <!-- docs/cloud/billing-and-usage/billing-api.mdx:45-48 -->
+Data range limits by granularity: <!-- docs/cloud/billing-and-usage/billing-api.mdx:42-45 -->
 
 | Granularity | Available range |
 |---|---|
@@ -137,53 +135,53 @@ Data range limits by granularity: <!-- docs/cloud/billing-and-usage/billing-api.
 
 ### Rate limits and concurrency
 
-Within a single account, only one billing report is generated at a time. Additional requests are accepted but queued. <!-- docs/cloud/billing-and-usage/billing-api.mdx:62-65 -->
+Within a single account, only one billing report is generated at a time. Additional requests are accepted but queued. <!-- docs/cloud/billing-and-usage/billing-api.mdx:59-62 -->
 
-Report generation time varies and is not guaranteed. Factors include the size of the requested date range and overall platform load. <!-- docs/cloud/billing-and-usage/billing-api.mdx:69 -->
+Report generation time varies and is not guaranteed. Factors include the size of the requested date range and overall platform load. <!-- docs/cloud/billing-and-usage/billing-api.mdx:66 -->
 
 ### Best practices
 
-- Provide an idempotency key (`async_operation_id`) when retrying requests. <!-- docs/cloud/billing-and-usage/billing-api.mdx:73 -->
-- Poll `GetBillingReport` using exponential backoff. <!-- docs/cloud/billing-and-usage/billing-api.mdx:75 -->
-- Download reports immediately after generation (URLs expire). <!-- docs/cloud/billing-and-usage/billing-api.mdx:77 -->
-- Avoid frequent generation of large overlapping ranges in the current billing period. <!-- docs/cloud/billing-and-usage/billing-api.mdx:79 -->
+- Provide an idempotency key (`async_operation_id`) when retrying requests. <!-- docs/cloud/billing-and-usage/billing-api.mdx:71 -->
+- Poll `GetBillingReport` using exponential backoff. <!-- docs/cloud/billing-and-usage/billing-api.mdx:73 -->
+- Download reports immediately after generation (URLs expire). <!-- docs/cloud/billing-and-usage/billing-api.mdx:75 -->
+- Avoid frequent generation of large overlapping ranges in the current billing period. <!-- docs/cloud/billing-and-usage/billing-api.mdx:77 -->
 
-### Report schema (26 columns)
+### Report schema (27 columns)
 
-Each row represents a charge record. <!-- docs/cloud/billing-and-usage/billing-api.mdx:85 -->
+Each row represents a charge record. <!-- docs/cloud/billing-and-usage/billing-api.mdx:83 -->
 
 | Column Name | Description | Example |
 |---|---|---|
-| `BillingAccountID` | Temporal Cloud account ID | `a2dd6` <!-- docs/cloud/billing-and-usage/billing-api.mdx:89 --> |
-| `BillingAccountName` | Temporal Cloud account name | `temporal` <!-- docs/cloud/billing-and-usage/billing-api.mdx:90 --> |
-| `BillingCurrency` | The currency an account is billed in | `USD (cents)` <!-- docs/cloud/billing-and-usage/billing-api.mdx:91 --> |
-| `BillingPeriodEnd` | Exclusive end bound of a billing period | `2024-02-01T00:00:00Z` <!-- docs/cloud/billing-and-usage/billing-api.mdx:92 --> |
-| `BillingPeriodStart` | Inclusive start bound of a billing period | `2024-01-01T00:00:00Z` <!-- docs/cloud/billing-and-usage/billing-api.mdx:93 --> |
-| `ChargeCategory` | Highest-level classification based on how it is billed | `Usage` <!-- docs/cloud/billing-and-usage/billing-api.mdx:94 --> |
-| `ChargeDescription` | Self-contained summary of the charge's purpose | `Actions - Tier 1` <!-- docs/cloud/billing-and-usage/billing-api.mdx:95 --> |
-| `ChargeFrequency` | How often a charge occurs | `Usage-Based` <!-- docs/cloud/billing-and-usage/billing-api.mdx:96 --> |
-| `ChargePeriodEnd` | Time period end for the charge (correlates to data granularity) | `2025-10-01T01:00:00.000Z` <!-- docs/cloud/billing-and-usage/billing-api.mdx:97 --> |
-| `ChargePeriodStart` | Time period start for the charge (correlates to data granularity) | `2025-10-01T00:00:00.000Z` <!-- docs/cloud/billing-and-usage/billing-api.mdx:98 --> |
-| `ContractedCost` | Cost calculated by multiplying `ContractedUnitPrice` and `PricingQuantity` | `100.00` <!-- docs/cloud/billing-and-usage/billing-api.mdx:99 --> |
-| `ContractedUnitPrice` | Agreed-upon unit price for a single pricing unit, inclusive of negotiated discounts | `10.00` <!-- docs/cloud/billing-and-usage/billing-api.mdx:100 --> |
-| `InvoiceID` | ID of the invoice for this billing period | `in_XXXXXXXXXXXXXXXXXXXX` <!-- docs/cloud/billing-and-usage/billing-api.mdx:101 --> |
-| `InvoiceIssuer` | Entity responsible for issuing payable invoices | `stripe` <!-- docs/cloud/billing-and-usage/billing-api.mdx:102 --> |
-| `PricingQuantity` | Volume of a given SKU used or purchased | `10.00` <!-- docs/cloud/billing-and-usage/billing-api.mdx:103 --> |
-| `PricingUnit` | Measurement unit for `PricingQuantity` | `1 Million Actions` <!-- docs/cloud/billing-and-usage/billing-api.mdx:104 --> |
-| `Provider` | Provider of purchased resources or services | `Temporal Technologies` <!-- docs/cloud/billing-and-usage/billing-api.mdx:105 --> |
-| `Publisher` | Publisher of purchased resources or services | `Temporal Technologies` <!-- docs/cloud/billing-and-usage/billing-api.mdx:106 --> |
-| `ResourceID` | Namespace name + Temporal Cloud account ID | `production.a2dd6` <!-- docs/cloud/billing-and-usage/billing-api.mdx:107 --> |
-| `ResourceName` | Namespace name + Temporal Cloud account ID | `production.a2dd6` <!-- docs/cloud/billing-and-usage/billing-api.mdx:108 --> |
-| `ResourceType` | Type of resource the charge applies to | `Namespace` <!-- docs/cloud/billing-and-usage/billing-api.mdx:109 --> |
-| `ServiceCategory` | Highest-level classification based on core function | `Temporal Cloud` <!-- docs/cloud/billing-and-usage/billing-api.mdx:110 --> |
-| `ServiceName` | Offering that can be purchased from a provider | `Temporal Cloud` <!-- docs/cloud/billing-and-usage/billing-api.mdx:111 --> |
-| `ServiceSubcategory` | Secondary classification based on core function | `Actions` <!-- docs/cloud/billing-and-usage/billing-api.mdx:112 --> |
-| `SKUID` | Unique identifier for a specific SKU | `essentials-actions` <!-- docs/cloud/billing-and-usage/billing-api.mdx:113 --> |
-| `SKUMeter` | Functionality being metered by a particular SKU | `Actions` <!-- docs/cloud/billing-and-usage/billing-api.mdx:114 --> |
-| `Tags` | Provider and customer defined tags associated with resources | `{"$tmprl_project":["project-id"],"namespace-tag-key":["namespace-tag-value"]}` <!-- docs/cloud/billing-and-usage/billing-api.mdx:115 --> |
+| `BillingAccountID` | Temporal Cloud account ID | `a2dd6` <!-- docs/cloud/billing-and-usage/billing-api.mdx:87 --> |
+| `BillingAccountName` | Temporal Cloud account name | `temporal` <!-- docs/cloud/billing-and-usage/billing-api.mdx:88 --> |
+| `BillingCurrency` | The currency an account is billed in | `USD (cents)` <!-- docs/cloud/billing-and-usage/billing-api.mdx:89 --> |
+| `BillingPeriodEnd` | Exclusive end bound of a billing period | `2024-02-01T00:00:00Z` <!-- docs/cloud/billing-and-usage/billing-api.mdx:90 --> |
+| `BillingPeriodStart` | Inclusive start bound of a billing period | `2024-01-01T00:00:00Z` <!-- docs/cloud/billing-and-usage/billing-api.mdx:91 --> |
+| `ChargeCategory` | Highest-level classification based on how it is billed | `Usage` <!-- docs/cloud/billing-and-usage/billing-api.mdx:92 --> |
+| `ChargeDescription` | Self-contained summary of the charge's purpose | `Actions - Tier 1` <!-- docs/cloud/billing-and-usage/billing-api.mdx:93 --> |
+| `ChargeFrequency` | How often a charge occurs | `Usage-Based` <!-- docs/cloud/billing-and-usage/billing-api.mdx:94 --> |
+| `ChargePeriodEnd` | Time period end for the charge (correlates to data granularity) | `2025-10-01T01:00:00.000Z` <!-- docs/cloud/billing-and-usage/billing-api.mdx:95 --> |
+| `ChargePeriodStart` | Time period start for the charge (correlates to data granularity) | `2025-10-01T00:00:00.000Z` <!-- docs/cloud/billing-and-usage/billing-api.mdx:96 --> |
+| `ContractedCost` | Cost calculated by multiplying `ContractedUnitPrice` and `PricingQuantity` | `100.00` <!-- docs/cloud/billing-and-usage/billing-api.mdx:97 --> |
+| `ContractedUnitPrice` | Agreed-upon unit price for a single pricing unit, inclusive of negotiated discounts | `10.00` <!-- docs/cloud/billing-and-usage/billing-api.mdx:98 --> |
+| `InvoiceID` | ID of the invoice for this billing period | `in_XXXXXXXXXXXXXXXXXXXX` <!-- docs/cloud/billing-and-usage/billing-api.mdx:99 --> |
+| `InvoiceIssuer` | Entity responsible for issuing payable invoices | `stripe` <!-- docs/cloud/billing-and-usage/billing-api.mdx:100 --> |
+| `PricingQuantity` | Volume of a given SKU used or purchased | `10.00` <!-- docs/cloud/billing-and-usage/billing-api.mdx:101 --> |
+| `PricingUnit` | Measurement unit for `PricingQuantity` | `1 Million Actions` <!-- docs/cloud/billing-and-usage/billing-api.mdx:102 --> |
+| `Provider` | Provider of purchased resources or services | `Temporal Technologies` <!-- docs/cloud/billing-and-usage/billing-api.mdx:103 --> |
+| `Publisher` | Publisher of purchased resources or services | `Temporal Technologies` <!-- docs/cloud/billing-and-usage/billing-api.mdx:104 --> |
+| `ResourceID` | Namespace name + Temporal Cloud account ID | `production.a2dd6` <!-- docs/cloud/billing-and-usage/billing-api.mdx:105 --> |
+| `ResourceName` | Namespace name + Temporal Cloud account ID | `production.a2dd6` <!-- docs/cloud/billing-and-usage/billing-api.mdx:106 --> |
+| `ResourceType` | Type of resource the charge applies to | `Namespace` <!-- docs/cloud/billing-and-usage/billing-api.mdx:107 --> |
+| `ServiceCategory` | Highest-level classification based on core function | `Temporal Cloud` <!-- docs/cloud/billing-and-usage/billing-api.mdx:108 --> |
+| `ServiceName` | Offering that can be purchased from a provider | `Temporal Cloud` <!-- docs/cloud/billing-and-usage/billing-api.mdx:109 --> |
+| `ServiceSubcategory` | Secondary classification based on core function | `Actions` <!-- docs/cloud/billing-and-usage/billing-api.mdx:110 --> |
+| `SKUID` | Unique identifier for a specific SKU | `essentials-actions` <!-- docs/cloud/billing-and-usage/billing-api.mdx:111 --> |
+| `SKUMeter` | Functionality being metered by a particular SKU | `Actions` <!-- docs/cloud/billing-and-usage/billing-api.mdx:112 --> |
+| `Tags` | Provider and customer defined tags associated with resources | `{"$tmprl_project":["project-id"],"namespace-tag-key":["namespace-tag-value"]}` <!-- docs/cloud/billing-and-usage/billing-api.mdx:113 --> |
 
 **Key schema notes:**
 
-- `ResourceID` is `namespace_name.account_id` (e.g., `production.a2dd6`), not just the namespace name. <!-- docs/cloud/billing-and-usage/billing-api.mdx:107 -->
-- `BillingCurrency` values are in cents (e.g., `USD (cents)`). <!-- docs/cloud/billing-and-usage/billing-api.mdx:91 -->
-- The cost column is `ContractedCost`, not `Cost` or `TotalCost`. <!-- docs/cloud/billing-and-usage/billing-api.mdx:99 -->
+- `ResourceID` is `namespace_name.account_id` (e.g., `production.a2dd6`), not just the namespace name. <!-- docs/cloud/billing-and-usage/billing-api.mdx:105 -->
+- `BillingCurrency` values are in cents (e.g., `USD (cents)`). <!-- docs/cloud/billing-and-usage/billing-api.mdx:89 -->
+- The cost column is `ContractedCost`, not `Cost` or `TotalCost`. <!-- docs/cloud/billing-and-usage/billing-api.mdx:97 -->
