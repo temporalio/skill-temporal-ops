@@ -33,7 +33,7 @@ Treating either error as a single-layer failure is the most common triage mistak
 **Verbatim error shapes seen in the wild:**
 - `Context: deadline exceeded` — surfaced by the Temporal troubleshooting guide. <!-- docs/troubleshooting/deadline-exceeded-error.mdx:16 -->
 - `rpc error: code = DeadlineExceeded desc = context deadline exceeded` — Go gRPC client. <!-- grpc: DEADLINE_EXCEEDED -->
-- `Error: 4 DEADLINE_EXCEEDED: context deadline exceeded` — the `@grpc/grpc-js` TypeScript client form documented in the Temporal TS debugging guide. <!-- docs/develop/typescript/best-practices/debugging.mdx:291 -->
+- `Error: 4 DEADLINE_EXCEEDED: context deadline exceeded` — the `@grpc/grpc-js` TypeScript client form documented in the Temporal TS debugging guide. <!-- docs/develop/typescript/best-practices/debugging.mdx:287 -->
 
 **What it means:** the caller's deadline fired before a response arrived. The code is `DEADLINE_EXCEEDED` <!-- grpc: DEADLINE_EXCEEDED --> regardless of which layer failed to respond.
 
@@ -46,12 +46,12 @@ Treating either error as a single-layer failure is the most common triage mistak
 - **Service just restarted / roles not yet initialized.** Wait and retry; review Workflow Execution history and server logs if it persists. <!-- docs/troubleshooting/deadline-exceeded-error.mdx:100-105 -->
 - **Self-hosted: `frontend.keepAliveMaxConnectionAge` too short** for in-flight requests — increase it and monitor server load. <!-- docs/troubleshooting/deadline-exceeded-error.mdx:107-118 -->
 
-**TypeScript SDK guide adds two concrete triggers for a `context deadline exceeded` at call time:** <!-- docs/develop/typescript/best-practices/debugging.mdx:308-315 -->
+**TypeScript SDK guide adds two concrete triggers for a `context deadline exceeded` at call time:** <!-- docs/develop/typescript/best-practices/debugging.mdx:304-305 -->
 
 - Network hiccup, timeout that's too short, or overloaded server.
-- "Querying a Workflow Execution whose query handler causes an error can result in the query call timing out." <!-- docs/develop/typescript/best-practices/debugging.mdx:309 -->
+- "Querying a Workflow Execution whose query handler causes an error can result in the query call timing out." <!-- docs/develop/typescript/best-practices/debugging.mdx:305 -->
 
-**Nexus-specific:** "If a Nexus handler doesn't process a start or cancel request within 10 seconds, it will receive a context deadline exceeded error, and the caller will retry, with an exponential backoff, for the ScheduleToClose duration for the overall Nexus Operation." <!-- docs/evaluate/temporal-cloud/limits.mdx:293 -->
+**Nexus-specific:** "If a Nexus handler doesn't process a start or cancel request within 10 seconds, it will receive a context deadline exceeded error, and the caller will retry, with an exponential backoff, for the ScheduleToClose duration for the overall Nexus Operation." <!-- docs/evaluate/temporal-cloud/limits.mdx:312 -->
 
 ### Discriminating by where the call was made
 
@@ -60,10 +60,10 @@ Treating either error as a single-layer failure is the most common triage mistak
 | Operation | Likely-first check |
 |---|---|
 | Workflow start / signal / update / describe (RPC from a client) | Confirm DNS / TCP / TLS / auth succeed for the same endpoint from the failing environment. Start at [connectivity.md → Quick diagnostic scripts](connectivity.md#quick-diagnostic-scripts). If layers 1–4 pass, move to Frontend health <!-- docs/troubleshooting/deadline-exceeded-error.mdx:29-56 --> and the `resource_exhausted_cause` metric. |
-| Workflow start with a large input | Rule out `BlobSizeLimitError` (2 MB per request, 4 MB per Event History transaction). <!-- docs/troubleshooting/blob-size-limit-error.mdx:15-18 --> That error is self-naming, not a bare `deadline exceeded`, but large payloads also inflate request latency (`temporal_request_latency`) per the bottlenecks guide. <!-- docs/troubleshooting/performance-bottlenecks.mdx:219-220 --> |
-| Query | The Workflow's Query handler may itself be erroring out. <!-- docs/develop/typescript/best-practices/debugging.mdx:309 --> Queries run in the Worker and the call is synchronous. <!-- docs/encyclopedia/workflow-message-passing/sending-messages.mdx:175 --> Check Worker logs for an exception raised inside the handler; fix and redeploy. |
+| Workflow start with a large input | Rule out `BlobSizeLimitError` (2 MB per individual payload, 4 MB per gRPC request). <!-- docs/troubleshooting/blob-size-limit-error.mdx:28-30 --><!-- docs/troubleshooting/blob-size-limit-error.mdx:86-87 --> That error is self-naming, not a bare `deadline exceeded`, but large payloads also inflate request latency (`temporal_request_latency`) per the bottlenecks guide. <!-- docs/troubleshooting/performance-bottlenecks.mdx:219-220 --> |
+| Query | The Workflow's Query handler may itself be erroring out. <!-- docs/develop/typescript/best-practices/debugging.mdx:305 --> Queries run in the Worker and the call is synchronous. <!-- docs/encyclopedia/workflow-message-passing/sending-messages.mdx:185 --> Check Worker logs for an exception raised inside the handler; fix and redeploy. |
 | Worker long-poll (`PollWorkflowTaskQueue`, `PollActivityTaskQueue`) | `temporal_long_request_failure` is counted against these poll RPCs; the bottlenecks guide lists network issues, rate limiting (often indicated by `ResourceExhausted`), and server errors as the three cause classes. <!-- docs/troubleshooting/performance-bottlenecks.mdx:183-187 --> Jump to [worker-health.md → Worker log signatures](worker-health.md#worker-log-signatures). |
-| Nexus handler call | 10-second handler cap; see `docs/evaluate/temporal-cloud/limits.mdx` for Nexus timeout semantics. <!-- docs/evaluate/temporal-cloud/limits.mdx:293 --> |
+| Nexus handler call | 10-second handler cap; see `docs/evaluate/temporal-cloud/limits.mdx` for Nexus timeout semantics. <!-- docs/evaluate/temporal-cloud/limits.mdx:306 --> |
 
 ### PrivateLink-specific deadline exceeded
 
@@ -73,10 +73,10 @@ Treating either error as a single-layer failure is the most common triage mistak
    ```bash
    nc -zvw10 vpce-0123456789abcdef-abc.us-east-1.vpce.amazonaws.com 7233   # man: nc(1)
    ```
-   If this times out, the VPC-endpoint security group is not permitting TCP/7233 from the client subnet. <!-- docs/cloud/connectivity/aws-connectivity.mdx:68 --> The exact probe command form is the one used in the Cloud connectivity guide. <!-- docs/cloud/connectivity/index.mdx:317-319 --> See [connectivity.md → PrivateLink and PSC](connectivity.md#privatelink-and-psc).
-2. **TLS handshake fails because SNI is not overridden.** When connecting by the VPC-endpoint DNS name (i.e. not via private DNS), the client must set the TLS server name to the Namespace Endpoint — `<namespace>.<account>.tmprl.cloud`. The Cloud connectivity guide gives the exact env-var form: `TEMPORAL_ADDRESS=vpce-...:7233` paired with `TEMPORAL_TLS_SERVER_NAME=my-namespace.my-account.tmprl.cloud`. <!-- docs/cloud/connectivity/index.mdx:208-221 --> Full details: [certificates.md → Server name override](certificates.md#server-name-override).
-3. **Private DNS missing for the region the Namespace is currently in (HA Namespaces).** After a failover, the `region.tmprl.cloud` private hosted zone must cover every region the Namespace can fail over to. <!-- docs/cloud/high-availability/ha-connectivity.mdx:58-61 --> Details: [ha-failover.md → PrivateLink stopped working after failover](ha-failover.md#symptom-privatelink-stopped-working-after-failover).
-4. **PrivateLink not enabled on the Namespace.** Verify connectivity configuration on the Namespace; if the Namespace is not configured for PrivateLink, public DNS will route the caller somewhere the VPC cannot reach. <!-- docs/cloud/connectivity/index.mdx:201-212 -->
+   If this times out, the VPC-endpoint security group is not permitting TCP/7233 from the client subnet. <!-- docs/cloud/connectivity/aws-connectivity.mdx:78 --> The exact probe command form is the one used in the Cloud connectivity guide. <!-- docs/cloud/connectivity/index.mdx:351 --> See [connectivity.md → PrivateLink and PSC](connectivity.md#privatelink-and-psc).
+2. **TLS handshake fails because SNI is not overridden.** When connecting by the VPC-endpoint DNS name (i.e. not via private DNS), the client must set the TLS server name to the Namespace Endpoint — `<namespace>.<account>.tmprl.cloud`. The Cloud connectivity guide gives the exact env-var form: `TEMPORAL_ADDRESS=vpce-...:7233` paired with `TEMPORAL_TLS_SERVER_NAME=my-namespace.my-account.tmprl.cloud`. <!-- docs/cloud/connectivity/index.mdx:250-254 --> Full details: [certificates.md → Server name override](certificates.md#server-name-override).
+3. **Private DNS missing for the region the Namespace is currently in (HA Namespaces).** After a failover, the `region.tmprl.cloud` private hosted zone must cover every region the Namespace can fail over to. <!-- docs/cloud/high-availability/ha-connectivity.mdx:229-234 --> Details: [ha-failover.md → PrivateLink stopped working after failover](ha-failover.md#symptom-privatelink-stopped-working-after-failover).
+4. **PrivateLink not enabled on the Namespace.** Verify connectivity configuration on the Namespace; if the Namespace is not configured for PrivateLink, public DNS will route the caller somewhere the VPC cannot reach. <!-- docs/cloud/connectivity/index.mdx:44-52 -->
 
 ## Workflow busy backpressure
 
@@ -84,23 +84,23 @@ Treating either error as a single-layer failure is the most common triage mistak
 
 **What the docs do say about operations competing on the same Workflow Execution:**
 
-- Workflow Tasks are scheduled for a Workflow Execution, and the in-flight state is inspectable via `pendingWorkflowTask` in `temporal workflow describe`. <!-- docs/cli/index.mdx:397-402 --> An accumulation of pending operations against a single Workflow is an observable condition via describe, not via a named server error.
+- Workflow Tasks are scheduled for a Workflow Execution, and the in-flight state is inspectable via `pendingWorkflowTask` in `temporal workflow describe`. <!-- docs/cli/command-reference/workflow.mdx:138 (describe command) --> <!-- undocumented: pendingWorkflowTask is a field of the describe output, not named in the CLI docs prose --> An accumulation of pending operations against a single Workflow is an observable condition via describe, not via a named server error.
 - "High Workflow lock latency. If many updates are made to a single execution, this can cause Workflow lock latency, which in turn affects the Schedule-to-start latency. Reduce the rate of Signals." <!-- docs/troubleshooting/performance-bottlenecks.mdx:38 --> This is the docs' framing of single-execution hot-spot pressure.
 
 **What this is not:**
 - Not a Namespace-wide rate limit — that is APS / RPS / OPS on Cloud or `frontend.rps` / `frontend.namespaceRPS` self-hosted. See [rate-limits.md](rate-limits.md).
-- Not a Workflow failure. A `RESOURCE_EXHAUSTED` on a signal/update does not fail the Workflow Execution; the SDK's default gRPC retry policy retries the RPC with backoff. <!-- docs/evaluate/temporal-cloud/limits.mdx:97 -->
+- Not a Workflow failure. A `RESOURCE_EXHAUSTED` on a signal/update does not fail the Workflow Execution; the SDK's default gRPC retry policy retries the RPC with backoff. <!-- docs/evaluate/temporal-cloud/limits.mdx:91 -->
 - Not "the workflow is blocked in a useful sense." The Workflow may be perfectly healthy and the pressure is on the caller's side.
 
 **Things to discriminate:**
 - **Which RPC returned the error?** Signals, updates, and queries against the same Workflow ID are the usual culprits when a caller (or a caller's retry loop) fans in.
 - **Caller concurrency vs. the same Workflow ID.** Rate of operations per second from all callers against that one ID.
-- **Is the caller retrying without backoff?** Retries count against the budget. <!-- docs/evaluate/temporal-cloud/limits.mdx:97-98 --> A raw gRPC client reimplementing retry must implement exponential backoff.
+- **Is the caller retrying without backoff?** Retries count against the budget. <!-- docs/evaluate/temporal-cloud/limits.mdx:91-92 --> A raw gRPC client reimplementing retry must implement exponential backoff.
 
 **Mitigation shapes (docs-anchored where possible):**
 - Throttle or coalesce signals on the caller side; the bottlenecks guide's "Reduce the rate of Signals" wording applies. <!-- docs/troubleshooting/performance-bottlenecks.mdx:38 -->
 - Fan out across multiple Workflow IDs when the entity is genuinely many things.
-- Rely on SDK retry with backoff for transient bursts. <!-- docs/evaluate/temporal-cloud/limits.mdx:97 -->
+- Rely on SDK retry with backoff for transient bursts. <!-- docs/evaluate/temporal-cloud/limits.mdx:91 -->
 
 **Which limiter actually fired?** Classify with the server-side cause label, not the message text. Cloud exposes `temporal_cloud_v0_resource_exhausted_error_count` labeled by `resource_exhausted_cause`. <!-- docs/cloud/metrics/reference.mdx:83-86 --><!-- docs/cloud/metrics/reference.mdx:217 --> Self-hosted exposes the same label via `service_errors_resource_exhausted`. <!-- docs/troubleshooting/deadline-exceeded-error.mdx:65-68 --> See [rate-limits.md → From the error](rate-limits.md#from-the-error) for the full protocol.
 
@@ -108,7 +108,7 @@ Treating either error as a single-layer failure is the most common triage mistak
 
 ### `no pollers`
 
-This phrase is a clue, not a diagnosis. Common shapes: no Worker reached the frontend for the queue+type within the last 5 minutes, Workers are polling a different queue or Namespace, or Workers connect but fail before the poll loop. <!-- docs/cli/task-queue.mdx:99-101 --> Verify from `temporal task-queue describe`, not from cached metrics. Full protocol: [worker-health.md → What "no pollers" looks like](worker-health.md#what-no-pollers-looks-like).
+This phrase is a clue, not a diagnosis. Common shapes: no Worker reached the frontend for the queue+type within the last 5 minutes, Workers are polling a different queue or Namespace, or Workers connect but fail before the poll loop. <!-- docs/cli/command-reference/task-queue.mdx:106-109 --> Verify from `temporal task-queue describe`, not from cached metrics. Full protocol: [worker-health.md → What "no pollers" looks like](worker-health.md#what-no-pollers-looks-like).
 
 ### `INVALID_ARGUMENT`
 
