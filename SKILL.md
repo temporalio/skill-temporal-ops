@@ -13,12 +13,12 @@ This skill operates and diagnoses Temporal environments. It has two modes:
 - **Operations:** the user wants to do something — create a namespace, rotate a key, check capacity, find unhealthy workflows, cancel a batch, set up export. The skill executes the right commands and interprets the output.
 - **Diagnosis:** the user arrives with a symptom — a stuck workflow, a cert error, a connection timeout, a non-determinism panic. The skill routes the investigation through a layered, bottom-up diagnosis until a root cause is identified with a confidence score.
 
-It does not teach how to write workflows or activities (use `skill-temporal-developer` for that), and it does not deep-dive into CLI flag semantics (use `skill-temporal-cli` for that). The boundary is: if the user needs to administer or troubleshoot a running Temporal environment, this skill applies.
+It does not teach how to write workflows or activities (use `skill-temporal-developer` for that), and it does not reproduce exhaustive CLI flag tables — run `temporal <cmd> --help` for those, and see [cli-conventions.md](references/ops/cli-conventions.md) for cross-command CLI conventions. The boundary is: if the user needs to administer or troubleshoot a running Temporal environment, this skill applies.
 
 ## Out of scope
 
 - **Writing workflows, activities, or SDK code** → `skill-temporal-developer`.
-- **CLI command reference, flag semantics** → `skill-temporal-cli`.
+- **Exhaustive CLI flags / command reference** → run `temporal <cmd> --help`; **cross-command CLI conventions** → [cli-conventions.md](references/ops/cli-conventions.md).
 - **Worker performance tuning, sizing, capacity planning** → `skill-temporal-workertuning`.
 - **Helm, Kubernetes, database admin, monitoring stack config** for self-hosted — beyond the CLI surface.
 
@@ -86,10 +86,10 @@ Find the row that matches the user's intent. The reference file contains the com
 | Self-hosted search attributes, Nexus endpoints | Self-hosted admin | [self-hosted-admin.md](references/ops/self-hosted-admin.md) |
 | Find stuck/hung/unhealthy workflows via list queries | Workflow health | [workflow-health.md](references/ops/workflow-health.md) |
 | Task queue poller status, workflow counts | Workflow health | [workflow-health.md](references/ops/workflow-health.md) |
-| Cancel, terminate, or reset workflows | Batch & lifecycle | [batch-and-lifecycle.md](references/ops/batch-and-lifecycle.md) |
-| Batch operations on workflows | Batch & lifecycle | [batch-and-lifecycle.md](references/ops/batch-and-lifecycle.md) |
-| Schedule CRUD and operations | Batch & lifecycle | [batch-and-lifecycle.md](references/ops/batch-and-lifecycle.md) |
-| Complete or fail an activity externally | Batch & lifecycle | [batch-and-lifecycle.md](references/ops/batch-and-lifecycle.md) |
+| Cancel, terminate, or reset workflows | Workflow recovery | [workflow-stuck.md#recovery-commands](references/triage/workflow-stuck.md#recovery-commands) |
+| Bulk / batch operations on workflows (`--query`) | CLI conventions | [cli-conventions.md](references/ops/cli-conventions.md#the---query--batch-job-bridge) |
+| Schedule CRUD, time-spec, and operations | CLI conventions | [cli-conventions.md](references/ops/cli-conventions.md#schedule-time-spec-forms) |
+| Complete or fail an activity externally | CLI conventions | [cli-conventions.md](references/ops/cli-conventions.md#operation--command-index) |
 | Cloud Ops API access, rate limits, Go SDK | Cloud Ops API | [cloud-ops-api.md](references/ops/cloud-ops-api.md) |
 | View billing, generate billing report, cost attribution | Cloud billing | [cloud-billing.md](references/ops/cloud-billing.md) |
 | Audit Logs: view, query via API, configure sink (AWS/GCP) | Cloud audit logs | [cloud-audit-logs.md](references/ops/cloud-audit-logs.md) |
@@ -218,7 +218,7 @@ If the layer above the fix is still failing, return to step 4 and continue walki
 - [cloud-saml-scim.md](references/ops/cloud-saml-scim.md) — SAML SSO (Entra ID, Okta): entity identifier (`urn:auth0:prod-tmprl:ACCOUNT_ID-saml`), callback URL (`login.tmprl.cloud`), IdP configuration steps, support ticket workflow. SCIM: supported vendors, prerequisites (SAML first), 10-minute sync window, group-to-role mapping.
 - [self-hosted-admin.md](references/ops/self-hosted-admin.md) — Self-hosted control plane via `temporal operator`: cluster health/describe, namespace CRUD, search-attribute create/list/remove, Nexus endpoint CRUD.
 - [workflow-health.md](references/ops/workflow-health.md) — Data-plane health queries: `temporal workflow list` with List Filters, `temporal workflow describe`/`show`/`count`, `temporal task-queue describe` for poller status.
-- [batch-and-lifecycle.md](references/ops/batch-and-lifecycle.md) — Bulk and lifecycle operations: `temporal workflow cancel/terminate/reset`, `temporal batch`, `temporal schedule`, `temporal activity complete/fail`.
+- [cli-conventions.md](references/ops/cli-conventions.md) — Cross-command `temporal` CLI conventions: connection/identity (`TEMPORAL_*` env vars ↔ `--address`/`--namespace`/`--api-key`, `--identity`), output/formatting (`--output`, `--time-format`, payload shorthand), the `--query` ⇒ batch-job bridge (with `temporal batch describe/list/terminate`), and schedule time-spec forms. Ends with an operation→command index that routes each data-plane operation to its owner file. Delegates exhaustive flags to `temporal <cmd> --help`.
 - [ops/recipes.md](references/ops/recipes.md) — End-to-end ops playbooks: set up new namespace, check APS, switch capacity mode, find hung workflows, rotate API key, audit access, rotate mTLS certs, check self-hosted health, view billing / generate billing report, configure audit log sink, provision resources with Terraform, set up SAML SSO.
 
 ### Diagnosis

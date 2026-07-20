@@ -133,4 +133,4 @@ There are exactly 6 overlap policies. <!-- docs/cli/schedule.mdx:76 -->
 ## Sibling skill pointers
 
 - For metrics collection and alerting infrastructure, see the observability skill (planned: `skill-temporal-observability`).
-- For Schedule CRUD operations (`temporal schedule create`, `temporal schedule update`, etc.), see `batch-and-lifecycle.md` in the ops reference files.
+- For Schedule CRUD operations (`temporal schedule create`, `temporal schedule update`, etc.) and the time-spec forms, see [`cli-conventions.md`](../ops/cli-conventions.md#schedule-time-spec-forms) in the ops reference files.
