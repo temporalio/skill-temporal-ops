@@ -31,8 +31,59 @@ If the conversation drifts into one of these areas, hand off to the relevant sib
 When the user wants to perform an operational task:
 
 1. **Identify the intent and backend.** Is this a Cloud operation (`tcld`) or a self-hosted operation (`temporal operator`)? Data-plane operations (`temporal workflow`, `temporal batch`, etc.) work on both. **If the backend is ambiguous, ask before proceeding — do not assume Cloud or self-hosted and do not output environment-specific commands until you know.**
-2. **Execute commands and interpret output.** Run the documented command, read the result, and report what it means — or act on it if the user asked for an action.
+2. **Execute commands and interpret output.** Run the documented command, read the result, and report what it means — or act on it if the user asked for an action. Read-only commands (`get`, `list`, `describe`, `count`, `show`) run freely. Anything listed under [Destructive operations](#destructive-operations) is proposed to the user first.
 3. **Verify the result.** After a mutating operation, confirm the new state matches the user's intent.
+
+### Destructive operations
+
+Some operations delete data, revoke access, or move production traffic. None of
+them are undone by re-running the command with different flags. For every
+operation in this tier, gather the evidence and **propose** — do not run it on
+your own initiative, and do not run one to find out what it would do.
+
+| Operation | What it costs |
+|---|---|
+| `temporal workflow terminate \| cancel \| delete \| reset` | Ends or rewinds a live Execution. A reset re-executes every Event after the reset point, re-running Activities with external side effects. |
+| `temporal workflow terminate \| cancel \| delete \| signal --query`, `temporal activity reset \| unpause --query` | Fans out to a batch job over **every** matching Execution — see the [batch bridge](references/ops/cli-conventions.md#the---query--batch-job-bridge). |
+| `temporal schedule delete` | Removes the Schedule; already-running Executions keep going and must be handled separately. |
+| `tcld namespace delete` | Permanent. All Workflow Executions and Task Queues are removed immediately. |
+| `tcld namespace delete-region` | Disables HA and imposes a 7-day wait before HA can be re-enabled in that region. |
+| `tcld namespace failover` | Moves production traffic to another region. |
+| `tcld namespace accepted-client-ca set \| remove` | Changes who can connect. `set` replaces the whole bundle; either form can lock out every client presenting a leaf under a dropped CA. |
+| `tcld apikey delete \| disable`, `tcld user delete`, `tcld user-group delete`, `tcld service-account delete` | Revokes access for a live identity. Deleting a Service Account also deletes all of its API keys. |
+| `temporal operator namespace delete`, `temporal operator search-attribute remove`, `temporal operator cluster remove` | Self-hosted equivalents; same permanence. |
+| `tcld namespace capacity update` | Changes billing and throughput limits. |
+
+Before proposing any of them:
+
+1. **Establish the blast radius as a number, not a description.** For any
+   `--query` form, run `temporal workflow count --query '<query>'` with the
+   byte-identical query first and carry the result into the proposal. A filter
+   with no narrowing predicate beyond `ExecutionStatus="Running"` matches every
+   open Execution in the Namespace.
+2. **State the exact command, the target, and the Namespace it resolves to.**
+   If the backend or Namespace was inferred from context rather than stated by
+   the user, say so — a destructive command aimed at the wrong Namespace is the
+   most common way this goes wrong. Connection settings can come from
+   `TEMPORAL_*` env vars or a config-file profile, so the target is not always
+   visible in the command text; confirm it rather than assuming the default.
+3. **Once the user approves, run the command so it completes.** Pass the
+   command's own skip-confirmation flag where one exists (`--yes` on the
+   `--query` batch forms). These prompts expect a terminal and abort the run when
+   they don't get one. Ask the user up front rather than adding the flag after a
+   prompt-related failure — a flag the user never saw is not an approved one.
+   Approval covers one command against one target; it does not carry to the next
+   command, a widened query, or a second Namespace.
+4. **Verify, and know the abort path.** Re-run the corresponding `get`,
+   `describe`, or `count`. A batch job drains asynchronously:
+   `temporal batch describe --job-id <id>` shows how far it has gotten and
+   `temporal batch terminate --job-id <id>` stops it before it reaches the rest
+   of its matches.
+
+When a safer option reaches the same goal, propose it alongside: `cancel` lets
+Workflow cleanup code run where `terminate` does not; `apikey disable` is
+reversible where `delete` is not; `accepted-client-ca add` appends where `set`
+replaces.
 
 ### Diagnostic discipline
 

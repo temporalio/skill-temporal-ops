@@ -135,6 +135,20 @@ tcld namespace delete \
 
 Deletion is permanent. All Workflow Executions and Task Queues are removed immediately. Closed Workflow Histories remain until their retention period expires. <!-- docs/cloud/get-started/namespaces.mdx:433-438 -->
 
+This is the highest-consequence command in this file and there is no undo. Never
+run it autonomously. Before proposing it, report what is in the Namespace —
+`temporal workflow count --query 'ExecutionStatus="Running"'` against that
+Namespace — and quote the full Namespace ID (`<namespace_name>.<account_suffix>`)
+back to the user for confirmation, since a bare name can match a Namespace in a
+different account than the one they mean. If the intent is to stop work rather
+than discard the Namespace, that is a Workflow-level or capacity-level change,
+not a delete.
+
+If the delete is refused, the Namespace has delete protection enabled (below).
+Treat that as a deliberate decision by whoever provisioned it: report the block
+and stop. Do not disable protection and retry unless the user explicitly asks for
+that, as a separate step.
+
 ### Delete protection
 
 Enable via `--enable-delete-protection` / `--edp` at create time. <!-- docs/cloud/tcld/namespace.mdx:193-199 -->
@@ -198,6 +212,13 @@ tcld namespace delete-region \
 | `--cloud-provider` | | No | `aws` (default) or `gcp` <!-- docs/cloud/tcld/namespace.mdx:375-377 --> |
 | `--request-id` | `-r` | No | |
 
+The 7-day wait is what makes this hard to walk back: the Namespace runs
+single-region for a week with no failover target, so a removal done to "clean up"
+a replica cannot be reversed if the primary degrades in the meantime. Confirm
+with the user that they intend to give up HA for at least that long, and check
+which region is currently active first — removing the replica is a different
+operation from failing back to it.
+
 ---
 
 ## tcld namespace failover
@@ -217,6 +238,15 @@ tcld namespace failover \
 | `--region` | `--re` | Yes | Region to fail over TO |
 | `--cloud-provider` | | No | `aws` (default) or `gcp` <!-- docs/cloud/tcld/namespace.mdx:851 --> |
 | `--request-id` | `-r` | No | |
+
+This moves production traffic and is not a diagnostic step — never trigger one to
+test whether failover works, and never trigger one while diagnosing a symptom that
+has not been traced to the active region. Confirm the target with the user, and
+note that `--region` names the region being failed over **to**, not away from.
+Once the request returns an operation ID the failover is guaranteed to proceed and
+cannot be called back; clients may see a brief window of retryable errors during
+handover. After a user-triggered failover Temporal does **not** fail back
+automatically. See [../triage/ha-failover.md](../triage/ha-failover.md).
 
 ---
 

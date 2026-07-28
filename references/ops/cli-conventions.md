@@ -69,29 +69,65 @@ The one cross-command rule worth memorizing. Passing `--query` (a
 Execution. (The `--query` form of `temporal activity reset | unpause` behaves the
 same way.)
 
+### Count before you mutate
+
+The mutating form does not report how many Executions it matched until the job is
+already running. Run the query through `count` first and put that number in front
+of the user:
+
+```bash
+temporal workflow count --query 'ExecutionStatus="Running" AND WorkflowType="<YourType>"'
+```
+
+Use the byte-identical query string in both commands — a predicate dropped between
+the `count` and the `terminate` silently widens the blast radius. A filter with no
+narrowing term beyond `ExecutionStatus="Running"` matches every open Execution in
+the Namespace.
+
+### Running an approved batch
+
 ```bash
 temporal workflow terminate \
     --query 'ExecutionStatus="Running" AND WorkflowType="<YourType>"' \
     --reason "<why>" \
     --rps <n> \        # throttle the batch; only valid with --query
-    --yes              # skip the confirm prompt; only valid with --query
+    --yes              # proceed without the interactive prompt
 ```
 
-Inspect and manage the resulting jobs with `temporal batch`:
+Without `--yes` the command prompts `Start batch against approximately N
+workflow(s)? y/N`. That prompt needs a terminal: with no terminal attached it
+reads EOF, reports `user denied confirmation`, exits non-zero, and touches
+nothing. So `--yes` is how an already-approved batch actually runs — and it is
+also what suppresses the `N`, which is why the `count` above is not optional.
+Get the user's approval on the scope, then run it with `--yes`; do not discover
+the flag by retrying a command that failed the prompt.
+
+### Inspecting and aborting a running job
+
+A batch job drains asynchronously, so one started against too broad a query can
+still be stopped before it reaches the rest of its matches:
 
 ```bash
 temporal batch list
-temporal batch describe --job-id <JobId>
-temporal batch terminate --job-id <JobId> --reason "<why>"   # stops the job, not the workflows it already acted on
+temporal batch describe --job-id <JobId>   # progress; how far it has drained
+temporal batch terminate --job-id <JobId> --reason "<why>"
 ```
+
+`batch terminate` stops the job, **not** the Executions it already acted on —
+those are already terminated, cancelled, or deleted and stopping the job does not
+bring them back.
 
 `--reason`, `--rps`, and `--yes` are accepted only when `--query` is present. For
 *which* List Filter to run, see [workflow-health.md](workflow-health.md).
 
-**Destructive single-target commands run with no confirmation.** A single-target
-`workflow cancel | terminate | delete | signal` (with `--workflow-id`) executes
-immediately — the interactive prompt, and `--yes` to skip it, exist **only** on
-the `--query` batch form above. Verify the target before running. And
+### Single-target commands have no prompt at all
+
+A single-target `workflow cancel | terminate | delete | signal` (with
+`--workflow-id`) executes immediately — there is no confirmation and no `--yes`
+to skip, because the prompt exists **only** on the `--query` batch form above.
+The scope is one Execution, but nothing between the command and the effect will
+catch a wrong Workflow ID or a wrong Namespace, so confirm both before running.
+
 `workflow delete` in a multi-region (global) Namespace removes the Execution from
 **all replicas**; requests to a passive cluster are forwarded to the active one by
 default — pass `--grpc-meta xdc-redirection=false` to target a passive cluster.
