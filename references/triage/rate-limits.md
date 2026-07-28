@@ -97,9 +97,17 @@ Two sources of signal: the gRPC error itself and the Cloud metrics endpoint.
 
 ### From the error
 
-`RESOURCE_EXHAUSTED` carries a free-text message, and the exact wording varies by server version and by which internal limiter fired. Rather than pattern-matching on specific strings (which are not contracted and have not been quoted verbatim in `docs/`), rely on the gRPC code and the Cloud-emitted metric label. The Cloud metric `temporal_cloud_v0_resource_exhausted_error_count` is labeled with `resource_exhausted_cause`, "Cause for resource exhaustion." <!-- docs/cloud/metrics/reference.mdx:83-86 --><!-- docs/cloud/metrics/reference.mdx:217 --> Splitting this metric by `resource_exhausted_cause` tells you *which* limit was exceeded without relying on text parsing.
+`RESOURCE_EXHAUSTED` carries a free-text message whose wording varies by server version and by which internal limiter fired, so rely on the gRPC code plus the metric label rather than pattern-matching the text. Which label depends on the metric family:
 
-The same label is used in self-hosted cluster metrics: the `deadline-exceeded` troubleshooting page recommends `sum(rate(service_errors_resource_exhausted{}[1m])) by (resource_exhausted_cause)` to check for `RpsLimit`, `ConcurrentLimit`, and `SystemOverloaded` causes. <!-- docs/troubleshooting/deadline-exceeded-error.mdx:65-68 -->
+| Environment | Metric | Label to split by |
+|---|---|---|
+| Cloud, v1 metrics | `temporal_cloud_v1_resource_exhausted_error_count` | `operation` <!-- docs/cloud/metrics/openmetrics/metrics-reference.mdx:132-140 --> |
+| Cloud, v0 metrics | `temporal_cloud_v0_resource_exhausted_error_count` | `resource_exhausted_cause`, "Cause for resource exhaustion" <!-- docs/cloud/metrics/reference.mdx:83-86 --><!-- docs/cloud/metrics/reference.mdx:217 --> |
+| Self-hosted | `service_errors_resource_exhausted` | `resource_exhausted_cause` <!-- docs/troubleshooting/deadline-exceeded-error.mdx:65-68 --> |
+
+Self-hosted: the `deadline-exceeded` troubleshooting page recommends `sum(rate(service_errors_resource_exhausted{}[1m])) by (resource_exhausted_cause)` to check for `RpsLimit`, `ConcurrentLimit`, and `SystemOverloaded` causes. <!-- docs/troubleshooting/deadline-exceeded-error.mdx:65-68 -->
+
+One documented message string does exist: per-Workflow lock contention appears in Service logs as `Workflow is busy.` <!-- docs/cloud/service-health.mdx:244 --> That is a *different condition* from account-limit throttling and is not fixed by raising limits — see [runtime-errors.md → Workflow lock contention (BusyWorkflow)](runtime-errors.md#workflow-lock-contention-busyworkflow).
 
 
 ### From Cloud metrics
@@ -114,7 +122,7 @@ Temporal Cloud exposes an OpenMetrics endpoint whose limit / count / throttle tr
 
 The v1 metrics are pre-computed per-second rates aggregated over a 1-minute window <!-- docs/cloud/metrics/openmetrics/metrics-reference.mdx:33-41 -->, so a sustained non-zero value on a `*_throttled_count` metric is the definitive Cloud signal that a specific budget is being hit.
 
-The Cloud service-health guide calls out `temporal_cloud_v1_resource_exhausted_error_count` as "the primary indicator for Cloud-side throttling" and notes that "persistent non-zero values of this metric are unexpected." <!-- docs/cloud/service-health.mdx:149-152 -->
+**Do not read `temporal_cloud_v1_resource_exhausted_error_count` as the throttling signal.** The throttle metrics in the table above are. "Tracking trends against your account limits is the most important throttling signal to monitor. Unlike Resource Exhaustion, which usually self-heals through retries, hitting a limit slows or stalls progress until the workload backs off or your capacity is increased." <!-- docs/cloud/service-health.mdx:149 --> The v1 resource-exhausted metric explicitly "does not include throttling due to Namespace limits" <!-- docs/cloud/metrics/openmetrics/metrics-reference.mdx:134 -->; it counts bursts against a single resource — a Namespace, Task Queue, or Workflow ID — that the resource could not absorb in the moment, and persistent non-zero values indicate a hot resource. <!-- docs/cloud/service-health.mdx:236-240 --> Route those to [runtime-errors.md → Workflow lock contention (BusyWorkflow)](runtime-errors.md#workflow-lock-contention-busyworkflow), which is the most common cause. <!-- docs/cloud/service-health.mdx:244 -->
 
 For the v0 metric family, the equivalent is `temporal_cloud_v0_resource_exhausted_error_count`, "gRPC requests received that were rate-limited by Temporal Cloud, aggregated by cause." <!-- docs/cloud/metrics/reference.mdx:83-86 -->
 

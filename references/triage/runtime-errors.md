@@ -1,6 +1,6 @@
 # Runtime Errors
 
-Disambiguate Temporal errors whose text does not by itself identify the layer at fault. Primary focus: `context deadline exceeded` (`DEADLINE_EXCEEDED` <!-- grpc: DEADLINE_EXCEEDED -->) and "workflow busy" backpressure. Secondary: where to route `no pollers`, `INVALID_ARGUMENT`, and unspecified `UNAVAILABLE` <!-- grpc: UNAVAILABLE --> when the layer isn't obvious from the message alone.
+Disambiguate Temporal errors whose text does not by itself identify the layer at fault. Primary focus: `context deadline exceeded` (`DEADLINE_EXCEEDED` <!-- grpc: DEADLINE_EXCEEDED -->) and Workflow lock contention (`BusyWorkflow`). Secondary: where to route `no pollers`, `INVALID_ARGUMENT`, and unspecified `UNAVAILABLE` <!-- grpc: UNAVAILABLE --> when the layer isn't obvious from the message alone.
 
 Unambiguous errors are covered in the layer-specific files — link, don't duplicate:
 - DNS / TCP / endpoint / PrivateLink → [connectivity.md](connectivity.md)
@@ -16,7 +16,7 @@ Unambiguous errors are covered in the layer-specific files — link, don't dupli
 
 - [Why these errors are hard](#why-these-errors-are-hard)
 - [Deadline exceeded](#deadline-exceeded)
-- [Workflow busy backpressure](#workflow-busy-backpressure)
+- [Workflow lock contention (BusyWorkflow)](#workflow-lock-contention-busyworkflow)
 - [Other frequently ambiguous errors](#other-frequently-ambiguous-errors)
 - [Triage protocol](#triage-protocol)
 
@@ -24,7 +24,7 @@ Unambiguous errors are covered in the layer-specific files — link, don't dupli
 
 `context deadline exceeded` is emitted by the Go `context` package <!-- go: context --> and propagates through gRPC as `DEADLINE_EXCEEDED` <!-- grpc: DEADLINE_EXCEEDED -->. It tells you only that the caller gave up waiting — not why the response did not arrive. The Temporal troubleshooting guide lists "network interruptions, timeouts, server overload, and Query errors" as causes in the same breath, and the fix catalog spans clock skew, Frontend Service reachability, rate-limit saturation, client/worker configuration, and connection-age tuning. <!-- docs/troubleshooting/deadline-exceeded-error.mdx:17 --><!-- docs/troubleshooting/deadline-exceeded-error.mdx:20-118 -->
 
-The "workflow busy" shape — `RESOURCE_EXHAUSTED` <!-- grpc: RESOURCE_EXHAUSTED --> on operations targeting a single Workflow Execution — is not documented verbatim in the local docs clone. <!-- VERIFY: grep of /Users/joe/sap/documentation/docs for "workflow is busy" / "Workflow is busy" / "BusyWorkflow" on 2026-04-21 returned zero hits. The string is known from server behavior in the field; treat it as an observed shape and use the `RESOURCE_EXHAUSTED` code plus the `resource_exhausted_cause` metric label to classify. -->
+`ResourceExhausted` (`RESOURCE_EXHAUSTED` <!-- grpc: RESOURCE_EXHAUSTED -->) is ambiguous for a different reason: one gRPC code covers both throttling against your account limits and per-Workflow lock contention, and these are different problems with different fixes. The Cloud docs are explicit that lock contention "is contention on a single Execution, not an account limit. Increasing your Actions, Requests, or Operations per second limits does not resolve it." <!-- docs/cloud/service-health.mdx:246 --> The discriminator is the metric breakdown, not the error text. <!-- docs/cloud/service-health.mdx:248-252 -->
 
 Treating either error as a single-layer failure is the most common triage mistake in this category. Identify the operation and the layer before prescribing a fix. Give the proposed root cause an explicit confidence label — "low confidence, next discriminating check is X" beats a guess dressed up as a diagnosis. (Confidence framing is a skill convention, not a Temporal contract.)
 
@@ -78,31 +78,48 @@ Treating either error as a single-layer failure is the most common triage mistak
 3. **Private DNS missing for the region the Namespace is currently in (HA Namespaces).** After a failover, the `region.tmprl.cloud` private hosted zone must cover every region the Namespace can fail over to. <!-- docs/cloud/high-availability/ha-connectivity.mdx:229-234 --> Details: [ha-failover.md → PrivateLink stopped working after failover](ha-failover.md#symptom-privatelink-stopped-working-after-failover).
 4. **PrivateLink not enabled on the Namespace.** Verify connectivity configuration on the Namespace; if the Namespace is not configured for PrivateLink, public DNS will route the caller somewhere the VPC cannot reach. <!-- docs/cloud/connectivity/index.mdx:44-52 -->
 
-## Workflow busy backpressure
+## Workflow lock contention (BusyWorkflow)
 
-**Observed error shape:** a `RESOURCE_EXHAUSTED` <!-- grpc: RESOURCE_EXHAUSTED --> returned on operations (start / signal / update / query) targeting a single Workflow Execution, often reported by users as "workflow is busy". The verbatim string `workflow is busy` / `Workflow is busy` / `BusyWorkflow` is **not present** in the local docs clone; treat "workflow busy" as a field observation, not a documented contract. <!-- VERIFY: grepped /Users/joe/sap/documentation/docs on 2026-04-21 for "workflow is busy", "Workflow is busy", "BusyWorkflow", "WorkflowBusy", "workflow busy" — zero hits. Classify by code + `resource_exhausted_cause` label; don't pattern-match on the text. -->
+**Error shape:** every operation that mutates a single Workflow Execution — starting it, sending a Signal, and so on — is serialized under a per-Workflow lock. When operations reach one Execution faster than that lock can be acquired, the Service rejects the excess with a `ResourceExhausted` error (`RESOURCE_EXHAUSTED` <!-- grpc: RESOURCE_EXHAUSTED -->). In Service logs it appears as `Workflow is busy.` <!-- docs/cloud/service-health.mdx:244 --> The Cloud docs name the condition **Workflow lock contention (BusyWorkflow)**; use that term when explaining it, and treat a caller's "workflow is busy" report as pointing at it. <!-- docs/cloud/service-health.mdx:242 -->
 
-**What the docs do say about operations competing on the same Workflow Execution:**
-
-- Workflow Tasks are scheduled for a Workflow Execution, and the in-flight state is inspectable via `pendingWorkflowTask` in `temporal workflow describe`. <!-- docs/cli/command-reference/workflow.mdx:138 (describe command) --> <!-- undocumented: pendingWorkflowTask is a field of the describe output, not named in the CLI docs prose --> An accumulation of pending operations against a single Workflow is an observable condition via describe, not via a named server error.
-- "High Workflow lock latency. If many updates are made to a single execution, this can cause Workflow lock latency, which in turn affects the Schedule-to-start latency. Reduce the rate of Signals." <!-- docs/troubleshooting/performance-bottlenecks.mdx:38 --> This is the docs' framing of single-execution hot-spot pressure.
+The Cloud metric is `temporal_cloud_v1_resource_exhausted_error_count`, which increments when "a single resource (a Namespace, Task Queue, or Workflow ID) receives a burst of operations larger than that resource can absorb in the moment." <!-- docs/cloud/service-health.mdx:236 --> Lock contention is the most common cause of resource exhaustion. <!-- docs/cloud/service-health.mdx:244 -->
 
 **What this is not:**
-- Not a Namespace-wide rate limit — that is APS / RPS / OPS on Cloud or `frontend.rps` / `frontend.namespaceRPS` self-hosted. See [rate-limits.md](rate-limits.md).
-- Not a Workflow failure. A `RESOURCE_EXHAUSTED` on a signal/update does not fail the Workflow Execution; the SDK's default gRPC retry policy retries the RPC with backoff. <!-- docs/evaluate/temporal-cloud/limits.mdx:91 -->
-- Not "the workflow is blocked in a useful sense." The Workflow may be perfectly healthy and the pressure is on the caller's side.
+- **Not an account limit.** "This is contention on a single Execution, not an account limit. Increasing your Actions, Requests, or Operations per second limits does not resolve it." <!-- docs/cloud/service-health.mdx:246 --> Account-limit throttling is APS / RPS / OPS on Cloud or `frontend.rps` / `frontend.namespaceRPS` self-hosted — see [rate-limits.md](rate-limits.md). The two are distinct conditions that share a gRPC code. <!-- docs/cloud/service-health.mdx:240 -->
+- **Not a Workflow failure.** A `ResourceExhausted` on a signal/update does not fail the Workflow Execution; the SDK's default gRPC retry policy retries the RPC with backoff. <!-- docs/evaluate/temporal-cloud/limits.mdx:91 -->
+- **Not "the Workflow is blocked in a useful sense."** The Workflow may be perfectly healthy; the pressure is on the lock, from the caller's side.
+- **Not always worth chasing.** "At low, brief rates this error is benign because clients retry it and no progress is lost." Investigate when the rate is sustained or correlates with rising latency on the affected operations. <!-- docs/cloud/service-health.mdx:263 -->
 
-**Things to discriminate:**
-- **Which RPC returned the error?** Signals, updates, and queries against the same Workflow ID are the usual culprits when a caller (or a caller's retry loop) fans in.
-- **Caller concurrency vs. the same Workflow ID.** Rate of operations per second from all callers against that one ID.
-- **Is the caller retrying without backoff?** Retries count against the budget. <!-- docs/evaluate/temporal-cloud/limits.mdx:91-92 --> A raw gRPC client reimplementing retry must implement exponential backoff.
+### Confirming lock contention
 
-**Mitigation shapes (docs-anchored where possible):**
-- Throttle or coalesce signals on the caller side; the bottlenecks guide's "Reduce the rate of Signals" wording applies. <!-- docs/troubleshooting/performance-bottlenecks.mdx:38 -->
-- Fan out across multiple Workflow IDs when the entity is genuinely many things.
-- Rely on SDK retry with backoff for transient bursts. <!-- docs/evaluate/temporal-cloud/limits.mdx:91 -->
+The Cloud service-health guide's protocol: <!-- docs/cloud/service-health.mdx:248-252 -->
 
-**Which limiter actually fired?** Classify with the server-side cause label, not the message text. Cloud exposes `temporal_cloud_v0_resource_exhausted_error_count` labeled by `resource_exhausted_cause`. <!-- docs/cloud/metrics/reference.mdx:83-86 --><!-- docs/cloud/metrics/reference.mdx:217 --> Self-hosted exposes the same label via `service_errors_resource_exhausted`. <!-- docs/troubleshooting/deadline-exceeded-error.mdx:65-68 --> See [rate-limits.md → From the error](rate-limits.md#from-the-error) for the full protocol.
+1. **Rule out account-limit throttling first.** If the throttle metrics are elevated, address that throttling before looking at lock contention — limits-driven throttling slows or stalls a workload, so it is the more important signal. <!-- docs/cloud/service-health.mdx:240 --><!-- docs/cloud/service-health.mdx:250 --> See [rate-limits.md → Identifying which limit was hit](rate-limits.md#identifying-which-limit-was-hit).
+2. **If you are within limits but `temporal_cloud_v1_resource_exhausted_error_count` is still non-zero, break it down by the `operation` label.** "Lock contention concentrates on operations that target individual executions." <!-- docs/cloud/service-health.mdx:251 -->
+3. **Match the operation to the guidance below.** <!-- docs/cloud/service-health.mdx:252 -->
+
+**Mind the label, it differs by metric family.** The v1 Cloud metric carries only `operation`. <!-- docs/cloud/metrics/openmetrics/metrics-reference.mdx:132-140 --> The v0 metric carries `resource_exhausted_cause`. <!-- docs/cloud/metrics/reference.mdx:83-86 --><!-- docs/cloud/metrics/reference.mdx:217 --> Self-hosted uses `resource_exhausted_cause` on `service_errors_resource_exhausted`. <!-- docs/troubleshooting/deadline-exceeded-error.mdx:65-68 --> Whichever family the user is on, classify from the label, not the free-text message. See [rate-limits.md → From the error](rate-limits.md#from-the-error).
+
+### Per-operation guidance
+
+Mapped from the Cloud service-health table. <!-- docs/cloud/service-health.mdx:254-261 -->
+
+| `operation` | What it indicates | What to do |
+|---|---|---|
+| `StartWorkflowExecution`, `SignalWithStartWorkflowExecution` | The same Workflow ID was started again inside the de-duplication window (about one second). The first start succeeded; the duplicate was rejected. | Usually safe to ignore. Don't retry aggressively. Look for a client path firing the duplicate start. |
+| `SignalWorkflowExecution` | Signal rate to one Execution is too high. | Batch or coalesce Signals (one per N events), shard work across more Executions, or buffer Signals and drain them in the main Workflow loop. |
+| `UpdateWorkflowExecution` | More than the per-execution in-flight Update limit (10) are outstanding. | Cap concurrent in-flight Updates client-side, then back off and retry. |
+| `RecordActivityTaskHeartbeat` | Too many Activities heartbeating into the same Execution. | Raise the heartbeat timeout and interval; reduce how many Activities heartbeat into one Execution concurrently. |
+| `RespondWorkflowTaskCompleted` | One Workflow schedules a large batch of Activities or Child Workflows in parallel, each taking the lock. | Keep concurrent operations at 500 or fewer per Execution. Process the batch in smaller groups (sliding-window or plain batching) instead of scheduling everything at once. |
+| `QueryWorkflow` | Too many concurrent Queries against one Execution, or fallout from repeated Workflow Task retries. | Reduce concurrent Queries to that Execution. If it correlates with Workflow Task failures or timeouts, resolve those first. |
+
+The per-execution ceilings referenced above are in the Cloud limits page: 10 in-flight Updates per Execution <!-- docs/evaluate/temporal-cloud/limits.mdx:278 -->, and 2,000 incomplete Activities / Signals / Child Workflows / external-cancellation requests, with 500 or fewer recommended for optimal performance. <!-- docs/evaluate/temporal-cloud/limits.mdx:261-268 -->
+
+### Related signals
+
+- **Schedule-to-start latency rising alongside it.** "High Workflow lock latency. If many updates are made to a single execution, this can cause Workflow lock latency, which in turn affects the Schedule-to-start latency. Reduce the rate of Signals." <!-- docs/troubleshooting/performance-bottlenecks.mdx:38 --> This is the same hot-execution pressure seen from the latency side; see [performance-bottlenecks.md](performance-bottlenecks.md).
+- **Is the caller retrying without backoff?** Retries count against the budget. <!-- docs/evaluate/temporal-cloud/limits.mdx:91-92 --> A raw gRPC client reimplementing retry must use exponential backoff.
+- **Pending state on the Execution.** `pendingWorkflowTask` in `temporal workflow describe` output shows in-flight Workflow Task state for the Execution. <!-- docs/cli/command-reference/workflow.mdx:138 (describe command) --> <!-- undocumented: pendingWorkflowTask is a field of the describe output, not named in the CLI docs prose -->
 
 ## Other frequently ambiguous errors
 
