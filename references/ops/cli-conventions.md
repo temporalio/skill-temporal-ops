@@ -25,8 +25,9 @@ stated here and the exact flag spelling/values are left to `--help`.)
 
 ## Connection and identity
 
-Every `temporal` command reads the same connection settings, as an environment
-variable or a flag (the flag wins):
+Every `temporal` command reads the same connection settings from three
+sources, checked in this order (first match wins): flag, env var, then
+config-file profile.
 
 | Env var | Flag | Purpose |
 |---|---|---|
@@ -34,6 +35,13 @@ variable or a flag (the flag wins):
 | `TEMPORAL_NAMESPACE` | `--namespace`, `-n` | Namespace (default `default`). |
 | `TEMPORAL_API_KEY` | `--api-key` | API-key auth (implies TLS). |
 
+- **Config-file profile** (Environment Configuration) supplies a value only
+  when no flag or env var sets it: `[profile.<name>]` in a TOML file at
+  `$CONFIG_PATH/temporalio/temporal.toml` (OS-specific path; run `temporal
+  config --help`). Pick the profile with `--profile` / `TEMPORAL_PROFILE`
+  (default `default`); point at a different file with `--config-file` /
+  `TEMPORAL_CONFIG_FILE`. Docs:
+  [Environment Configuration](https://docs.temporal.io/develop/environment-configuration).
 - mTLS uses `TEMPORAL_TLS_CERT` / `TEMPORAL_TLS_KEY` (`--tls-cert-path` /
   `--tls-key-path`). The endpoint form differs by auth method — see
   [../triage/connectivity.md](../triage/connectivity.md).
