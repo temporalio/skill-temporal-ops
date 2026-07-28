@@ -442,7 +442,7 @@ For remote clusters, pass `--address <host>:<port>` (and TLS flags if enabled). 
 
 ### Step 1: Review billing in the Cloud UI
 
-Navigate to the **Billing** page in the Temporal Cloud UI. Account Owners and Finance Admins can view: <!-- docs/cloud/billing-and-usage/billing.mdx:96 -->
+Navigate to the **Billing** page in the Temporal Cloud UI. Account Owners and Finance Admins can view: <!-- docs/cloud/billing-and-usage/index.mdx:38-39 -->
 
 - Current balance and recent bill
 - Invoices table (with downloadable invoices for prior months)
@@ -451,16 +451,16 @@ Navigate to the **Billing** page in the Temporal Cloud UI. Account Owners and Fi
 
 ### Step 2: Generate a billing report via the Billing API
 
-The Billing API (Public Preview) provides namespace-level cost attribution in CSV format. <!-- docs/cloud/billing-and-usage/billing-api.mdx:16-17, 22-25 -->
+The Billing API provides namespace-level cost attribution in CSV format. <!-- docs/cloud/billing-and-usage/billing-api.mdx:19-20, 24-28 -->
 
-Report generation is asynchronous: <!-- docs/cloud/billing-and-usage/billing-api.mdx:41, 121-124 -->
+Report generation is asynchronous: <!-- docs/cloud/billing-and-usage/billing-api.mdx:38, 119-122 -->
 
 1. Call `CreateBillingReport` with the desired date range (billing-month boundaries) and granularity. The response includes a `billing_report_id` and `async_operation_id`.
 2. Poll `GetBillingReport` using the `billing_report_id` with exponential backoff.
 3. When the state is `BILLING_REPORT_STATE_GENERATED`, retrieve the download URL.
 4. Download the CSV before the URL expires.
 
-Date range limits by granularity: <!-- docs/cloud/billing-and-usage/billing-api.mdx:45-48 -->
+Date range limits by granularity: <!-- docs/cloud/billing-and-usage/billing-api.mdx:42-45 -->
 
 | Granularity | Available range |
 |---|---|
@@ -470,13 +470,13 @@ Date range limits by granularity: <!-- docs/cloud/billing-and-usage/billing-api.
 
 ### Step 3: Interpret the report
 
-Key columns to understand: <!-- docs/cloud/billing-and-usage/billing-api.mdx:99, 107, 91 -->
+Key columns to understand: <!-- docs/cloud/billing-and-usage/billing-api.mdx:97, 105, 89 -->
 
 - `ContractedCost`: The actual cost (not `Cost` or `TotalCost`).
 - `ResourceID`: `namespace_name.account_id` (e.g., `production.a2dd6`), not just the namespace name.
 - `BillingCurrency`: Values are in cents (e.g., `USD (cents)`).
 
-Only one billing report per account is generated at a time; additional requests are queued. <!-- docs/cloud/billing-and-usage/billing-api.mdx:64 -->
+Only one billing report per account is generated at a time; additional requests are queued. <!-- docs/cloud/billing-and-usage/billing-api.mdx:61-62 -->
 
 ---
 
