@@ -1,6 +1,6 @@
 # Cloud Billing
 
-Temporal Cloud provides billing and usage information for your account. Use this information to assess spending patterns, inspect your credit ledger, check invoice histories, update payment details, and manage your current plan. <!-- docs/cloud/billing-and-usage/index.mdx:26-28 -->
+Temporal Cloud provides billing and costs information for your account. Use this information to assess spending patterns, inspect your credit ledger, check invoice histories, update payment details, and manage your current plan. <!-- docs/cloud/billing-and-usage/index.mdx:26-28 -->
 
 ---
 
@@ -11,14 +11,14 @@ Temporal Cloud provides billing and usage information for your account. Use this
 | **Billing Center** | Summary invoices, credits, plan management, account deletion | Account Owners, Finance Admin <!-- docs/cloud/billing-and-usage/index.mdx:38-39 --> |
 | **Billing API** | Namespace-level cost attribution down to hourly granularity, enriched with Tags and Projects; FOCUS-friendly CSV format | Account Owners, Finance Admin <!-- docs/cloud/billing-and-usage/index.mdx:41-42 --> |
 | **Usage Dashboards** | Aggregate Actions on a Namespace level with Action categories | Account Owners, Finance Admin, Global Admin (account level); Namespace access holders (namespace level) <!-- docs/cloud/billing-and-usage/index.mdx:45-46 --> |
-| **Actions in Workflow History** | Actions annotated in Workflow History via Cloud UI (some Actions are not measured in Workflow histories) | Account Owners, Global Admin, Namespace Admin, Developers, Read-Only <!-- docs/cloud/billing-and-usage/index.mdx:48-49 --> |
+| **Actions in Event History** | Highlights Actions in a given Event History via the Cloud UI (some Actions are not measured in Workflow histories) | Account Owners, Global Admin, Namespace Admin, Developers, Read-Only <!-- docs/cloud/billing-and-usage/index.mdx:48-49 --> |
 | **Actions Metrics** | High-cardinality billable action metric with labels for Category, Action Type, Workflow Type, Namespace (minute granularity) | Metrics Read-Only service account role <!-- docs/cloud/billing-and-usage/index.mdx:51-52 --> |
 
 ---
 
 ## Billing Center
 
-Access: Account Owners and Finance Admins. <!-- docs/cloud/billing-and-usage/billing.mdx:96 -->
+Access: Account Owners and Finance Admins. <!-- docs/cloud/billing-and-usage/index.mdx:38-39 -->
 
 ### Current balance
 
@@ -58,11 +58,13 @@ Invoices prior to the current calendar month can be downloaded. The current bill
 
 Account Owners and Finance Admins can see a cost column on the Usage page, enabling per-Namespace cost monitoring. <!-- docs/cloud/billing-and-usage/billing.mdx:96-98 -->
 
-Namespace cost details are not available for "last 90 days" or "last 120 days". Cost breakdowns distribute the total usage cost to namespaces proportionally based on metered usage. <!-- docs/cloud/billing-and-usage/billing.mdx:104-108 -->
+> **Being replaced.** The [Billing API](#billing-api) will replace the Cost by Namespace UI. It provides the same information on a Namespace basis down to hourly granularity, enriched with Tags and Projects. <!-- docs/cloud/billing-and-usage/billing.mdx:90-92 -->
+
+Namespace cost details are not available for "last 90 days" or "last 120 days". Cost breakdowns distribute the total usage cost to namespaces proportionally based on metered usage. The proration reflects your effective price, factoring in included Actions/Storage and tiered pricing rates in your plan. <!-- docs/cloud/billing-and-usage/billing.mdx:104-108 -->
 
 ### Plans
 
-Account Owners and Finance Admins can view plan information, pricing details, entitlements, available plans, and Pay-as-You-Go pricing rates. <!-- docs/cloud/billing-and-usage/billing.mdx:113-118 -->
+Account Owners and Finance Admins can view plan information, pricing details, entitlements, available plans, and Pay-as-You-Go pricing rates. On a standard agreement they can also upgrade and downgrade between available plans. <!-- docs/cloud/billing-and-usage/billing.mdx:113-119 -->
 
 - Upgrades are processed immediately with pro-rated billing. Monthly entitlements reflect the full volume of the upgrade plan for that billing month. After an upgrade, a downgrade cannot be processed until the following billing period. <!-- docs/cloud/billing-and-usage/billing.mdx:123-125 -->
 - Downgrades are processed immediately. Billing and entitlements are backdated to the beginning of the billing period. <!-- docs/cloud/billing-and-usage/billing.mdx:127 -->
@@ -78,13 +80,15 @@ Account Owners and Finance Admins can view plan information, pricing details, en
 
 Actions usage is tracked across an account in the usage dashboard and is visible to Account Owners, Finance Admin, and Global Admin. Per-namespace usage is visible on the Namespace pages to those with access. <!-- docs/cloud/billing-and-usage/actions-usage.mdx:28-30 -->
 
-### Actions in Workflow History
+### Actions in Workflows
 
-Events that represent a Billable Action are annotated with the number consumed by the event in the **Billable Actions** column. These Actions are summarized at the top of the workflow. <!-- docs/cloud/billing-and-usage/actions-usage.mdx:36-37 -->
+When viewing an Event History, events that represent a Billable Action are annotated with the number consumed by the event in the **Billable Actions** column. These Actions are summarized at the top of the workflow. <!-- docs/cloud/billing-and-usage/actions-usage.mdx:36-37 -->
 
 This estimate is useful for projecting cost. Example: 20 Actions per run, 100 runs/day, 30 days = 60,000 Billable Actions per month. <!-- docs/cloud/billing-and-usage/actions-usage.mdx:49-52 -->
 
-Excluded from the Billable Actions estimate: <!-- docs/cloud/billing-and-usage/actions-usage.mdx:57-69 -->
+> **Treat the estimate as an estimate.** The Billable Action estimate is an **experimental feature** and only measures Billable Actions that exist within Workflow event histories. If billable events exist outside of event history, the actual Actions count could be higher. Workflows with the `TemporalNamespaceDivision` Search Attribute set may not have accurate estimates. <!-- docs/cloud/billing-and-usage/actions-usage.mdx:56-57, 67-69 -->
+
+Excluded from the Billable Actions estimate: <!-- docs/cloud/billing-and-usage/actions-usage.mdx:57-65 -->
 
 - Query
 - Activity Heartbeats
@@ -97,7 +101,9 @@ Excluded from the Billable Actions estimate: <!-- docs/cloud/billing-and-usage/a
 
 ## Billing API
 
-The Billing API is part of the Cloud Operations API. It provides Namespace-level cost attribution through on-demand billing reports in CSV format. <!-- docs/cloud/billing-and-usage/billing-api.mdx:19-22 -->
+<!-- GA. Do not re-add a "Public Preview" label from the docs: billing.mdx:90 and billing-api.mdx:42 still say public preview, but that is stale upstream. -->
+
+The Billing API is part of the Cloud Operations API. It provides Namespace-level cost attribution through on-demand billing reports in CSV format, for ingestion into FinOps tooling and cloud cost management platforms. <!-- docs/cloud/billing-and-usage/billing-api.mdx:19-22 -->
 
 Reports contain: <!-- docs/cloud/billing-and-usage/billing-api.mdx:30-34 -->
 
@@ -120,6 +126,8 @@ Key identifiers: <!-- docs/cloud/billing-and-usage/billing-api.mdx:124-129 -->
 |---|---|
 | `billing_report_id` | Identifies the billing report; used to retrieve metadata and download URLs |
 | `async_operation_id` | Identifies the background operation responsible for generating the report |
+
+The async operation follows the standard Cloud Operations async model. See [cloud-ops-api.md](cloud-ops-api.md). <!-- docs/cloud/billing-and-usage/billing-api.mdx:131 -->
 
 ### Allowed date ranges
 
