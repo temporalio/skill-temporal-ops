@@ -192,7 +192,7 @@ For the full inspection flow — describe output shape, status interpretation, p
 - `ActivityTaskScheduled` with no matching retry / terminal event after describe — loop back to layer 6; the task was never picked up. [workflow-stuck.md → Pending activities](workflow-stuck.md#pending-activities).
 - Pending Activity with climbing attempts and `last_failure` populated — the Activity is running and failing; fix the Activity or its retry policy. Same section.
 - Workflow `Running` with `historyLength` flat and no pending sections — a timer-based wait, covered in [workflow-stuck.md → Timer-based waits](workflow-stuck.md#timer-based-waits).
-- Ambiguous `DEADLINE_EXCEEDED` <!-- grpc: DEADLINE_EXCEEDED --> or "workflow busy" backpressure on signals/updates/queries — [runtime-errors.md → Deadline exceeded](runtime-errors.md#deadline-exceeded) and [runtime-errors.md → Workflow busy backpressure](runtime-errors.md#workflow-busy-backpressure).
+- Ambiguous `DEADLINE_EXCEEDED` <!-- grpc: DEADLINE_EXCEEDED --> or `Workflow is busy` lock contention on signals/updates/queries — [runtime-errors.md → Deadline exceeded](runtime-errors.md#deadline-exceeded) and [runtime-errors.md → Workflow lock contention (BusyWorkflow)](runtime-errors.md#workflow-lock-contention-busyworkflow).
 
 ## Quick per-layer commands
 
