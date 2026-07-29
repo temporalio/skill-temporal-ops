@@ -18,6 +18,12 @@ mkdir -p ~/.claude/skills && git clone https://github.com/temporalio/skill-tempo
 
 Adjust the installation directory based on your coding agent. Plugin-marketplace and `npx skills` installation will be documented here once the skill is released.
 
+## Before you point an agent at production
+
+This skill runs `temporal` and `tcld` commands against whatever environment your CLIs are authenticated to, and some of those commands have no undo. The skill tells the agent to establish a blast radius and get your approval before running anything in that category — but that is a behavior, not a boundary.
+
+Since you have to set up CLI authentication anyway, it is worth deciding *which* credential the agent gets: a scoped-down or read-only Service Account limits what any mutating command can reach, no matter what the agent decides to run. [**AGENT-PERMISSIONS.md**](AGENT-PERMISSIONS.md) covers that, plus command denylists and pre-execution hooks, with examples for Claude Code.
+
 ## What this skill covers
 
 ### Operations

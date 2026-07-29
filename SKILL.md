@@ -80,9 +80,10 @@ lets Workflow cleanup code run where `terminate` does not; `apikey disable` is
 reversible where `delete` is not; `accepted-client-ca add` appends where `set`
 replaces.
 
-This section is guidance the model follows, not a control the environment
-enforces. To make approval mandatory rather than intended, see
-[hardening.md](references/ops/hardening.md).
+Assume nothing in the environment will stop a destructive command on your behalf.
+Credential scope, command denylists, and confirmation prompts may or may not be
+configured, and their possible presence is not a reason to skip any step above —
+you are the safeguard the user is relying on.
 
 ### Diagnostic discipline
 
@@ -148,7 +149,6 @@ Find the row that matches the user's intent. The reference file contains the com
 | SAML SSO, SCIM provisioning, IdP integration | Cloud SAML/SCIM | [cloud-saml-scim.md](references/ops/cloud-saml-scim.md) |
 | Migrate self-hosted to Cloud (automated or manual), migrate between Cloud regions | Cloud migration | [cloud-migration.md](references/ops/cloud-migration.md) |
 | End-to-end ops playbook (setup, rotation, audit, billing, Terraform) | Ops recipes | [ops/recipes.md](references/ops/recipes.md) |
-| Require approval for destructive commands; block them in the agent harness | Hardening | [hardening.md](references/ops/hardening.md) |
 
 ### Diagnosis
 
@@ -271,7 +271,6 @@ If the layer above the fix is still failing, return to step 4 and continue walki
 - [workflow-health.md](references/ops/workflow-health.md) — Data-plane health queries: `temporal workflow list` with List Filters, `temporal workflow describe`/`show`/`count`, `temporal task-queue describe` for poller status.
 - [cli-conventions.md](references/ops/cli-conventions.md) — Cross-command `temporal` CLI conventions: connection/identity (`TEMPORAL_*` env vars ↔ `--address`/`--namespace`/`--api-key`, `--identity`), output/formatting (`--output`, `--time-format`, payload shorthand), the `--query` ⇒ batch-job bridge (with `temporal batch describe/list/terminate`), and schedule time-spec forms. Ends with an operation→command index that routes each data-plane operation to its owner file. Delegates exhaustive flags to `temporal <cmd> --help`.
 - [ops/recipes.md](references/ops/recipes.md) — End-to-end ops playbooks: set up new namespace, check APS, switch capacity mode, find hung workflows, rotate API key, audit access, rotate mTLS certs, check self-hosted health, view billing / generate billing report, configure audit log sink, provision resources with Terraform, set up SAML SSO.
-- [hardening.md](references/ops/hardening.md) — Opt-in enforcement for the [Destructive operations](#destructive-operations) policy: why prose guidance is not a control, `deny` rules and a `PreToolUse` hook for `.claude/settings.json`, an isolated-profile pattern for `temporal`/`tcld`, and what each layer does and does not cover.
 
 ### Diagnosis
 
