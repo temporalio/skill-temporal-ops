@@ -312,6 +312,15 @@ temporal workflow reset \
 
 <!-- docs/cli/workflow.mdx:380-384 --> The `--type` flag's `LastContinuedAsNew` value appears in the reset example. The batch-reset guidance in the same section mentions `FirstWorkflowTask`, `LastWorkflowTask`, and `BuildId` as the only `--type` values permitted for batch resets. <!-- docs/cli/workflow.mdx:386-387 --> A companion flag `--reapply-type` controls which Events are reapplied after the reset point; accepted values are `Signal, None`. <!-- docs/cli/cmd-options.mdx:495-497 -->
 
+Because the new Run replays history only up to the reset point, everything after it
+*happens again* —
+Activities with external side effects re-execute, so a reset past a payment, an
+email, a provisioning call, or a non-idempotent write performs it a second time.
+`--reapply-type None` suppresses Signal reapplication; it does not prevent Activity
+re-execution. Establish where the side effects are relative to the candidate reset
+point, say so in the proposal, and prefer the latest reset point that still clears
+the problem.
+
 <!-- VERIFY: `docs/cli/workflow.mdx` shows the `reset` command prose (lines 367-390) but does not have a complete flag table for `reset` itself (only for the `reset with-workflow-update-options` subcommand at lines 397-403). The full enum set for `--type` on the single-workflow form of `reset` is not explicitly enumerated in a table in this docs snapshot beyond the `LastContinuedAsNew` example and the batch-reset guidance. The `workflow reset-batch` subcommand appears in the page description at line 5 but has no dedicated section. Flag sets should be confirmed with `temporal workflow reset --help` against the CLI version in use. -->
 
 ### `temporal workflow pause` / `unpause`

@@ -36,54 +36,53 @@ When the user wants to perform an operational task:
 
 ### Destructive operations
 
-Some operations delete data, revoke access, or move production traffic. None of
-them are undone by re-running the command with different flags. For every
-operation in this tier, gather the evidence and **propose** — do not run it on
-your own initiative, and do not run one to find out what it would do.
+An operation belongs to this tier if it is **irreversible** (`tcld namespace
+delete`), **revokes access for a live identity** (`tcld apikey delete`), **moves
+production traffic** (`tcld namespace failover`), or **fans out to every match**
+(any `--query` form). Apply the test to the operation in front of you — this is a
+rule, not a list, and a command's absence from any list in this skill does not
+place it outside the tier.
 
-| Operation | What it costs |
-|---|---|
-| `temporal workflow terminate \| cancel \| delete \| reset` | Ends or rewinds a live Execution. A reset re-executes every Event after the reset point, re-running Activities with external side effects. |
-| `temporal workflow terminate \| cancel \| delete \| signal --query`, `temporal activity reset \| unpause --query` | Fans out to a batch job over **every** matching Execution — see the [batch bridge](references/ops/cli-conventions.md#the---query--batch-job-bridge). |
-| `temporal schedule delete` | Removes the Schedule; already-running Executions keep going and must be handled separately. |
-| `tcld namespace delete` | Permanent. All Workflow Executions and Task Queues are removed immediately. |
-| `tcld namespace delete-region` | Disables HA and imposes a 7-day wait before HA can be re-enabled in that region. |
-| `tcld namespace failover` | Moves production traffic to another region. |
-| `tcld namespace accepted-client-ca set \| remove` | Changes who can connect. `set` replaces the whole bundle; either form can lock out every client presenting a leaf under a dropped CA. |
-| `tcld apikey delete \| disable`, `tcld user delete`, `tcld user-group delete`, `tcld service-account delete` | Revokes access for a live identity. Deleting a Service Account also deletes all of its API keys. |
-| `temporal operator namespace delete`, `temporal operator search-attribute remove`, `temporal operator cluster remove` | Self-hosted equivalents; same permanence. |
-| `tcld namespace capacity update` | Changes billing and throughput limits. |
+For anything in the tier: gather the evidence and **propose**. Do not run it on
+your own initiative, and do not run one to find out what it would do. The
+reference file for each command states its specific blast radius; read that
+before proposing, not after.
 
-Before proposing any of them:
-
-1. **Establish the blast radius as a number, not a description.** For any
-   `--query` form, run `temporal workflow count --query '<query>'` with the
-   byte-identical query first and carry the result into the proposal. A filter
-   with no narrowing predicate beyond `ExecutionStatus="Running"` matches every
-   open Execution in the Namespace.
-2. **State the exact command, the target, and the Namespace it resolves to.**
-   If the backend or Namespace was inferred from context rather than stated by
-   the user, say so — a destructive command aimed at the wrong Namespace is the
-   most common way this goes wrong. Connection settings can come from
-   `TEMPORAL_*` env vars or a config-file profile, so the target is not always
-   visible in the command text; confirm it rather than assuming the default.
-3. **Once the user approves, run the command so it completes.** Pass the
-   command's own skip-confirmation flag where one exists (`--yes` on the
-   `--query` batch forms). These prompts expect a terminal and abort the run when
-   they don't get one. Ask the user up front rather than adding the flag after a
-   prompt-related failure — a flag the user never saw is not an approved one.
-   Approval covers one command against one target; it does not carry to the next
-   command, a widened query, or a second Namespace.
+1. **Blast radius as a number, not a description.** For any `--query` form, run
+   `temporal workflow count --query '<query>'` with the byte-identical query
+   first and carry the result into the proposal. A filter with no narrowing
+   predicate beyond `ExecutionStatus="Running"` matches every open Execution in
+   the Namespace.
+2. **Name the target.** State the exact command, the target, and the Namespace it
+   resolves to. Connection settings can come from `TEMPORAL_*` env vars or a
+   config-file profile, so the target is frequently not visible in the command
+   text. If the backend or Namespace was inferred from context rather than stated
+   by the user, say so — a destructive command aimed at the wrong Namespace is the
+   most common way this goes wrong.
+3. **Ask explicitly, then run it so it completes.** Put the command, the target,
+   and — for any `--query` form — the count from step 1 to the user as a direct
+   question, and wait for an answer. Once they approve, run it with `--yes` on the
+   `--query` batch forms; that flag is what lets an approved batch finish, since
+   the interactive prompt needs a terminal and without one the command reports
+   `user denied confirmation` and does nothing. `--yes` belongs in a command the
+   user approved, never in a retry of one that failed its prompt. Do not substitute
+   a loop over single-target `workflow terminate --workflow-id`. Approval covers one
+   command against one target; it does not carry to the next command, a widened
+   query, or a second Namespace.
 4. **Verify, and know the abort path.** Re-run the corresponding `get`,
    `describe`, or `count`. A batch job drains asynchronously:
    `temporal batch describe --job-id <id>` shows how far it has gotten and
    `temporal batch terminate --job-id <id>` stops it before it reaches the rest
    of its matches.
 
-When a safer option reaches the same goal, propose it alongside: `cancel` lets
-Workflow cleanup code run where `terminate` does not; `apikey disable` is
+When a reversible sibling reaches the same goal, propose it alongside: `cancel`
+lets Workflow cleanup code run where `terminate` does not; `apikey disable` is
 reversible where `delete` is not; `accepted-client-ca add` appends where `set`
 replaces.
+
+This section is guidance the model follows, not a control the environment
+enforces. To make approval mandatory rather than intended, see
+[hardening.md](references/ops/hardening.md).
 
 ### Diagnostic discipline
 
@@ -149,6 +148,7 @@ Find the row that matches the user's intent. The reference file contains the com
 | SAML SSO, SCIM provisioning, IdP integration | Cloud SAML/SCIM | [cloud-saml-scim.md](references/ops/cloud-saml-scim.md) |
 | Migrate self-hosted to Cloud (automated or manual), migrate between Cloud regions | Cloud migration | [cloud-migration.md](references/ops/cloud-migration.md) |
 | End-to-end ops playbook (setup, rotation, audit, billing, Terraform) | Ops recipes | [ops/recipes.md](references/ops/recipes.md) |
+| Require approval for destructive commands; block them in the agent harness | Hardening | [hardening.md](references/ops/hardening.md) |
 
 ### Diagnosis
 
@@ -271,6 +271,7 @@ If the layer above the fix is still failing, return to step 4 and continue walki
 - [workflow-health.md](references/ops/workflow-health.md) — Data-plane health queries: `temporal workflow list` with List Filters, `temporal workflow describe`/`show`/`count`, `temporal task-queue describe` for poller status.
 - [cli-conventions.md](references/ops/cli-conventions.md) — Cross-command `temporal` CLI conventions: connection/identity (`TEMPORAL_*` env vars ↔ `--address`/`--namespace`/`--api-key`, `--identity`), output/formatting (`--output`, `--time-format`, payload shorthand), the `--query` ⇒ batch-job bridge (with `temporal batch describe/list/terminate`), and schedule time-spec forms. Ends with an operation→command index that routes each data-plane operation to its owner file. Delegates exhaustive flags to `temporal <cmd> --help`.
 - [ops/recipes.md](references/ops/recipes.md) — End-to-end ops playbooks: set up new namespace, check APS, switch capacity mode, find hung workflows, rotate API key, audit access, rotate mTLS certs, check self-hosted health, view billing / generate billing report, configure audit log sink, provision resources with Terraform, set up SAML SSO.
+- [hardening.md](references/ops/hardening.md) — Opt-in enforcement for the [Destructive operations](#destructive-operations) policy: why prose guidance is not a control, `deny` rules and a `PreToolUse` hook for `.claude/settings.json`, an isolated-profile pattern for `temporal`/`tcld`, and what each layer does and does not cover.
 
 ### Diagnosis
 

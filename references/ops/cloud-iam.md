@@ -524,9 +524,9 @@ tcld service-account delete --service-account-id "<id>"
 
 Deleting a Service Account automatically deletes all associated API keys. <!-- docs/cloud/manage-access/service-accounts.mdx:127-128 -->
 
-That cascade is the risk: the blast radius is not one identity but every Worker
-and automation authenticating with any key the Service Account owns, and none of
-it is recoverable. Run `tcld apikey list --owner-type service-account --owner-id
+The blast radius is not one identity but every Worker and automation
+authenticating with any key the Service Account owns, and none of it is
+recoverable. Run `tcld apikey list --owner-type service-account --owner-id
 <id>` first, report what would be revoked, and confirm with the user before
 proposing the delete.
 

@@ -135,8 +135,8 @@ tcld namespace delete \
 
 Deletion is permanent. All Workflow Executions and Task Queues are removed immediately. Closed Workflow Histories remain until their retention period expires. <!-- docs/cloud/get-started/namespaces.mdx:433-438 -->
 
-This is the highest-consequence command in this file and there is no undo. Never
-run it autonomously. Before proposing it, report what is in the Namespace —
+There is no undo. Never run it autonomously. Before proposing it, report what is
+in the Namespace —
 `temporal workflow count --query 'ExecutionStatus="Running"'` against that
 Namespace — and quote the full Namespace ID (`<namespace_name>.<account_suffix>`)
 back to the user for confirmation, since a bare name can match a Namespace in a
@@ -279,6 +279,13 @@ tcld namespace retention set \
 |---|---|---|---|
 | `--namespace` | `-n` | Yes | |
 | `--retention-days` | `--rd` | Yes | Range: 1-90 days <!-- docs/cloud/get-started/namespaces.mdx:216 --> |
+
+Lowering retention is a data deletion, not a settings change: closed Workflow
+Histories that fall outside the new window stop being retained and cannot be
+recovered by setting the value back. Read the current value with `retention get`
+and confirm the new number with the user before proposing it; the deletion does not
+appear anywhere in the command's own output. Raising retention is safe but does not
+resurrect anything already aged out.
 
 ---
 
@@ -530,6 +537,16 @@ The `remove` subcommand additionally supports `--ca-certificate-fingerprint` / `
 
 Do NOT use a CA certificate signed with SHA-1 -- such signatures are rejected. <!-- docs/cloud/tcld/namespace.mdx:772-776 -->
 
+`set` and `remove` both change who can connect, and the failure is fleet-wide
+rather than gradual: every client presenting a leaf that chained only to a dropped
+CA fails its next handshake, and Workers fail closed with a TLS error rather than
+degrading. `set` is the sharper of the two because it replaces the entire bundle —
+a PEM that omits a CA still in use silently revokes it. Run `list` first, confirm
+which CAs are live, and prefer `add` when the goal is to introduce a new CA.
+Reserve `set` for steps 2 and 4 of the rollover above, and do not run step 4 until
+step 3 has actually shown old-cert traffic stop. Recovery means re-uploading the
+dropped CA, so keep the PEM until the rollover is confirmed complete.
+
 ---
 
 ## tcld namespace certificate-filters
@@ -548,6 +565,16 @@ Filter fields (at least one required): `commonName`, `organization`, `organizati
 Filter input via `--certificate-filter-file` / `-f` or `--certificate-filter-input` / `-i`. Cannot specify both. <!-- docs/cloud/tcld/namespace.mdx:1364-1365 -->
 
 JSON format: `{ "filters": [ { "commonName": "test1" } ] }` <!-- docs/cloud/tcld/namespace.mdx:153 -->
+
+Two of these subcommands change access, in opposite directions, and both are worth
+proposing rather than running. `import` replaces the whole filter set rather than
+appending to it, so it locks out every identity whose cert matched only a filter
+the new file omits — the same fleet-wide shape as `accepted-client-ca set`, and the
+reason to `export` to a file first and edit that. `clear` fails the other way: with
+no filters, **any** client cert that chains to a configured CA is accepted
+<!-- docs/cloud/tcld/namespace.mdx:580,584 -->, so it silently widens access
+instead of removing it. Neither direction is what "clear the filters" sounds like;
+state which one you mean when you propose it.
 
 ---
 

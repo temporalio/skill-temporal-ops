@@ -153,6 +153,15 @@ search attributes can't be changed after creation. `temporal schedule delete` do
 **not** stop already-running Executions — terminate those separately (e.g.
 `temporal workflow terminate` by `TemporalScheduledById`).
 
+**`backfill` is a fan-out.** It replays the Schedule's actions across a past
+window, so the Executions it starts scale with the window divided by the interval —
+a month backfilled onto a 15-minute schedule is roughly 2,880 of them, and under
+`--overlap-policy AllowAll` they start together rather than queueing. Compute that
+number from the window and interval and put it in front of the user before running
+one, the same way `count` precedes a `--query` mutation. The overlap policy is the
+difference between a backfill that drains and one that stampedes the Worker fleet;
+see [../triage/schedule-missed.md](../triage/schedule-missed.md).
+
 ## Operation → command index
 
 One row per common data-plane operation. The linked file owns the judgment (when
@@ -169,3 +178,10 @@ to run it, how to read the output); run `temporal <cmd> --help` for flags.
 | Complete / fail an activity externally | `temporal activity complete\|fail -a <id> -w <id>` | `temporal activity --help` |
 | Schedule CRUD (create / update / toggle / trigger / delete) | `temporal schedule <sub> -s <id> ...` | this file ([spec forms](#schedule-time-spec-forms)) |
 | Backfill / diagnose missed schedule actions | `temporal schedule backfill -s <id> ...` | [../triage/schedule-missed.md](../triage/schedule-missed.md) |
+
+`activity complete | fail` inject a result the Activity never produced. The
+Workflow resumes on that outcome as if the Activity had really succeeded or
+failed, and the Event History records the supplied result with no undo. They are
+for an Activity genuinely completing asynchronously outside the Worker — propose
+rather than run. To stop a retry loop rather than answer it, use
+[`activity pause`](../triage/workflow-stuck.md#temporal-activity-pause--unpause--reset).
