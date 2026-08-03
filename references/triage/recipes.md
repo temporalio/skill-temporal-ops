@@ -243,12 +243,12 @@ Confidence checkpoints follow the skill convention in [runtime-errors.md](runtim
 
 2. **Capture the worker error text.** Per [non-determinism.md → Per-SDK error shape](non-determinism.md#per-sdk-error-shape), only TypeScript has a doc-pinned class (`DeterminismViolationError`); other SDKs emit per-SDK errors. The message usually names the offending Command vs. expected Event — that's what pins the divergence.
 
-3. **Reproduce locally against the *deployed* commit** (not `main`) — per [replay-with-vscode.md → Prerequisites](replay-with-vscode.md#prerequisites), replaying newer source against an older recording produces divergence for a different reason than the bug being triaged.
+3. **Reproduce locally against the *deployed* commit** (not `main`) — per [replay.md → Prerequisites](replay.md#prerequisites), replaying newer source against an older recording can produce divergence for a different reason than the bug being triaged.
 
-   - **Interactive (TypeScript only):** VS Code extension — [replay-with-vscode.md → Step 2b](replay-with-vscode.md#step-2b--vs-code-extension-typescript-only-interactive). Point it at `history.json`.
-   - **Headless / CI (any supported SDK):** SDK replayer — [replay-with-vscode.md → Step 2a](replay-with-vscode.md#step-2a--sdk-replayer-all-supported-sdks-ci-friendly). For Go/Java, set `TEMPORAL_DEBUG=true` while stepping ([replay-with-vscode.md → TEMPORAL_DEBUG](replay-with-vscode.md#temporal_debug-suppress-the-deadlock-detector-while-stepping)).
+   - **Interactive (TypeScript only):** VS Code extension — [replay.md → The VS Code extension](replay.md#the-vs-code-extension-typescript-only-interactive). Point it at `history.json`.
+   - **Headless / CI (any supported SDK):** SDK replayer — [replay.md → Step 2](replay.md#step-2--run-the-sdk-replayer-all-supported-sdks). For Go/Java, set `TEMPORAL_DEBUG=true` while stepping ([replay.md → TEMPORAL_DEBUG](replay.md#temporal_debug-suppress-the-deadlock-detector-while-stepping)).
 
-   Interpret per [replay-with-vscode.md → Interpreting a replay that diverges](replay-with-vscode.md#interpreting-a-replay-that-diverges) / [→ succeeds](replay-with-vscode.md#interpreting-a-replay-that-succeeds). Replay against the deployed commit fails with the same error → diagnosis stands. Replay succeeds → deployed Workers are on different code; find them before fixing.
+   Interpret per [replay.md → Interpreting a replay that diverges](replay.md#interpreting-a-replay-that-diverges) / [→ succeeds](replay.md#interpreting-a-replay-that-succeeds). Replay against the deployed commit fails with the same error → diagnosis stands. Replay succeeds → deployed Workers are on different code; find them before fixing.
 
 4. **Identify the change.** Diff the deployed commit against the previous known-working commit. Canonical divergence shapes are listed in [non-determinism.md → What the docs call out as ND-inducing patterns](non-determinism.md#what-the-docs-call-out-as-nd-inducing-patterns) — command-order changes, Activity name changes, Timer-duration changes to/from zero (per-SDK), and intrinsic ND (random branches, map iteration order, wall-clock reads).
 
@@ -263,7 +263,7 @@ Confidence checkpoints follow the skill convention in [runtime-errors.md](runtim
 
 6. **Verify.** Local replay of the failing history should now succeed. After deploy, re-run `temporal workflow describe`; `pendingWorkflowTask.attempt` should stop climbing and new non-bookkeeping events should arrive.
 
-7. **Post-incident: add a replay regression test.** Put each production history into a bulk replayer in CI (`WorkflowReplayer.replayWorkflowExecutions` / `Worker.runReplayHistories` / `Replayer.replay_workflows`) per [replay-with-vscode.md → Step 2a](replay-with-vscode.md#step-2a--sdk-replayer-all-supported-sdks-ci-friendly), so the next regression fails CI.
+7. **Post-incident: add a replay regression test.** Put each production history into a bulk replayer in CI (`WorkflowReplayer.replayWorkflowExecutions` / `Worker.runReplayHistories` / `Replayer.replay_workflows`) per [replay.md → Step 2](replay.md#step-2--run-the-sdk-replayer-all-supported-sdks), so the next regression fails CI.
 
 **Confidence checkpoints:**
 - After step 1: high that it's ND *iff* the JSON inspection returns the Nondeterminism cause on at least one `WorkflowTaskFailed` event. Without that, do not prescribe patching or reset — the WFT is failing for a different reason.
