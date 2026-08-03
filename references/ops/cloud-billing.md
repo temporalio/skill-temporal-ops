@@ -54,14 +54,6 @@ Invoices prior to the current calendar month can be downloaded. The current bill
 | Amount | Credit amount granted, deducted, or expired <!-- docs/cloud/billing-and-usage/billing.mdx:83 --> |
 | Credits Remaining | Remaining credit available <!-- docs/cloud/billing-and-usage/billing.mdx:84 --> |
 
-### Cost by Namespace
-
-Account Owners and Finance Admins can see a cost column on the Usage page, enabling per-Namespace cost monitoring. <!-- docs/cloud/billing-and-usage/billing.mdx:96-98 -->
-
-> **Being replaced.** The [Billing API](#billing-api) will replace the Cost by Namespace UI. It provides the same information on a Namespace basis down to hourly granularity, enriched with Tags and Projects. <!-- docs/cloud/billing-and-usage/billing.mdx:90-92 -->
-
-Namespace cost details are not available for "last 90 days" or "last 120 days". Cost breakdowns distribute the total usage cost to namespaces proportionally based on metered usage. The proration reflects your effective price, factoring in included Actions/Storage and tiered pricing rates in your plan. <!-- docs/cloud/billing-and-usage/billing.mdx:104-108 -->
-
 ### Plans
 
 Account Owners and Finance Admins can view plan information, pricing details, entitlements, available plans, and Pay-as-You-Go pricing rates. On a standard agreement they can also upgrade and downgrade between available plans. <!-- docs/cloud/billing-and-usage/billing.mdx:113-119 -->
