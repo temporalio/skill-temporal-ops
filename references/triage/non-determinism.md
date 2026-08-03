@@ -4,7 +4,7 @@ This file scopes to one specific Workflow Task failure subtype: the one whose `W
 
 Non-determinism is a subtype of the WFT-failure loop documented in [workflow-stuck.md](workflow-stuck.md#pending-workflow-task-and-workflowtaskfailed-loops). For the taxonomy of *other* WFT-failure causes (Unhandled Command, Pending Activities Limit Exceeded, Bad Search Attributes, Workflow Worker Unhandled Failure), start there.
 
-Out of scope here (link, don't absorb):
+Out of scope here:
 - Workflow stuck in general, including other WFT-failure causes → [workflow-stuck.md](workflow-stuck.md)
 - Replaying an Event History locally under a debugger → [replay.md](replay.md)
 - Worker not polling the Workflow Task Queue at all → [worker-health.md](worker-health.md)
@@ -132,7 +132,7 @@ Per-SDK replay APIs (names transcribed from the testing-suite pages; cross-check
 
 For an interactive reproducer with breakpoints over the same replayer APIs, see [replay.md](replay.md).
 
-Export the run's history with:
+Fetch the history with the SDK client in the same test that replays it — per-SDK calls in [replay.md → Step 1](replay.md#step-1--get-the-event-history). Where a file is needed instead:
 
 ```bash
 temporal workflow show \
