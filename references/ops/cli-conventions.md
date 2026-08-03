@@ -69,29 +69,65 @@ The one cross-command rule worth memorizing. Passing `--query` (a
 Execution. (The `--query` form of `temporal activity reset | unpause` behaves the
 same way.)
 
+### Count before you mutate
+
+The mutating form does not report how many Executions it matched until the job is
+already running. Run the query through `count` first and put that number in front
+of the user:
+
+```bash
+temporal workflow count --query 'ExecutionStatus="Running" AND WorkflowType="<YourType>"'
+```
+
+Use the byte-identical query string in both commands — a predicate dropped between
+the `count` and the `terminate` silently widens the blast radius. A filter with no
+narrowing term beyond `ExecutionStatus="Running"` matches every open Execution in
+the Namespace.
+
+### Running an approved batch
+
 ```bash
 temporal workflow terminate \
     --query 'ExecutionStatus="Running" AND WorkflowType="<YourType>"' \
     --reason "<why>" \
     --rps <n> \        # throttle the batch; only valid with --query
-    --yes              # skip the confirm prompt; only valid with --query
+    --yes              # proceed without the interactive prompt
 ```
 
-Inspect and manage the resulting jobs with `temporal batch`:
+Without `--yes` the command prompts `Start batch against approximately N
+workflow(s)? y/N`. That prompt needs a terminal: with no terminal attached it
+reads EOF, reports `user denied confirmation`, exits non-zero, and touches
+nothing. So `--yes` is how an already-approved batch actually runs — and it is
+also what suppresses the `N`, which is why the `count` above is not optional.
+Get the user's approval on the scope, then run it with `--yes`; do not discover
+the flag by retrying a command that failed the prompt.
+
+### Inspecting and aborting a running job
+
+A batch job drains asynchronously, so one started against too broad a query can
+still be stopped before it reaches the rest of its matches:
 
 ```bash
 temporal batch list
-temporal batch describe --job-id <JobId>
-temporal batch terminate --job-id <JobId> --reason "<why>"   # stops the job, not the workflows it already acted on
+temporal batch describe --job-id <JobId>   # progress; how far it has drained
+temporal batch terminate --job-id <JobId> --reason "<why>"
 ```
+
+`batch terminate` stops the job, **not** the Executions it already acted on —
+those are already terminated, cancelled, or deleted and stopping the job does not
+bring them back.
 
 `--reason`, `--rps`, and `--yes` are accepted only when `--query` is present. For
 *which* List Filter to run, see [workflow-health.md](workflow-health.md).
 
-**Destructive single-target commands run with no confirmation.** A single-target
-`workflow cancel | terminate | delete | signal` (with `--workflow-id`) executes
-immediately — the interactive prompt, and `--yes` to skip it, exist **only** on
-the `--query` batch form above. Verify the target before running. And
+### Single-target commands have no prompt at all
+
+A single-target `workflow cancel | terminate | delete | signal` (with
+`--workflow-id`) executes immediately — there is no confirmation and no `--yes`
+to skip, because the prompt exists **only** on the `--query` batch form above.
+The scope is one Execution, but nothing between the command and the effect will
+catch a wrong Workflow ID or a wrong Namespace, so confirm both before running.
+
 `workflow delete` in a multi-region (global) Namespace removes the Execution from
 **all replicas**; requests to a passive cluster are forwarded to the active one by
 default — pass `--grpc-meta xdc-redirection=false` to target a passive cluster.
@@ -117,6 +153,15 @@ search attributes can't be changed after creation. `temporal schedule delete` do
 **not** stop already-running Executions — terminate those separately (e.g.
 `temporal workflow terminate` by `TemporalScheduledById`).
 
+**`backfill` is a fan-out.** It replays the Schedule's actions across a past
+window, so the Executions it starts scale with the window divided by the interval —
+a month backfilled onto a 15-minute schedule is roughly 2,880 of them, and under
+`--overlap-policy AllowAll` they start together rather than queueing. Compute that
+number from the window and interval and put it in front of the user before running
+one, the same way `count` precedes a `--query` mutation. The overlap policy is the
+difference between a backfill that drains and one that stampedes the Worker fleet;
+see [../triage/schedule-missed.md](../triage/schedule-missed.md).
+
 ## Operation → command index
 
 One row per common data-plane operation. The linked file owns the judgment (when
@@ -133,3 +178,10 @@ to run it, how to read the output); run `temporal <cmd> --help` for flags.
 | Complete / fail an activity externally | `temporal activity complete\|fail -a <id> -w <id>` | `temporal activity --help` |
 | Schedule CRUD (create / update / toggle / trigger / delete) | `temporal schedule <sub> -s <id> ...` | this file ([spec forms](#schedule-time-spec-forms)) |
 | Backfill / diagnose missed schedule actions | `temporal schedule backfill -s <id> ...` | [../triage/schedule-missed.md](../triage/schedule-missed.md) |
+
+`activity complete | fail` inject a result the Activity never produced. The
+Workflow resumes on that outcome as if the Activity had really succeeded or
+failed, and the Event History records the supplied result with no undo. They are
+for an Activity genuinely completing asynchronously outside the Worker — propose
+rather than run. To stop a retry loop rather than answer it, use
+[`activity pause`](../triage/workflow-stuck.md#temporal-activity-pause--unpause--reset).

@@ -56,12 +56,16 @@ Lists remote Temporal Clusters registered to the local Service. Reports: name, I
 
 ### Remove cluster
 
+Removes a registered remote Cluster from the local Service. De-registering it
+affects everything relying on replication to that Cluster, across every Namespace
+configured against it — the blast radius is Service-wide, not per-Namespace.
+Confirm the Cluster name and what still depends on it with the user before
+proposing this.
+
 ```bash
 temporal operator cluster remove --name YourClusterName
 ```
 <!-- docs/cli/operator.mdx:101-107 -->
-
-Removes a registered remote Cluster from the local Service.
 
 | Flag | Required | Type | Description |
 |------|----------|------|-------------|
@@ -124,6 +128,11 @@ Note: URI values for archival states can't be changed once enabled. <!-- docs/cl
 
 ### Delete namespace
 
+Deletion is permanent, and it takes the Namespace's Workflow Executions and Task
+Queues with it. Never run it autonomously. Before proposing it, report what the
+Namespace holds — `temporal workflow count --query 'ExecutionStatus="Running"'`
+against that Namespace — and confirm the Namespace name with the user.
+
 ```bash
 temporal operator namespace delete --namespace YourNamespaceName
 ```
@@ -131,7 +140,13 @@ temporal operator namespace delete --namespace YourNamespaceName
 
 | Flag | Required | Type | Description |
 |------|----------|------|-------------|
-| `--yes`, `-y` | No | **bool** | Request confirmation before deletion. | <!-- docs/cli/operator.mdx:236 -->
+| `--yes`, `-y` | No | **bool** | Don't prompt to confirm deletion. | <!-- docs/cli/operator.mdx:236 -->
+
+The confirmation is stronger than the usual `y/N`: the CLI asks for the Namespace
+name to be typed back. Without `--yes`, and with no terminal to answer the prompt,
+the command exits non-zero with `user denied confirmation or mistyped the
+namespace name` and deletes nothing. So `--yes` belongs only in a command the user
+has already approved — never in a retry of one that failed its prompt.
 
 ### Describe namespace
 
@@ -223,12 +238,16 @@ Displays active Search Attributes that can be assigned or used in Workflow Queri
 
 ### Remove search attribute
 
+Confirm with the user before proposing a removal: every List Filter, saved query,
+and Workflow Query referencing the attribute stops resolving, and the effect is
+Namespace-wide rather than scoped to one Workflow.
+
 ```bash
 temporal operator search-attribute remove --name YourAttributeName
 ```
 <!-- docs/cli/operator.mdx:496-501 -->
 
-Skip confirmation prompt:
+Once the user has approved the removal, `--yes` skips the confirmation prompt:
 
 ```bash
 temporal operator search-attribute remove --name YourAttributeName --yes

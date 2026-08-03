@@ -79,6 +79,13 @@ tcld apikey delete --id <apikey_id>
 | `--resource-version` | `-v` | No | ETag; uses latest if not set <!-- docs/cloud/tcld/apikey.mdx:166 --> |
 | `--request-id` | `-r` | No | Server assigns if not set <!-- docs/cloud/tcld/apikey.mdx:178 --> |
 
+Deleting a key immediately breaks every Worker, script, and CI job still
+presenting it, and the key cannot be restored. Identify what is using the key
+before proposing the delete, and confirm with the user rather than deleting
+autonomously. During a rotation, prefer `disable` — it produces the same
+`UNAUTHENTICATED` failure for callers but can be reversed with `enable` if you
+disabled the wrong key. Delete only once the replacement is verified in use.
+
 ### Disable
 
 ```bash
@@ -241,6 +248,13 @@ Must set either `--user-email` or `--user-id`. <!-- docs/cloud/tcld/user.mdx:33 
 | `--request-id` | `-r` | No | <!-- docs/cloud/tcld/user.mdx:59 --> |
 | `--resource-version` | `-v` | No | ETag; uses latest if not set <!-- docs/cloud/tcld/user.mdx:66-69 --> |
 
+Removes the user's access to the account and every Namespace they held
+permissions on. Confirm the identity with the user before running — `--user-email`
+is easy to mistype into a valid address belonging to someone else, so prefer
+`tcld user list` to resolve the exact `--user-id` first and propose the delete
+against that. To reduce a user's access rather than remove them, update their
+account role or Namespace permissions instead.
+
 ### Resend Invite
 
 ```bash
@@ -389,6 +403,14 @@ tcld user-group delete --group-id <id>
 
 Alias: `d` <!-- docs/cloud/tcld/user-group.mdx:74 -->
 
+Every member loses the Namespace permissions the group conferred, which can
+revoke access for many people at once. List the members first and confirm the
+scope with the user before proposing the delete. To remove one person, use
+`remove-users`; to change what the group grants, update its permissions. For a
+SCIM-synced group the IdP owns group create/update/delete and membership, so
+deleting it here does not change the IdP — offboard in the IdP instead. See
+[cloud-saml-scim.md](cloud-saml-scim.md).
+
 ### Add Users
 
 ```bash
@@ -501,6 +523,12 @@ tcld service-account delete --service-account-id "<id>"
 <!-- docs/cloud/manage-access/service-accounts.mdx:142-146 -->
 
 Deleting a Service Account automatically deletes all associated API keys. <!-- docs/cloud/manage-access/service-accounts.mdx:127-128 -->
+
+The blast radius is not one identity but every Worker and automation
+authenticating with any key the Service Account owns, and none of it is
+recoverable. Run `tcld apikey list --owner-type service-account --owner-id
+<id>` first, report what would be revoked, and confirm with the user before
+proposing the delete.
 
 ### Update
 

@@ -31,8 +31,59 @@ If the conversation drifts into one of these areas, hand off to the relevant sib
 When the user wants to perform an operational task:
 
 1. **Identify the intent and backend.** Is this a Cloud operation (`tcld`) or a self-hosted operation (`temporal operator`)? Data-plane operations (`temporal workflow`, `temporal batch`, etc.) work on both. **If the backend is ambiguous, ask before proceeding — do not assume Cloud or self-hosted and do not output environment-specific commands until you know.**
-2. **Execute commands and interpret output.** Run the documented command, read the result, and report what it means — or act on it if the user asked for an action.
+2. **Execute commands and interpret output.** Run the documented command, read the result, and report what it means — or act on it if the user asked for an action. Read-only commands (`get`, `list`, `describe`, `count`, `show`) run freely. Anything listed under [Destructive operations](#destructive-operations) is proposed to the user first.
 3. **Verify the result.** After a mutating operation, confirm the new state matches the user's intent.
+
+### Destructive operations
+
+An operation belongs to this tier if it is **irreversible** (`tcld namespace
+delete`), **revokes access for a live identity** (`tcld apikey delete`), **moves
+production traffic** (`tcld namespace failover`), or **fans out to every match**
+(any `--query` form). Apply the test to the operation in front of you — this is a
+rule, not a list, and a command's absence from any list in this skill does not
+place it outside the tier.
+
+For anything in the tier: gather the evidence and **propose**. Do not run it on
+your own initiative, and do not run one to find out what it would do. The
+reference file for each command states its specific blast radius; read that
+before proposing, not after.
+
+1. **Blast radius as a number, not a description.** For any `--query` form, run
+   `temporal workflow count --query '<query>'` with the byte-identical query
+   first and carry the result into the proposal. A filter with no narrowing
+   predicate beyond `ExecutionStatus="Running"` matches every open Execution in
+   the Namespace.
+2. **Name the target.** State the exact command, the target, and the Namespace it
+   resolves to. Connection settings can come from `TEMPORAL_*` env vars or a
+   config-file profile, so the target is frequently not visible in the command
+   text. If the backend or Namespace was inferred from context rather than stated
+   by the user, say so — a destructive command aimed at the wrong Namespace is the
+   most common way this goes wrong.
+3. **Ask explicitly, then run it so it completes.** Put the command, the target,
+   and — for any `--query` form — the count from step 1 to the user as a direct
+   question, and wait for an answer. Once they approve, run it with `--yes` on the
+   `--query` batch forms; that flag is what lets an approved batch finish, since
+   the interactive prompt needs a terminal and without one the command reports
+   `user denied confirmation` and does nothing. `--yes` belongs in a command the
+   user approved, never in a retry of one that failed its prompt. Do not substitute
+   a loop over single-target `workflow terminate --workflow-id`. Approval covers one
+   command against one target; it does not carry to the next command, a widened
+   query, or a second Namespace.
+4. **Verify, and know the abort path.** Re-run the corresponding `get`,
+   `describe`, or `count`. A batch job drains asynchronously:
+   `temporal batch describe --job-id <id>` shows how far it has gotten and
+   `temporal batch terminate --job-id <id>` stops it before it reaches the rest
+   of its matches.
+
+When a reversible sibling reaches the same goal, propose it alongside: `cancel`
+lets Workflow cleanup code run where `terminate` does not; `apikey disable` is
+reversible where `delete` is not; `accepted-client-ca add` appends where `set`
+replaces.
+
+Assume nothing in the environment will stop a destructive command on your behalf.
+Credential scope, command denylists, and confirmation prompts may or may not be
+configured, and their possible presence is not a reason to skip any step above —
+you are the safeguard the user is relying on.
 
 ### Diagnostic discipline
 

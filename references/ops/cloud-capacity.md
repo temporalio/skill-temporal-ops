@@ -148,6 +148,15 @@ tcld namespace capacity get \
 
 If using API key authentication with `--api-key`, add it directly after `tcld` and before `capacity update`. <!-- docs/cloud/capacity-modes.mdx:221 -->
 
+`capacity update` changes both the bill and the throughput ceiling, so propose it
+rather than running it: read the current setting with `capacity get` first, and put
+the before-and-after mode and TRU count in front of the user. The direction that
+causes an incident is downward — lowering TRUs, or switching `provisioned` →
+`on_demand` on a Namespace that was provisioned precisely because auto-scaling
+could not keep up, throttles production traffic with `RESOURCE_EXHAUSTED` rather
+than failing the command. See [Throttling Behavior](#throttling-behavior) and
+[../triage/rate-limits.md](../triage/rate-limits.md).
+
 ### UI
 
 Navigate to the Namespace page in Temporal Cloud UI (`https://cloud.temporal.io/namespaces/<Namespace ID>`), click **Manage Capacity**, then select On-Demand or Provisioned and configure TRUs via the slider. <!-- docs/cloud/capacity-modes.mdx:183-198 -->
