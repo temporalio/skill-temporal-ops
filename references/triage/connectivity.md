@@ -2,7 +2,7 @@
 
 Diagnose failures to reach the Temporal frontend at the network layer — DNS resolution, TCP reachability, wrong endpoint, firewall/proxy drops, PrivateLink / Private Service Connect routing. This file covers layers 1 and 2 of the [diagnostic ladder](diagnostic-ladder.md).
 
-Out of scope here (link, don't absorb):
+Out of scope here:
 - TLS handshake / x509 / server-name mismatch → [certificates.md](certificates.md) (layer 3)
 - gRPC `UNAUTHENTICATED` / `PERMISSION_DENIED` → [authentication.md](authentication.md) (layer 4)
 - gRPC `RESOURCE_EXHAUSTED` → [rate-limits.md](rate-limits.md)

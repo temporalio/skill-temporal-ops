@@ -8,7 +8,7 @@ Prerequisite: before reading this file, rule out layers 1 and 2 (DNS, TCP). TLS 
 
 **Flexible Auth (mTLS + API key on the same Namespace):** When a Namespace has both auth methods enabled concurrently, a TLS-layer failure on the mTLS leg can be masked by a successful API-key path (and vice versa). Before triaging, confirm which auth method the failing client is using. If the same client is configured for both, disable one at a time to isolate which leg is broken. The recipes in this file apply to the mTLS leg only; API-key auth failures live in [authentication.md](authentication.md).
 
-Out of scope here (link, don't absorb):
+Out of scope here:
 - DNS / TCP / endpoint / firewall → [connectivity.md](connectivity.md) (layers 1-2)
 - gRPC `UNAUTHENTICATED` after a successful TLS handshake → [authentication.md](authentication.md) (layer 4)
 - API-key auth semantics (API-key connections still ride TLS, so TLS-level issues in this file apply — but the API-key authorization check itself is not a TLS issue) → [authentication.md](authentication.md)

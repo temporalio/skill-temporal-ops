@@ -4,7 +4,7 @@ Diagnose gRPC `RESOURCE_EXHAUSTED` <!-- grpc: RESOURCE_EXHAUSTED --> against Tem
 
 Prerequisite: `RESOURCE_EXHAUSTED` is returned *after* the connection, TLS, and auth layers have succeeded. If you do not yet know that the caller is reaching the frontend, rule out layers 1–3 first via [connectivity.md](connectivity.md), [certificates.md](certificates.md), and [authentication.md](authentication.md).
 
-Out of scope here (link, don't absorb):
+Out of scope here:
 - DNS / TCP / endpoint → [connectivity.md](connectivity.md)
 - TLS / x509 → [certificates.md](certificates.md)
 - `UNAUTHENTICATED` / `PERMISSION_DENIED` → [authentication.md](authentication.md)
