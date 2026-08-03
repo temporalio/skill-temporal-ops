@@ -54,8 +54,8 @@ Full env-var list: [docs.temporal.io/cli/setup-cli](https://docs.temporal.io/cli
 ## Output and formatting
 
 - `--output`, `-o` — `text` (default), `json`, `jsonl`, `none`. Use `json`/`jsonl`
-  for scripting and pipe to `jq`; every triage/health workflow that fans out over
-  many results assumes JSON output.
+  for scripting and pipe to `jq`; the triage/health runbooks recommend JSON
+  output whenever a step fans out over many results.
 - `--time-format` — `relative` (default), `iso`, `raw`.
 - Payload shorthand: JSON output renders payloads inline by default; pass
   `--no-json-shorthand-payloads` to emit the raw payload envelope instead.
