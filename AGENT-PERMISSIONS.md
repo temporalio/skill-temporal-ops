@@ -13,6 +13,8 @@ behavior, not a boundary — it depends on the agent following instructions, and
 offers no protection against a mistake you approve because the proposal looked
 reasonable.
 
+**It is strongly recommended to manually review every command the agent seeks to perform against your temporal account and namespaces. **
+
 If you want a boundary, it has to live in your environment. Three tiers below,
 strongest first. They compose, and the first one is worth doing even if you skip
 the others.
@@ -21,20 +23,12 @@ the others.
 
 ## Tier 1: scope the credentials you hand the agent
 
-You have to authenticate `tcld` and `temporal` before any of this works, so this is
-the one tier that costs nothing extra — it is a decision about *which* credential
-you set up, made at the moment you were already setting one up.
+You have to authenticate `tcld` and `temporal` before the agent, with or without the skill, can take action against temporal. Be judicious in which credentials you are giving to which accounts and namespaces. Understand that LLM based AI agents are non deterministic have documented history of making mistakes.
 
-Give an agent session a credential that cannot perform the operations you would not
-approve. This holds regardless of which agent tool you use, survives any prompt
-that gets clicked through, and is the only tier that still applies when someone
-runs a command by hand in the wrong terminal.
+It's recommended to give an agent session a credential that cannot perform the operations you would not approve. This holds regardless of which agent tool you use.
 
 - **Use a scoped Service Account, not your own login.** Temporal Cloud has
-  account-level roles and per-Namespace permissions. A Service Account with `Read`
-  on production and `Admin` only on a scratch Namespace turns
-  `tcld namespace delete --namespace prod...` into a `PERMISSION_DENIED` that no
-  regex had to catch. See `references/ops/cloud-iam.md`.
+  account-level roles and per-Namespace permissions. 
 - **Point the default profile somewhere harmless.** Both CLIs resolve connection
   settings from flags, then `TEMPORAL_*` / `TEMPORAL_CLOUD_NAMESPACE` env vars,
   then a config-file profile — so a command with no explicit `--namespace` lands
@@ -177,12 +171,9 @@ fall back to exiting 2 for tier B as well and run those commands yourself.
 
 ---
 
-## What none of this covers
+## More info
 
-Not every destructive operation leaves a trail. Activity Operations
-(`temporal activity pause | unpause | reset`) produce no Event History events, so
-they leave no record beyond the current `describe` output — if one gets through,
-there is nothing to review afterwards.
+Not every destructive operation leaves a trail.
 
 And a batch job drains asynchronously. Once it starts, the useful question is no
 longer whether it was approved but how far it has gotten:
