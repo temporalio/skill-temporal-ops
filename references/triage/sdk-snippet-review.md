@@ -4,7 +4,7 @@ A Layer-0 config check that runs **before** the [diagnostic ladder](diagnostic-l
 
 This file is a **cross-SDK** checklist for **Temporal Cloud** client/worker connection config. SDK-specific field names (`tls.Config{}` in Go, `Connection.connect({ tls })` in TypeScript, `TLSConfig` in Python) belong to `skill-temporal-developer`. Stay at the level of: endpoint, namespace, auth method, TLS expectations, env vars.
 
-Out of scope here (link, don't absorb):
+Out of scope here:
 - Network-layer probes (DNS / TCP / TLS / auth) → [diagnostic-ladder.md](diagnostic-ladder.md)
 - Endpoint-family rationale and DNS failure shapes → [connectivity.md → Endpoint formats](connectivity.md#endpoint-formats)
 - API-key lifecycle and address guidance → [authentication.md → Address form for API-key connections](authentication.md#address-form-for-api-key-connections)

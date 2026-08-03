@@ -4,7 +4,7 @@ A Workflow Execution exists, is reachable, reports an Open status, but is not ma
 
 Prerequisite: the client can reach the Temporal Service, authenticate, and issue data-plane RPCs. If `temporal workflow describe` itself fails, the problem is not in this file — rule out earlier layers via [connectivity.md](connectivity.md), [certificates.md](certificates.md), [authentication.md](authentication.md), and [rate-limits.md](rate-limits.md).
 
-Out of scope here (link, don't absorb):
+Out of scope here:
 - Task Queue has no pollers / workers not polling → [worker-health.md](worker-health.md)
 - Replaying recorded history diverges from the compiled Workflow (non-determinism) → [non-determinism.md](non-determinism.md)
 - Replaying an Event History locally under a debugger → [replay.md](replay.md)

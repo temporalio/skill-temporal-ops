@@ -4,7 +4,7 @@ Diagnose worker-side failures that surface as tasks not being picked up, picked 
 
 Prerequisite: layers 1–4 already succeed. If the worker cannot connect or cannot authenticate, its pollers will never register and every symptom here is secondary — rule those out via [connectivity.md](connectivity.md), [certificates.md](certificates.md), [authentication.md](authentication.md) first.
 
-Out of scope here (link, don't absorb):
+Out of scope here:
 - Pending activity / pending child / pending signal inside a specific Workflow Execution → [workflow-stuck.md](workflow-stuck.md)
 - Non-determinism / replay errors / `WorkflowTaskFailed` loops → [non-determinism.md](non-determinism.md)
 - gRPC `RESOURCE_EXHAUSTED` <!-- grpc: RESOURCE_EXHAUSTED --> / server-side throttling → [rate-limits.md](rate-limits.md)

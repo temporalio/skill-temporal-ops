@@ -4,7 +4,7 @@ Diagnose Temporal Cloud Multi-region / Multi-cloud Namespace failover symptoms: 
 
 Citations point at stable doc anchors (slug + heading), e.g. `/cloud/high-availability/ha-connectivity#namespace-endpoint-recommended`. They are public URL fragments, not line numbers — durable across doc edits.
 
-Out of scope here (link, don't absorb):
+Out of scope here:
 - DNS / TCP reachability in general (before HA is even a hypothesis) → [connectivity.md](connectivity.md) (layers 1-2), which also carries the PrivateLink / CNAME facts in [§ PrivateLink and PSC](connectivity.md#privatelink-and-psc).
 - Worker placement architecture decisions (cost, latency, pattern selection) → `skill-temporal-deploy`. This file gives only a triage-layer pointer.
 - Enabling HA / choosing replica regions / pricing at setup time → `/cloud/high-availability/enable`.

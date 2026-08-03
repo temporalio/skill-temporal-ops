@@ -4,7 +4,7 @@ Diagnose failures that happen *after* TLS has completed — the TCP connection i
 
 Prerequisite: rule out layers 1–3 first. If `openssl s_client` (see [certificates.md → openssl recipes](certificates.md#openssl-recipes)) does not print `Verify return code: 0 (ok)`, the problem is not in this file.
 
-Out of scope here (link, don't absorb):
+Out of scope here:
 - DNS / TCP / endpoint family → [connectivity.md](connectivity.md) (layers 1–2)
 - TLS handshake / x509 / SNI override → [certificates.md](certificates.md) (layer 3)
 - gRPC `RESOURCE_EXHAUSTED` → [rate-limits.md](rate-limits.md)
@@ -168,7 +168,7 @@ Case (1) is an authorization rejection *after* a clean TLS handshake. The exact 
 
 ### Certificate filters
 
-Cloud Namespace certificate filters are configured at the Namespace level and restrict which end-entity (leaf) certificates may authenticate, even when the issuing CA is in the accepted-client-ca set. Per the Cloud docs: "To limit access to specific [end-entity certificates](#end-entity-certificates), create certificate filters. Each filter contains values for one or more of the following fields: commonName (CN), organization (O), organizationalUnit (OU), subjectAlternativeName (SAN)." <!-- docs/cloud/get-started/certificates.mdx:404-410 --> "Corresponding fields in the client certificate must match every specified value in the filter." <!-- docs/cloud/get-started/certificates.mdx:412 -->
+Cloud Namespace certificate filters are configured at the Namespace level and restrict which end-entity (leaf) certificates may authenticate, even when the issuing CA is in the accepted-client-ca set. Per the Cloud docs: "To limit access to specific end-entity certificates, create certificate filters. Each filter contains values for one or more of the following fields: commonName (CN), organization (O), organizationalUnit (OU), subjectAlternativeName (SAN)." <!-- docs/cloud/get-started/certificates.mdx:404-410 --> "Corresponding fields in the client certificate must match every specified value in the filter." <!-- docs/cloud/get-started/certificates.mdx:412 -->
 
 Matching rules worth knowing when diagnosing a filter mismatch:
 
