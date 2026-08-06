@@ -10,40 +10,40 @@ Backend-agnostic (works on Temporal Cloud and self-hosted).
 
 ## 1. List Filter fundamentals
 
-`temporal workflow list` accepts an optional `--query` (`-q`) flag whose value is an SQL-like List Filter string. <!-- docs/cli/workflow.mdx:280-286 -->
+`temporal workflow list` accepts an optional `--query` (`-q`) flag whose value is an SQL-like List Filter string.
 
 ### Supported operators
 
-`=, !=, >, >=, <, <=` | `AND, OR, ()` | `BETWEEN ... AND` | `IN` | `STARTS_WITH` <!-- docs/encyclopedia/visibility/list-filter.mdx:36-40 -->
+`=, !=, >, >=, <, <=` | `AND, OR, ()` | `BETWEEN ... AND` | `IN` | `STARTS_WITH`
 
-Additional filter expressions: `IS NULL`, `IS NOT NULL` <!-- docs/encyclopedia/visibility/list-filter.mdx:117 -->
+Additional filter expressions: `IS NULL`, `IS NOT NULL`
 
-> **ORDER BY is not supported in Temporal Cloud.** <!-- docs/encyclopedia/visibility/list-filter.mdx:44 -->
-> The default ordering is `ClosedTime DESC NULL FIRST`, `StartTime DESC`. <!-- docs/encyclopedia/visibility/list-filter.mdx:46 -->
+> **ORDER BY is not supported in Temporal Cloud.**
+> The default ordering is `ClosedTime DESC NULL FIRST`, `StartTime DESC`.
 
 ### Key Search Attributes for health queries
 
-All of the following are default (built-in) Search Attributes: <!-- docs/encyclopedia/visibility/search-attributes.mdx:70-101 -->
+All of the following are default (built-in) Search Attributes:
 
 | Attribute | Type | Notes |
 |-----------|------|-------|
-| `ExecutionStatus` | Keyword | Current state. Values: `Running`, `Completed`, `Failed`, `Canceled`, `Terminated`, `ContinuedAsNew`, `TimedOut` <!-- docs/encyclopedia/visibility/search-attributes.mdx:111 --> |
-| `WorkflowType` | Keyword | The type of Workflow <!-- docs/encyclopedia/visibility/search-attributes.mdx:100 --> |
-| `WorkflowId` | Keyword | Identifies the Workflow Execution <!-- docs/encyclopedia/visibility/search-attributes.mdx:99 --> |
-| `TaskQueue` | Keyword | Task Queue used by Workflow Execution <!-- docs/encyclopedia/visibility/search-attributes.mdx:89 --> |
-| `StartTime` | Datetime | Time the Workflow Execution started <!-- docs/encyclopedia/visibility/search-attributes.mdx:87 --> |
-| `CloseTime` | Datetime | Time the Workflow Execution completed (closed workflows only) <!-- docs/encyclopedia/visibility/search-attributes.mdx:80 --> |
-| `ExecutionTime` | Datetime | Actual begin time; differs from `StartTime` for cron/retry <!-- docs/encyclopedia/visibility/search-attributes.mdx:83 --> |
-| `ExecutionDuration` | Int | Time to run in nanoseconds (closed workflows only) <!-- docs/encyclopedia/visibility/search-attributes.mdx:81 --> |
-| `HistoryLength` | Int | Event count (closed workflows only) <!-- docs/encyclopedia/visibility/search-attributes.mdx:84 --> |
-| `HistorySizeBytes` | Long | Size of Event History <!-- docs/encyclopedia/visibility/search-attributes.mdx:85 --> |
-| `StateTransitionCount` | Int | Number of state persists (closed workflows only) <!-- docs/encyclopedia/visibility/search-attributes.mdx:88 --> |
+| `ExecutionStatus` | Keyword | Current state. Values: `Running`, `Completed`, `Failed`, `Canceled`, `Terminated`, `ContinuedAsNew`, `TimedOut` |
+| `WorkflowType` | Keyword | The type of Workflow |
+| `WorkflowId` | Keyword | Identifies the Workflow Execution |
+| `TaskQueue` | Keyword | Task Queue used by Workflow Execution |
+| `StartTime` | Datetime | Time the Workflow Execution started |
+| `CloseTime` | Datetime | Time the Workflow Execution completed (closed workflows only) |
+| `ExecutionTime` | Datetime | Actual begin time; differs from `StartTime` for cron/retry |
+| `ExecutionDuration` | Int | Time to run in nanoseconds (closed workflows only) |
+| `HistoryLength` | Int | Event count (closed workflows only) |
+| `HistorySizeBytes` | Long | Size of Event History |
+| `StateTransitionCount` | Int | Number of state persists (closed workflows only) |
 
-Search Attribute names are case sensitive. <!-- docs/encyclopedia/visibility/list-filter.mdx:27 -->
+Search Attribute names are case sensitive.
 
-Datetime attributes accept RFC3339Nano strings (e.g. `"2024-01-15T10:00:00Z"`) or epoch-nanosecond integers. <!-- docs/encyclopedia/visibility/search-attributes.mdx:113 -->
+Datetime attributes accept RFC3339Nano strings (e.g. `"2024-01-15T10:00:00Z"`) or epoch-nanosecond integers.
 
-`ExecutionDuration` accepts nanosecond integers, Golang duration format, or `"hh:mm:ss"` format. <!-- docs/encyclopedia/visibility/search-attributes.mdx:115 -->
+`ExecutionDuration` accepts nanosecond integers, Golang duration format, or `"hh:mm:ss"` format.
 
 ---
 
@@ -55,7 +55,6 @@ Datetime attributes accept RFC3339Nano strings (e.g. `"2024-01-15T10:00:00Z"`) o
 temporal workflow list \
     --query "ExecutionStatus = 'Running'"
 ```
-<!-- docs/cli/workflow.mdx:280-286, docs/encyclopedia/visibility/search-attributes.mdx:111 -->
 
 ### All failed workflows
 
@@ -63,7 +62,6 @@ temporal workflow list \
 temporal workflow list \
     --query "ExecutionStatus = 'Failed'"
 ```
-<!-- docs/encyclopedia/visibility/search-attributes.mdx:111 -->
 
 ### All timed-out workflows
 
@@ -71,7 +69,6 @@ temporal workflow list \
 temporal workflow list \
     --query "ExecutionStatus = 'TimedOut'"
 ```
-<!-- docs/encyclopedia/visibility/search-attributes.mdx:111 -->
 
 ### All terminated workflows
 
@@ -79,7 +76,6 @@ temporal workflow list \
 temporal workflow list \
     --query "ExecutionStatus = 'Terminated'"
 ```
-<!-- docs/encyclopedia/visibility/search-attributes.mdx:111 -->
 
 ### Non-running workflows (any closed status)
 
@@ -87,7 +83,6 @@ temporal workflow list \
 temporal workflow list \
     --query "ExecutionStatus != 'Running'"
 ```
-<!-- docs/encyclopedia/visibility/list-filter.mdx:142-143 -->
 
 ---
 
@@ -101,7 +96,6 @@ Workflows that started more than 24 hours ago and are still running:
 temporal workflow list \
     --query "ExecutionStatus = 'Running' AND StartTime < '2024-01-14T00:00:00Z'"
 ```
-<!-- docs/encyclopedia/visibility/list-filter.mdx:174, docs/encyclopedia/visibility/search-attributes.mdx:87 -->
 
 Replace the timestamp with the appropriate cutoff for your use case.
 
@@ -111,7 +105,6 @@ Replace the timestamp with the appropriate cutoff for your use case.
 temporal workflow list \
     --query "ExecutionStatus = 'Running' AND TaskQueue = 'my-task-queue'"
 ```
-<!-- docs/encyclopedia/visibility/search-attributes.mdx:89 -->
 
 ### Running workflows of a specific type
 
@@ -119,7 +112,6 @@ temporal workflow list \
 temporal workflow list \
     --query "ExecutionStatus = 'Running' AND WorkflowType = 'MyWorkflow'"
 ```
-<!-- docs/encyclopedia/visibility/search-attributes.mdx:100 -->
 
 ### Combining conditions
 
@@ -127,7 +119,6 @@ temporal workflow list \
 temporal workflow list \
     --query "WorkflowType = 'OrderWorkflow' AND ExecutionStatus = 'Running' AND StartTime < '2024-01-14T00:00:00Z'"
 ```
-<!-- docs/encyclopedia/visibility/list-filter.mdx:142-143 -->
 
 ### Workflows started in a time window
 
@@ -135,7 +126,6 @@ temporal workflow list \
 temporal workflow list \
     --query "StartTime BETWEEN '2024-01-01T00:00:00Z' AND '2024-01-02T00:00:00Z'"
 ```
-<!-- docs/encyclopedia/visibility/list-filter.mdx:177-178 -->
 
 ### Matching Workflow IDs by prefix
 
@@ -143,15 +133,14 @@ temporal workflow list \
 temporal workflow list \
     --query "WorkflowId STARTS_WITH 'order-'"
 ```
-<!-- docs/encyclopedia/visibility/list-filter.mdx:86-89 -->
 
-`STARTS_WITH` is only available for Keyword Search Attributes. <!-- docs/encyclopedia/visibility/list-filter.mdx:125 -->
+`STARTS_WITH` is only available for Keyword Search Attributes.
 
 ---
 
 ## 4. Counting workflows
 
-`temporal workflow count` returns a count of Workflow Executions regardless of execution state. Use `--query` to filter: <!-- docs/cli/workflow.mdx:88-96 -->
+`temporal workflow count` returns a count of Workflow Executions regardless of execution state. Use `--query` to filter:
 
 ```
 temporal workflow count \
@@ -174,14 +163,14 @@ Use count to detect anomalies: a rising count of `Running` workflows with a stab
 
 ## 5. Describing a specific workflow
 
-`temporal workflow describe` displays information about a specific Workflow Execution: <!-- docs/cli/workflow.mdx:133-140 -->
+`temporal workflow describe` displays information about a specific Workflow Execution:
 
 ```
 temporal workflow describe \
     --workflow-id YourWorkflowId
 ```
 
-Key flags: <!-- docs/cli/workflow.mdx:150-157 -->
+Key flags:
 
 | Flag | Description |
 |------|-------------|
@@ -194,14 +183,14 @@ The output includes execution status, start/close times, task queue, workflow ty
 
 ### Viewing Event History
 
-`temporal workflow show` displays the full Event History: <!-- docs/cli/workflow.mdx:422-431 -->
+`temporal workflow show` displays the full Event History:
 
 ```
 temporal workflow show \
     --workflow-id YourWorkflowId
 ```
 
-Key flags: <!-- docs/cli/workflow.mdx:434-441 -->
+Key flags:
 
 | Flag | Description |
 |------|-------------|
@@ -212,7 +201,7 @@ Key flags: <!-- docs/cli/workflow.mdx:434-441 -->
 | `--detailed` | Display events as detailed sections |
 | `--output json` | JSON output (usable for SDK replay) |
 
-Export history for replay: <!-- docs/cli/workflow.mdx:424-426 -->
+Export history for replay:
 
 ```
 temporal workflow show \
@@ -224,16 +213,16 @@ temporal workflow show \
 
 ## 6. Stack trace
 
-Get the current stack trace of a running Workflow's threads/routines: <!-- docs/cli/workflow.mdx:527-533 -->
+Get the current stack trace of a running Workflow's threads/routines:
 
 ```
 temporal workflow stack \
     --workflow-id YourWorkflowId
 ```
 
-This performs a `__stack_trace`-type Query on the Workflow Execution. <!-- docs/cli/workflow.mdx:527 -->
+This performs a `__stack_trace`-type Query on the Workflow Execution.
 
-Flags: <!-- docs/cli/workflow.mdx:536-542 -->
+Flags:
 
 | Flag | Description |
 |------|-------------|
@@ -245,14 +234,14 @@ Flags: <!-- docs/cli/workflow.mdx:536-542 -->
 
 ## 7. Task Queue poller status
 
-`temporal task-queue describe` displays active Workers that have recently polled a Task Queue. <!-- docs/cli/task-queue.mdx:106-109 -->
+`temporal task-queue describe` displays active Workers that have recently polled a Task Queue.
 
 ```
 temporal task-queue describe \
     --task-queue YourTaskQueue
 ```
 
-**Interpreting poller results:** <!-- docs/cli/task-queue.mdx:107-109 -->
+**Interpreting poller results:**
 
 - The Temporal Server records each poll request time.
 - A `LastAccessTime` over one minute may indicate the Worker is at capacity or has shut down.
@@ -260,7 +249,7 @@ temporal task-queue describe \
 
 ### Workflow vs. Activity pollers
 
-Workflow and Activity polling use separate Task Queues. Specify the type to check Activity pollers: <!-- docs/cli/task-queue.mdx:117-123 -->
+Workflow and Activity polling use separate Task Queues. Specify the type to check Activity pollers:
 
 ```
 temporal task-queue describe \
@@ -268,11 +257,11 @@ temporal task-queue describe \
     --task-queue-type "activity"
 ```
 
-The `--task-queue-type` flag accepts: `workflow`, `activity`, `nexus`. If not specified, all types are reported. <!-- docs/cli/task-queue.mdx:200 -->
+The `--task-queue-type` flag accepts: `workflow`, `activity`, `nexus`. If not specified, all types are reported.
 
 ### Backlog statistics
 
-The describe output includes the following statistics: <!-- docs/cli/task-queue.mdx:125-149 -->
+The describe output includes the following statistics:
 
 | Statistic | Description |
 |-----------|-------------|
@@ -282,9 +271,9 @@ The describe output includes the following statistics: <!-- docs/cli/task-queue.
 | `TasksDispatchRate` | Approximate tasks dispatched per second, averaged over the last 30 seconds. Includes sync-matched tasks. |
 | `BacklogIncreaseRate` | Approximate rate of backlog growth (positive) or shrinkage (negative), in tasks per second. Roughly `TasksAddRate - TasksDispatchRate`. |
 
-> **Note:** `TasksAddRate` and `TasksDispatchRate` may differ from actual rates because eagerly dispatched or sticky tasks are not counted. The derived `BacklogIncreaseRate` is accurate for backlogs older than a few seconds. <!-- docs/cli/task-queue.mdx:144-149 -->
+> **Note:** `TasksAddRate` and `TasksDispatchRate` may differ from actual rates because eagerly dispatched or sticky tasks are not counted. The derived `BacklogIncreaseRate` is accurate for backlogs older than a few seconds.
 
-To disable statistics and show only poller info, use `--disable-stats`. <!-- docs/cli/task-queue.mdx:191 -->
+To disable statistics and show only poller info, use `--disable-stats`.
 
 ### What to look for
 
@@ -296,14 +285,14 @@ To disable statistics and show only poller info, use `--disable-stats`. <!-- doc
 
 ## 8. Workflow tracing
 
-Display progress of a Workflow Execution and its child workflows in real time: <!-- docs/cli/workflow.mdx:682-689 -->
+Display progress of a Workflow Execution and its child workflows in real time:
 
 ```
 temporal workflow trace \
     --workflow-id YourWorkflowId
 ```
 
-Key flags: <!-- docs/cli/workflow.mdx:692-699 -->
+Key flags:
 
 | Flag | Description |
 |------|-------------|
@@ -324,7 +313,6 @@ temporal workflow list \
     --query "ExecutionStatus = 'Running'" \
     --limit 50
 ```
-<!-- docs/cli/workflow.mdx:303 -->
 
 ### Page size
 
@@ -333,20 +321,18 @@ temporal workflow list \
     --query "ExecutionStatus = 'Running'" \
     --page-size 100
 ```
-<!-- docs/cli/workflow.mdx:304 -->
 
 ### JSON output
 
-Use `--output json` or `--output jsonl` on any command for machine-readable output. <!-- docs/cli/workflow.mdx:898 -->
+Use `--output json` or `--output jsonl` on any command for machine-readable output.
 
 ### Archived workflows
 
 ```
 temporal workflow list --archived
 ```
-<!-- docs/cli/workflow.mdx:292-296 -->
 
-This is an experimental feature. <!-- docs/cli/workflow.mdx:302 -->
+This is an experimental feature.
 
 ---
 
@@ -397,11 +383,11 @@ temporal workflow count \
     --query "ExecutionStatus = 'Failed' AND WorkflowType = '<YourWorkflowType>'"
 ```
 
-This identifies which Workflow Type is contributing the most failures rather than returning a flat list. `GROUP BY` in the Count API only supports grouping by `ExecutionStatus`, not by `WorkflowType` or other attributes — use per-type filtered counts instead. <!-- docs/encyclopedia/visibility/visibility.mdx:41-53 -->
+This identifies which Workflow Type is contributing the most failures rather than returning a flat list. `GROUP BY` in the Count API only supports grouping by `ExecutionStatus`, not by `WorkflowType` or other attributes — use per-type filtered counts instead.
 
 ### Pattern: "Workflows approaching history limits"
 
-The server terminates a Workflow Execution when its Event History exceeds 51,200 events, contains more than 2,000 Updates, or more than 10,000 Signals. <!-- docs/encyclopedia/workflow/workflow-execution/event.mdx:74-78 --> The `HistoryLength` Search Attribute surfaces the event count for running workflows. <!-- docs/encyclopedia/visibility/search-attributes.mdx:84 -->
+The server terminates a Workflow Execution when its Event History exceeds 51,200 events, contains more than 2,000 Updates, or more than 10,000 Signals. The `HistoryLength` Search Attribute surfaces the event count for running workflows.
 
 ```bash
 temporal workflow list \
@@ -429,7 +415,7 @@ For diagnosing *why* a workflow is stuck, see `../triage/workflow-stuck.md`.
 
 ## Quick reference: List Filter examples from docs
 
-The following examples are taken directly from the docs: <!-- docs/encyclopedia/visibility/list-filter.mdx:141-186 -->
+The following examples are taken directly from the docs:
 
 ```sql
 WorkflowType = "main.YourWorkflowDefinition" and ExecutionStatus != "Running" and (StartTime > "2021-06-07T16:46:34.236-08:00" or CloseTime > "2021-06-07T16:46:34-08:00")

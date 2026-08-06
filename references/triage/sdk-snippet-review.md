@@ -26,10 +26,10 @@ Out of scope here:
 
 Run snippet review when the user pastes SDK connection code **and** reports any of:
 
-- Cannot connect to Cloud, `UNAVAILABLE` on first attempt <!-- grpc: UNAVAILABLE -->
-- `UNAUTHENTICATED` / `PERMISSION_DENIED` on first attempt <!-- grpc: UNAUTHENTICATED --> <!-- grpc: PERMISSION_DENIED -->
-- `context deadline exceeded` with no prior-success baseline <!-- grpc: DEADLINE_EXCEEDED -->
-- `namespace not found` / `INVALID_ARGUMENT` <!-- grpc: INVALID_ARGUMENT -->
+- Cannot connect to Cloud, `UNAVAILABLE` on first attempt
+- `UNAUTHENTICATED` / `PERMISSION_DENIED` on first attempt
+- `context deadline exceeded` with no prior-success baseline
+- `namespace not found` / `INVALID_ARGUMENT`
 - "This worked yesterday" **after** a config change
 
 Skip snippet review (go straight to the ladder) when the user has an established, previously-working config and the symptom is new — the snippet is not the culprit, something in the environment changed.
@@ -52,10 +52,10 @@ Cloud data-plane endpoints (port `7233`) plus the control-plane endpoint:
 
 | Purpose | Form | Typical use |
 |---|---|---|
-| Namespace Endpoint (recommended default) | `<namespace>.<account>.tmprl.cloud:7233` | mTLS and API-key-only Namespaces; follows HA failovers <!-- docs/cloud/get-started/namespaces.mdx — access-namespaces --> <!-- docs/cloud/get-started/api-keys.mdx — namespace-authentication --> |
-| API Regional Endpoint | `<region>.<cloud_provider>.api.temporal.io:7233` | Explicit region pin; private connectivity without private DNS; dual-auth pre-release (API key cannot use Namespace Endpoint) <!-- docs/cloud/get-started/namespaces.mdx — access-namespaces --> |
-| HA Regional Endpoint | `<cloud>-<region>.region.tmprl.cloud:7233` | Pin to a specific HA replica region <!-- docs/cloud/high-availability/ha-connectivity.mdx --> |
-| Control plane (`tcld`, Cloud Ops API, Terraform) | `saas-api.tmprl.cloud:443` | **Not** a workflow / worker endpoint <!-- docs/cloud/operation-api.mdx --> |
+| Namespace Endpoint (recommended default) | `<namespace>.<account>.tmprl.cloud:7233` | mTLS and API-key-only Namespaces; follows HA failovers  |
+| API Regional Endpoint | `<region>.<cloud_provider>.api.temporal.io:7233` | Explicit region pin; private connectivity without private DNS; dual-auth pre-release (API key cannot use Namespace Endpoint) |
+| HA Regional Endpoint | `<cloud>-<region>.region.tmprl.cloud:7233` | Pin to a specific HA replica region |
+| Control plane (`tcld`, Cloud Ops API, Terraform) | `saas-api.tmprl.cloud:443` | **Not** a workflow / worker endpoint |
 
 The Namespace Endpoint follows HA failovers transparently. When a client pins to an API Regional or HA Regional Endpoint (or a PrivateLink/PSC DNS name) with **mTLS**, the client **must** override the TLS `server_name` to the Namespace Endpoint value — see [certificates.md → Server name override](certificates.md#server-name-override).
 
@@ -63,14 +63,14 @@ The Namespace Endpoint follows HA failovers transparently. When a client pins to
 
 - Short hostname without `.<account>` or `.tmprl.cloud` / `.api.temporal.io` — stale docs / wrong form.
 - `saas-api.tmprl.cloud` as the data-plane address — that's the control plane on port 443, not a workflow endpoint. Pointing a worker or `temporal` CLI data-plane command at it will not connect.
-- Dual-auth (`api_key_or_mtls`) Namespace + API key + Namespace Endpoint — pre-release dual-auth does not support API key auth to the Namespace Endpoint; use the API Regional Endpoint. <!-- docs/cloud/get-started/namespaces.mdx — access-namespaces -->
+- Dual-auth (`api_key_or_mtls`) Namespace + API key + Namespace Endpoint — pre-release dual-auth does not support API key auth to the Namespace Endpoint; use the API Regional Endpoint.
 - mTLS + Regional / VPCE address **without** SNI override — the TLS handshake will fail with `x509: certificate is valid for <SANs>, not <requested host>`. See [certificates.md → Hostname mismatch](certificates.md#hostname-mismatch).
 - Empty `HostPort` / address with a Cloud namespace set — no explicit Cloud endpoint; the client will attempt a local-dev default that won't reach Cloud.
-- URL form (`https://…`) in `--address` / `TEMPORAL_ADDRESS` — the flag takes `host:port`, not a URL. <!-- docs/cli/setup-cli.mdx -->
+- URL form (`https://…`) in `--address` / `TEMPORAL_ADDRESS` — the flag takes `host:port`, not a URL.
 
 ## Namespace format
 
-Cloud namespace format is `<namespace_name>.<account_id>`. <!-- docs/cloud/get-started/api-keys.mdx — using-apikeys --> The account suffix is visible in the Cloud UI and in `tcld namespace list`.
+Cloud namespace format is `<namespace_name>.<account_id>`. The account suffix is visible in the Cloud UI and in `tcld namespace list`.
 
 **Snippet smells:**
 
@@ -86,7 +86,7 @@ One auth method per client connection. A snippet that sets both mTLS cert flags 
 **Snippet smells:**
 
 - Both `tls-cert-path` / `tls-key-path` **and** `api-key` set — pick one.
-- API key in the snippet but the Namespace auth method is `mtls` only (or vice versa). Check with `tcld namespace auth-method get --namespace <ns>`. Migrate via Support or `tcld namespace auth-method set` (`mtls`, `api_key`, or pre-release `api_key_or_mtls`) — recreate is not the only path. <!-- docs/cloud/get-started/namespaces.mdx — access-namespaces --> <!-- docs/cloud/tcld/namespace.mdx — auth-method -->
+- API key in the snippet but the Namespace auth method is `mtls` only (or vice versa). Check with `tcld namespace auth-method get --namespace <ns>`. Migrate via Support or `tcld namespace auth-method set` (`mtls`, `api_key`, or pre-release `api_key_or_mtls`) — recreate is not the only path.
 - Auth method mismatched against endpoint constraints (especially dual-auth + Namespace Endpoint for API keys — see [Endpoint form](#endpoint-form)).
 
 ## TLS expectations
@@ -119,13 +119,13 @@ Two families. Do not mix them up.
 | `TEMPORAL_TLS_SERVER_NAME` | SNI override (regional / VPCE + mTLS) | `--tls-server-name` |
 | `TEMPORAL_TLS_DISABLE_HOST_VERIFICATION` | Default `false` | `--tls-disable-host-verification` |
 
-SDK envconfig also accepts `TEMPORAL_TLS_CLIENT_CERT_PATH` / `TEMPORAL_TLS_CLIENT_KEY_PATH` (and `*_DATA` variants). Those are real for SDKs — not typos. The CLI's legacy names are `TEMPORAL_TLS_CERT` / `TEMPORAL_TLS_KEY`. <!-- docs/references/client-envrionment-configuration.mdx --> <!-- docs/cli/setup-cli.mdx -->
+SDK envconfig also accepts `TEMPORAL_TLS_CLIENT_CERT_PATH` / `TEMPORAL_TLS_CLIENT_KEY_PATH` (and `*_DATA` variants). Those are real for SDKs — not typos. The CLI's legacy names are `TEMPORAL_TLS_CERT` / `TEMPORAL_TLS_KEY`.
 
 ### `tcld` / Terraform (control plane)
 
 | Variable | Purpose |
 |---|---|
-| `TEMPORAL_CLOUD_API_KEY` | API key for `tcld` and the Terraform provider <!-- tcld: app/flags.go --> |
+| `TEMPORAL_CLOUD_API_KEY` | API key for `tcld` and the Terraform provider |
 
 `TEMPORAL_API_KEY` is **not** what `tcld` reads. Public Cloud docs that say otherwise are wrong vs current `tcld` source.
 

@@ -19,17 +19,15 @@ tcld namespace create \
     --retention-days 30 \
     --enable-delete-protection=true
 ```
-<!-- docs/cloud/tcld/namespace.mdx:129-134, docs/cloud/tcld/namespace.mdx:122, docs/cloud/tcld/namespace.mdx:233 -->
-<!-- docs/cloud/get-started/namespaces.mdx:468-471 -->
 
-Requires Developer, Account Owner, or Global Admin account-level role. <!-- docs/cloud/get-started/namespaces.mdx:178 -->
-The creator is automatically granted Namespace Admin permission. <!-- docs/cloud/get-started/namespaces.mdx:176 -->
+Requires Developer, Account Owner, or Global Admin account-level role.
+The creator is automatically granted Namespace Admin permission.
 
 Optional flags:
-- `--search-attribute "name=type"` (types: `Bool`, `Datetime`, `Double`, `Int`, `Keyword`, `Text`). <!-- docs/cloud/tcld/namespace.mdx:240-241 -->
-- `--tag "key=value"` (up to 10 tags per namespace). <!-- docs/cloud/get-started/namespaces.mdx:480 -->
-- `--user-namespace-permission "email=permission"` (permissions: `Admin`, `Write`, `Read`). <!-- docs/cloud/tcld/namespace.mdx:277-279 -->
-- Omit `--enable-delete-protection` (or pass `--enable-delete-protection=false`) to skip delete protection; it is disabled by default. <!-- docs/cloud/get-started/namespaces.mdx:468-471 -->
+- `--search-attribute "name=type"` (types: `Bool`, `Datetime`, `Double`, `Int`, `Keyword`, `Text`).
+- `--tag "key=value"` (up to 10 tags per namespace).
+- `--user-namespace-permission "email=permission"` (permissions: `Admin`, `Write`, `Read`).
+- Omit `--enable-delete-protection` (or pass `--enable-delete-protection=false`) to skip delete protection; it is disabled by default.
 
 ### Step 2: Create a service account for Workers
 
@@ -37,9 +35,8 @@ Optional flags:
 tcld service-account create -n "<name>" -d "<description>" --ar "developer" \
     --np "<namespace_name>.<account_suffix>=Write"
 ```
-<!-- docs/cloud/get-started/service-accounts.mdx:88-89 -->
 
-Note the returned `ServiceAccountId`. <!-- docs/cloud/get-started/service-accounts.mdx:96-97 -->
+Note the returned `ServiceAccountId`.
 
 ### Step 3: Create an API key for the service account
 
@@ -50,7 +47,6 @@ tcld apikey create \
     --duration <duration> \
     --service-account-id <service-account-id>
 ```
-<!-- docs/cloud/get-started/api-keys.mdx:258-267 -->
 
 Save the returned key secret.
 
@@ -64,7 +60,6 @@ temporal workflow list \
     --address <namespace_name>.<account_suffix>.tmprl.cloud:7233 \
     --namespace <namespace_name>.<account_suffix>
 ```
-<!-- docs/cloud/get-started/api-keys.mdx:364-389 -->
 
 ### Step 5: (Optional) Grant additional user access
 
@@ -73,9 +68,8 @@ tcld user set-namespace-permissions \
     --user-email <email> \
     --namespace-permission <namespace_name>.<account_suffix>=<permission>
 ```
-<!-- docs/cloud/tcld/user.mdx:287-340 -->
 
-Permissions: `Admin`, `Write`, `Read`. <!-- docs/cloud/tcld/user.mdx:331-338 -->
+Permissions: `Admin`, `Write`, `Read`.
 
 ---
 
@@ -89,17 +83,16 @@ Permissions: `Admin`, `Write`, `Read`. <!-- docs/cloud/tcld/user.mdx:331-338 -->
    tcld namespace get \
        --namespace <namespace_name>.<account_suffix>
    ```
-   <!-- docs/cloud/tcld/namespace.mdx:466-468 -->
 
-   Output is JSON by default (no `--format` flag exists). <!-- undocumented: source = tcld CLI behavior; tcld commands emit JSON without a --format flag -->
+   Output is JSON by default (no `--format` flag exists).
 
 2. In the JSON output, look for the capacity configuration section. Key fields:
 
-   - **Capacity mode**: `on_demand` or `provisioned`. <!-- docs/cloud/capacity-modes.mdx:212-213 -->
-   - **TRU count** (if provisioned): the number of Temporal Resource Units allocated. Valid values: 2, 3, 4, 6, 8, 10, 12. <!-- docs/cloud/capacity-modes.mdx:142, 149 -->
-   - **APS limit**: On-Demand default is 500; each TRU provides 500 APS. <!-- docs/cloud/capacity-modes.mdx:107, 140 -->
+   - **Capacity mode**: `on_demand` or `provisioned`.
+   - **TRU count** (if provisioned): the number of Temporal Resource Units allocated. Valid values: 2, 3, 4, 6, 8, 10, 12.
+   - **APS limit**: On-Demand default is 500; each TRU provides 500 APS.
 
-3. To check whether throttling is occurring, look for `temporal_cloud_v0_resource_exhausted_errors` in your metrics. <!-- docs/best-practices/managing-aps-limits.mdx:237 -->
+3. To check whether throttling is occurring, look for `temporal_cloud_v0_resource_exhausted_errors` in your metrics.
 
 ---
 
@@ -113,7 +106,6 @@ Permissions: `Admin`, `Write`, `Read`. <!-- docs/cloud/tcld/user.mdx:331-338 -->
    tcld namespace get \
        --namespace <namespace_name>.<account_suffix>
    ```
-   <!-- docs/cloud/tcld/namespace.mdx:466-468 -->
 
 2. Switch to Provisioned mode with the desired TRU count:
 
@@ -123,15 +115,14 @@ Permissions: `Admin`, `Write`, `Read`. <!-- docs/cloud/tcld/user.mdx:331-338 -->
        --capacity-mode provisioned \
        --capacity-value <tru_count>
    ```
-   <!-- docs/cloud/capacity-modes.mdx:208 -->
 
-   Valid `--capacity-value` values: 2, 3, 4, 6, 8, 10, 12. <!-- docs/cloud/capacity-modes.mdx:142, 149 -->
+   Valid `--capacity-value` values: 2, 3, 4, 6, 8, 10, 12.
 
-   Temporal aims to provision the additional capacity within two minutes. <!-- docs/cloud/capacity-modes.mdx:150 -->
+   Temporal aims to provision the additional capacity within two minutes.
 
-   For requests in excess of 4 TRUs in regions outside of the US, submit a support ticket to ensure capacity availability. <!-- docs/cloud/capacity-modes.mdx:153-156 -->
+   For requests in excess of 4 TRUs in regions outside of the US, submit a support ticket to ensure capacity availability.
 
-   Requires **Global Admin** or **Namespace Admin** role. <!-- docs/cloud/capacity-modes.mdx:179 -->
+   Requires **Global Admin** or **Namespace Admin** role.
 
 3. Verify the change took effect:
 
@@ -139,7 +130,6 @@ Permissions: `Admin`, `Write`, `Read`. <!-- docs/cloud/tcld/user.mdx:331-338 -->
    tcld namespace get \
        --namespace <namespace_name>.<account_suffix>
    ```
-   <!-- docs/cloud/tcld/namespace.mdx:466-468 -->
 
    Confirm the capacity mode is `provisioned` and the TRU count matches your request.
 
@@ -150,9 +140,8 @@ Permissions: `Admin`, `Write`, `Read`. <!-- docs/cloud/tcld/user.mdx:331-338 -->
        --namespace <namespace_name>.<account_suffix> \
        --capacity-mode on_demand
    ```
-   <!-- docs/cloud/capacity-modes.mdx:208 -->
 
-   When switching back to On-Demand mode, your APS limit resets to the running average from the last 7 days. Plan for this if your workload is sensitive to the transition. <!-- docs/best-practices/managing-aps-limits.mdx:205-207 -->
+   When switching back to On-Demand mode, your APS limit resets to the running average from the last 7 days. Plan for this if your workload is sensitive to the transition.
 
 ---
 
@@ -166,7 +155,6 @@ Permissions: `Admin`, `Write`, `Read`. <!-- docs/cloud/tcld/user.mdx:331-338 -->
 temporal workflow count \
     --query "ExecutionStatus = 'Running' AND StartTime < '2024-01-15T09:00:00Z'"
 ```
-<!-- docs/cli/workflow.mdx:88-96, docs/encyclopedia/visibility/search-attributes.mdx:87 -->
 
 Replace the timestamp with your threshold for "too long". A count greater than zero indicates workflows that have been running longer than expected.
 
@@ -177,7 +165,6 @@ temporal workflow list \
     --query "ExecutionStatus = 'Running' AND StartTime < '2024-01-15T09:00:00Z'" \
     --limit 20
 ```
-<!-- docs/cli/workflow.mdx:280-286, docs/encyclopedia/visibility/list-filter.mdx:174 -->
 
 You can narrow further by Task Queue or Workflow Type:
 
@@ -185,7 +172,6 @@ You can narrow further by Task Queue or Workflow Type:
 temporal workflow list \
     --query "ExecutionStatus = 'Running' AND TaskQueue = 'my-task-queue' AND StartTime < '2024-01-15T09:00:00Z'"
 ```
-<!-- docs/encyclopedia/visibility/search-attributes.mdx:89 -->
 
 ### Step 3: Check worker health on the relevant Task Queue
 
@@ -193,9 +179,8 @@ temporal workflow list \
 temporal task-queue describe \
     --task-queue my-task-queue
 ```
-<!-- docs/cli/task-queue.mdx:106-109 -->
 
-Look for: active pollers present, `LastAccessTime` within the last minute, no growing `ApproximateBacklogCount`. <!-- docs/cli/task-queue.mdx:125-149 -->
+Look for: active pollers present, `LastAccessTime` within the last minute, no growing `ApproximateBacklogCount`.
 
 If there are no pollers, no Workers are running for this Task Queue and workflows on this queue cannot make progress.
 
@@ -204,17 +189,14 @@ If there are no pollers, no Workers are running for this Task Queue and workflow
 ```bash
 temporal workflow describe --workflow-id <id>
 ```
-<!-- docs/cli/workflow.mdx:133-140 -->
 
 ```bash
 temporal workflow show --workflow-id <id> --reverse
 ```
-<!-- docs/cli/workflow.mdx:422-431 -->
 
 ```bash
 temporal workflow stack --workflow-id <id>
 ```
-<!-- docs/cli/workflow.mdx:527-533 -->
 
 ### Step 5: Diagnose root cause
 
@@ -233,7 +215,6 @@ For diagnosing *why* a specific workflow is stuck (pending activities, pending c
        --description "<description>" \
        --duration <duration>
    ```
-   <!-- docs/cloud/tcld/apikey.mdx:30-102 -->
 
    Or for a Service Account:
 
@@ -244,9 +225,8 @@ For diagnosing *why* a specific workflow is stuck (pending activities, pending c
        --duration <duration> \
        --service-account-id <service-account-id>
    ```
-   <!-- docs/cloud/get-started/api-keys.mdx:258-267 -->
 
-   You may reuse key names. <!-- docs/cloud/get-started/api-keys.mdx:219-225 -->
+   You may reuse key names.
 
    Save the returned key secret -- it is only shown once.
 
@@ -257,27 +237,24 @@ For diagnosing *why* a specific workflow is stuck (pending activities, pending c
        --address <namespace>.<account>.tmprl.cloud:7233 \
        --namespace <namespace_id>.<account_id>
    ```
-   <!-- docs/cloud/get-started/api-keys.mdx:364-389 -->
 
    Set `TEMPORAL_API_KEY` to each key in turn and confirm the command succeeds.
 
-3. Update clients and workers to load the new key. <!-- docs/cloud/get-started/api-keys.mdx:219-225 -->
+3. Update clients and workers to load the new key.
 
 4. Once no traffic uses the old key, delete it:
 
    ```bash
    tcld apikey delete --id <old_apikey_id>
    ```
-   <!-- docs/cloud/tcld/apikey.mdx:144-188 -->
 
    Alternatively, disable before deleting to validate nothing breaks:
 
    ```bash
    tcld apikey disable --id <old_apikey_id>
    ```
-   <!-- docs/cloud/tcld/apikey.mdx:192-234 -->
 
-**Limits:** Up to 10 non-expired keys per user; up to 20 non-expired keys per Service Account. Maximum expiration: 2 years. <!-- docs/cloud/get-started/api-keys.mdx:440-449 -->
+**Limits:** Up to 10 non-expired keys per user; up to 20 non-expired keys per Service Account. Maximum expiration: 2 years.
 
 ---
 
@@ -290,7 +267,6 @@ For diagnosing *why* a specific workflow is stuck (pending activities, pending c
 ```bash
 tcld user list --namespace <namespace_name>.<account_suffix>
 ```
-<!-- docs/cloud/tcld/user.mdx:154-160, docs/cloud/tcld/user.mdx:168-170 -->
 
 This filters to users with direct permissions on the specified namespace. Users with account-level roles (e.g., Account Owner, Global Admin) have implicit access to all namespaces but may not appear in this filtered list — check `tcld user list` (without `--namespace`) and inspect account roles to get the full picture.
 
@@ -299,39 +275,34 @@ This filters to users with direct permissions on the specified namespace. Users 
 ```bash
 tcld user get --user-email <email>
 ```
-<!-- docs/cloud/tcld/user.mdx:74-100 -->
 
-Check the account role (`admin`, `developer`, `read`) and namespace-level permissions (`Admin`, `Write`, `Read`). <!-- docs/cloud/tcld/user.mdx:125, 137 -->
+Check the account role (`admin`, `developer`, `read`) and namespace-level permissions (`Admin`, `Write`, `Read`).
 
 ### Step 3: List all user groups
 
 ```bash
 tcld user-group list
 ```
-<!-- docs/cloud/tcld/user-group.mdx:94-105 -->
 
 For each group with namespace access, list its members:
 
 ```bash
 tcld user-group list-members --group-id <id>
 ```
-<!-- docs/cloud/tcld/user-group.mdx:108-120 -->
 
 ### Step 4: List all service accounts
 
 ```bash
 tcld service-account list
 ```
-<!-- docs/cloud/get-started/service-accounts.mdx:118-119 -->
 
-Review the output for service accounts that have permissions on the target namespace. Namespace-scoped Service Accounts always have a `Read` Account Role and are restricted to a single namespace. <!-- docs/cloud/get-started/service-accounts.mdx:195-198 -->
+Review the output for service accounts that have permissions on the target namespace. Namespace-scoped Service Accounts always have a `Read` Account Role and are restricted to a single namespace.
 
 ### Step 5: List all API keys
 
 ```bash
 tcld apikey list
 ```
-<!-- docs/cloud/tcld/apikey.mdx:128-140 -->
 
 Cross-reference the API key owners (user IDs or service account IDs) against the users and service accounts identified above.
 
@@ -340,7 +311,7 @@ Cross-reference the API key owners (user IDs or service account IDs) against the
 
 **When to use:** A CA certificate is approaching expiration, or you need to switch to a new CA without disrupting running Workers.
 
-Temporal Cloud sends email notifications 15 days before certificate expiration. <!-- docs/cloud/get-started/certificates.mdx:337 -->
+Temporal Cloud sends email notifications 15 days before certificate expiration.
 
 ### Step 1: Generate a new CA certificate
 
@@ -351,9 +322,8 @@ tcld generate-certificates certificate-authority-certificate \
     --ca-certificate-file <new_ca>.pem \
     --ca-key-file <new_ca>.key
 ```
-<!-- docs/cloud/tcld/generate-certificates.mdx:24-81 -->
 
-Default key algorithm is ECDSA P-384. Maximum duration: 1 year. <!-- docs/cloud/tcld/generate-certificates.mdx:85, docs/cloud/get-started/certificates.mdx:129-130 -->
+Default key algorithm is ECDSA P-384. Maximum duration: 1 year.
 
 ### Step 2: Generate new end-entity (leaf) certificates
 
@@ -366,13 +336,12 @@ tcld generate-certificates end-entity-certificate \
     --certificate-file <new_client>.pem \
     --key-file <new_client>.key
 ```
-<!-- docs/cloud/tcld/generate-certificates.mdx:96-187 -->
 
-End-entity certificate must expire before its root CA certificate. <!-- docs/cloud/get-started/certificates.mdx:130-131 -->
+End-entity certificate must expire before its root CA certificate.
 
 ### Step 3: Create a combined PEM bundle with old and new CA certificates
 
-Concatenate both CA certificates into a single PEM file: <!-- docs/cloud/get-started/certificates.mdx:378-388 -->
+Concatenate both CA certificates into a single PEM file:
 
 ```
 -----BEGIN CERTIFICATE-----
@@ -390,17 +359,16 @@ tcld namespace accepted-client-ca set \
     --namespace <namespace_name>.<account_suffix> \
     --ca-certificate-file <combined>.pem
 ```
-<!-- docs/cloud/get-started/certificates.mdx:390-393 -->
 
 Both old and new end-entity certificates will now be accepted.
 
 ### Step 5: Roll out new end-entity certificates to Workers and Clients
 
-Deploy the new leaf certificates to all Workers and Clients. Monitor traffic to the old certificate until it ceases. <!-- docs/cloud/get-started/certificates.mdx:395 -->
+Deploy the new leaf certificates to all Workers and Clients. Monitor traffic to the old certificate until it ceases.
 
 ### Step 6: Remove the old CA certificate
 
-Create a file containing only the new CA certificate and run `set` again: <!-- docs/cloud/get-started/certificates.mdx:397-399 -->
+Create a file containing only the new CA certificate and run `set` again:
 
 ```bash
 tcld namespace accepted-client-ca set \
@@ -414,9 +382,8 @@ tcld namespace accepted-client-ca set \
 tcld namespace accepted-client-ca list \
     --namespace <namespace_name>.<account_suffix>
 ```
-<!-- docs/cloud/tcld/namespace.mdx:868-890 -->
 
-Do NOT use a CA certificate signed with SHA-1 -- such signatures are rejected. <!-- docs/cloud/tcld/namespace.mdx:772-776 -->
+Do NOT use a CA certificate signed with SHA-1 -- such signatures are rejected.
 
 ---
 
@@ -426,13 +393,13 @@ Do NOT use a CA certificate signed with SHA-1 -- such signatures are rejected. <
 
 The full command reference for self-hosted cluster operations lives in [self-hosted-admin.md](self-hosted-admin.md). This recipe chains the key commands into a quick health check.
 
-1. **Cluster health:** `temporal operator cluster health` — returns `SERVING` if healthy. <!-- docs/cli/operator.mdx:77-79 -->
-2. **Cluster details:** `temporal operator cluster describe --detail` — Cluster Name, persistence, visibility, shard count. <!-- docs/cli/operator.mdx:59-67 -->
-3. **Namespaces:** `temporal operator namespace list` — all Namespaces on the Service. <!-- docs/cli/operator.mdx:261-265 -->
-4. **Worker health on key Task Queues:** `temporal task-queue describe --task-queue <task_queue_name>` — look for active pollers and no growing `ApproximateBacklogCount`. <!-- docs/cli/task-queue.mdx:106-109, 125-149 -->
-5. **Spot-check stuck workflows:** `temporal workflow count --query "ExecutionStatus = 'Running' AND StartTime < '<threshold>'"` — if high, follow playbook (d) above. <!-- docs/cli/workflow.mdx:88-96 -->
+1. **Cluster health:** `temporal operator cluster health` — returns `SERVING` if healthy.
+2. **Cluster details:** `temporal operator cluster describe --detail` — Cluster Name, persistence, visibility, shard count.
+3. **Namespaces:** `temporal operator namespace list` — all Namespaces on the Service.
+4. **Worker health on key Task Queues:** `temporal task-queue describe --task-queue <task_queue_name>` — look for active pollers and no growing `ApproximateBacklogCount`.
+5. **Spot-check stuck workflows:** `temporal workflow count --query "ExecutionStatus = 'Running' AND StartTime < '<threshold>'"` — if high, follow playbook (d) above.
 
-For remote clusters, pass `--address <host>:<port>` (and TLS flags if enabled). See [self-hosted-admin.md → Global flags](self-hosted-admin.md#global-flags-summary) for the full flag set. <!-- docs/cli/operator.mdx:526 -->
+For remote clusters, pass `--address <host>:<port>` (and TLS flags if enabled). See [self-hosted-admin.md → Global flags](self-hosted-admin.md#global-flags-summary) for the full flag set.
 
 ---
 
@@ -442,7 +409,7 @@ For remote clusters, pass `--address <host>:<port>` (and TLS flags if enabled). 
 
 ### Step 1: Review billing in the Cloud UI
 
-Navigate to the **Billing** page in the Temporal Cloud UI. Account Owners and Finance Admins can view: <!-- docs/cloud/billing-and-usage/index.mdx:38-39 -->
+Navigate to the **Billing** page in the Temporal Cloud UI. Account Owners and Finance Admins can view:
 
 - Current balance and recent bill
 - Invoices table (with downloadable invoices for prior months)
@@ -451,16 +418,16 @@ Navigate to the **Billing** page in the Temporal Cloud UI. Account Owners and Fi
 
 ### Step 2: Generate a billing report via the Billing API
 
-The Billing API provides namespace-level cost attribution in CSV format. <!-- docs/cloud/billing-and-usage/billing-api.mdx:19-20, 24-28 -->
+The Billing API provides namespace-level cost attribution in CSV format.
 
-Report generation is asynchronous: <!-- docs/cloud/billing-and-usage/billing-api.mdx:38, 119-122 -->
+Report generation is asynchronous:
 
 1. Call `CreateBillingReport` with the desired date range (billing-month boundaries) and granularity. The response includes a `billing_report_id` and `async_operation_id`.
 2. Poll `GetBillingReport` using the `billing_report_id` with exponential backoff.
 3. When the state is `BILLING_REPORT_STATE_GENERATED`, retrieve the download URL.
 4. Download the CSV before the URL expires.
 
-Date range limits by granularity: <!-- docs/cloud/billing-and-usage/billing-api.mdx:42-45 -->
+Date range limits by granularity:
 
 | Granularity | Available range |
 |---|---|
@@ -470,13 +437,13 @@ Date range limits by granularity: <!-- docs/cloud/billing-and-usage/billing-api.
 
 ### Step 3: Interpret the report
 
-Key columns to understand: <!-- docs/cloud/billing-and-usage/billing-api.mdx:97, 105, 89 -->
+Key columns to understand:
 
 - `ContractedCost`: The actual cost (not `Cost` or `TotalCost`).
 - `ResourceID`: `namespace_name.account_id` (e.g., `production.a2dd6`), not just the namespace name.
 - `BillingCurrency`: Values are in cents (e.g., `USD (cents)`).
 
-Only one billing report per account is generated at a time; additional requests are queued. <!-- docs/cloud/billing-and-usage/billing-api.mdx:61-62 -->
+Only one billing report per account is generated at a time; additional requests are queued.
 
 ---
 
@@ -484,49 +451,49 @@ Only one billing report per account is generated at a time; additional requests 
 
 **When to use:** You need to stream Temporal Cloud control plane Audit Logs to your infrastructure for compliance or monitoring.
 
-Audit Logs capture control plane events only -- they do NOT capture data plane events (Workflow Start, etc.). <!-- docs/cloud/audit-logs.mdx:30-33 -->
+Audit Logs capture control plane events only -- they do NOT capture data plane events (Workflow Start, etc.).
 
-Required role: Account Owner or Global Administrator. <!-- docs/cloud/audit-logs.mdx:27 -->
+Required role: Account Owner or Global Administrator.
 
 ### Option A: AWS Kinesis
 
-1. Ensure you have a Kinesis Data Stream in your AWS account. An [AWS CloudFormation template](https://temporal-auditlogs-config.s3.us-west-2.amazonaws.com/cloudformation/iam-role-for-temporal-audit-logs.yaml) is available to create the required IAM role. <!-- docs/cloud/audit-logs-aws.mdx:31 -->
+1. Ensure you have a Kinesis Data Stream in your AWS account. An [AWS CloudFormation template](https://temporal-auditlogs-config.s3.us-west-2.amazonaws.com/cloudformation/iam-role-for-temporal-audit-logs.yaml) is available to create the required IAM role.
 
-2. In the Cloud UI: **Settings** > **Audit Logs** > **Setup**. <!-- docs/cloud/audit-logs-aws.mdx:38-41 -->
+2. In the Cloud UI: **Settings** > **Audit Logs** > **Setup**.
 
-3. Choose **Auto** (configure CloudFormation from the UI) or **Manual** (download a template). <!-- docs/cloud/audit-logs-aws.mdx:42-43 -->
+3. Choose **Auto** (configure CloudFormation from the UI) or **Manual** (download a template).
 
-4. Enter the **Kinesis ARN**, **Role name**, and **AWS region**. <!-- docs/cloud/audit-logs-aws.mdx:44-46 -->
+4. Enter the **Kinesis ARN**, **Role name**, and **AWS region**.
 
 5. Complete the CloudFormation stack creation.
 
-6. Use the **Verify** button to confirm Temporal can write to the stream. <!-- docs/cloud/audit-logs-aws.mdx:64 -->
+6. Use the **Verify** button to confirm Temporal can write to the stream.
 
-First logs appear within 10 minutes. <!-- docs/cloud/audit-logs-aws.mdx:72 -->
+First logs appear within 10 minutes.
 
 ### Option B: GCP Pub/Sub
 
-1. Create a Pub/Sub topic and set up a service account in the same GCP project (or skip if using Terraform). <!-- docs/cloud/audit-logs-gcp.mdx:36-40, 30-33 -->
+1. Create a Pub/Sub topic and set up a service account in the same GCP project (or skip if using Terraform).
 
-2. In the Cloud UI: **Settings** > **Audit Logs** > **Setup** > **Pub/Sub**. <!-- docs/cloud/audit-logs-gcp.mdx:43-47 -->
+2. In the Cloud UI: **Settings** > **Audit Logs** > **Setup** > **Pub/Sub**.
 
-3. Enter the **service account email** and **Topic name**. <!-- docs/cloud/audit-logs-gcp.mdx:48-49 -->
+3. Enter the **service account email** and **Topic name**.
 
-4. Choose **Manual** or **Deploy with Terraform** to configure permissions. <!-- docs/cloud/audit-logs-gcp.mdx:50-51 -->
+4. Choose **Manual** or **Deploy with Terraform** to configure permissions.
 
-5. Use the **Verify** button, then click **Create**. <!-- docs/cloud/audit-logs-gcp.mdx:53-55 -->
+5. Use the **Verify** button, then click **Create**.
 
-Audit Logs appear in Pub/Sub within 10 minutes. <!-- docs/cloud/audit-logs-gcp.mdx:56 -->
+Audit Logs appear in Pub/Sub within 10 minutes.
 
 ### Verify the sink is working
 
-The Audit Logs page of the Cloud UI shows the current status: an **On** badge if functioning normally, or an error summary if an issue is detected. <!-- docs/cloud/audit-logs.mdx:168-171 -->
+The Audit Logs page of the Cloud UI shows the current status: an **On** badge if functioning normally, or an error summary if an issue is detected.
 
 ### Accessing logs via API
 
 Audit Logs are accessible for the past 30 days without a sink.
 
-**[Cloud Ops API](https://docs.temporal.io/ops) (retrieving log records):** Use `StartTimeInclusive`, `EndTimeExclusive`, `PageSize` (max 1000, default 100), and `PageToken` for pagination. <!-- docs/cloud/audit-logs.mdx:209, 212-215 -->
+**[Cloud Ops API](https://docs.temporal.io/ops) (retrieving log records):** Use `StartTimeInclusive`, `EndTimeExclusive`, `PageSize` (max 1000, default 100), and `PageToken` for pagination.
 
 tcld does not retrieve log records; it only manages export sinks. List the configured sinks with:
 
@@ -548,7 +515,6 @@ Provider source: [github.com/temporalio/terraform-provider-temporalcloud](https:
 ```bash
 export TEMPORAL_CLOUD_API_KEY=<your-secret-key>
 ```
-<!-- docs/cloud/terraform-provider.mdx:71 -->
 
 ```hcl
 terraform {
@@ -563,7 +529,6 @@ provider "temporalcloud" {
 
 }
 ```
-<!-- docs/cloud/terraform-provider.mdx:119-131 -->
 
 ### Step 2: Define resources
 
@@ -577,7 +542,6 @@ resource "temporalcloud_namespace" "namespace" {
   retention_days     = 14
 }
 ```
-<!-- docs/cloud/terraform-provider.mdx:132-137 -->
 
 Example User with namespace access:
 
@@ -592,7 +556,6 @@ resource "temporalcloud_user" "developer" {
   }]
 }
 ```
-<!-- docs/cloud/terraform-provider.mdx:597-605 -->
 
 ### Step 3: Apply
 
@@ -600,15 +563,14 @@ resource "temporalcloud_user" "developer" {
 terraform init
 terraform apply
 ```
-<!-- docs/cloud/terraform-provider.mdx:148-156 -->
 
 ### Key limitations
 
-- Once a resource is managed by Terraform, manage it only through Terraform. <!-- docs/cloud/terraform-provider.mdx:23 -->
-- Terraform cannot create, update, or delete the Account Owner role. <!-- docs/cloud/terraform-provider.mdx:550-551 -->
-- Namespace access must be managed from the User resource, not the Namespace resource. <!-- docs/cloud/terraform-provider.mdx:553-554 -->
-- API keys cannot be imported into Terraform -- create new keys instead. <!-- docs/cloud/terraform-provider.mdx:842-845 -->
-- The Terraform resource for API keys is `temporalcloud_apikey` (no underscore between `api` and `key`). <!-- docs/cloud/terraform-provider.mdx:756 -->
+- Once a resource is managed by Terraform, manage it only through Terraform.
+- Terraform cannot create, update, or delete the Account Owner role.
+- Namespace access must be managed from the User resource, not the Namespace resource.
+- API keys cannot be imported into Terraform -- create new keys instead.
+- The Terraform resource for API keys is `temporalcloud_apikey` (no underscore between `api` and `key`).
 
 ---
 
@@ -616,11 +578,11 @@ terraform apply
 
 **When to use:** You want to enable single sign-on for your organization's Temporal Cloud account using your corporate identity provider.
 
-SAML is available as an add-on for any Temporal Cloud plan. <!-- docs/cloud/saml.mdx:26-27 -->
+SAML is available as an add-on for any Temporal Cloud plan.
 
 ### Step 1: Locate your Account Id
 
-Find your Account Id (5-6 characters after the period in your Namespace Id, e.g., `f45a2`). Available from the Cloud UI profile dropdown or from any Namespace Id. <!-- docs/cloud/saml.mdx:31-34 -->
+Find your Account Id (5-6 characters after the period in your Namespace Id, e.g., `f45a2`). Available from the Cloud UI profile dropdown or from any Namespace Id.
 
 ### Step 2: Construct the SAML URLs
 
@@ -629,26 +591,24 @@ Entity identifier:
 ```
 urn:auth0:prod-tmprl:ACCOUNT_ID-saml
 ```
-<!-- docs/cloud/saml.mdx:61 -->
 
 Callback URL:
 
 ```
 https://login.tmprl.cloud/login/callback?connection=ACCOUNT_ID-saml
 ```
-<!-- docs/cloud/saml.mdx:74 -->
 
 Replace `ACCOUNT_ID` with your actual Account Id.
 
 ### Step 3: Configure your IdP
 
-**Microsoft Entra ID:** Create an Enterprise application, configure SAML with the entity identifier, callback URL, and sign on URL (`https://cloud.temporal.io/login/saml?connection=ACCOUNT_ID-saml`). Set NameID to `user.userprincipalname` with format `emailAddress`. Collect the Certificate (Base64) and Login URL. <!-- docs/cloud/saml.mdx:48-106 -->
+**Microsoft Entra ID:** Create an Enterprise application, configure SAML with the entity identifier, callback URL, and sign on URL (`https://cloud.temporal.io/login/saml?connection=ACCOUNT_ID-saml`). Set NameID to `user.userprincipalname` with format `emailAddress`. Collect the Certificate (Base64) and Login URL.
 
-**Okta:** Create a SAML 2.0 app integration. Set Single sign on URL to the callback URL. Set Audience URI to the entity identifier. Set Name ID format to `EmailAddress` with `email` and `name` attribute statements. Collect IdP settings and download the active certificate. <!-- docs/cloud/saml.mdx:114-155 -->
+**Okta:** Create a SAML 2.0 app integration. Set Single sign on URL to the callback URL. Set Audience URI to the entity identifier. Set Name ID format to `EmailAddress` with `email` and `name` attribute statements. Collect IdP settings and download the active certificate.
 
 ### Step 4: Submit a support ticket
 
-Include: <!-- docs/cloud/saml.mdx:163-170 -->
+Include:
 
 - The sign-in URL from your application
 - The X.509 SAML sign-in certificate in PEM format
@@ -656,4 +616,4 @@ Include: <!-- docs/cloud/saml.mdx:163-170 -->
 
 ### Step 5: Verify
 
-After Temporal confirms configuration, log in with your email and click **Continue** to be redirected to your IdP. <!-- docs/cloud/saml.mdx:172-173 -->
+After Temporal confirms configuration, log in with your email and click **Continue** to be redirected to your IdP.

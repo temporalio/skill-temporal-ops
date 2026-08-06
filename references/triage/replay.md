@@ -2,7 +2,7 @@
 
 This file is about the *tooling* that reproduces a recorded Workflow Execution in a debugger. For what replay divergence *means* as a concept — why the Worker Task fails, how the server classifies the cause, and how to remediate — see [non-determinism.md](non-determinism.md).
 
-A Replay is "the method by which a Workflow Execution resumes making progress. During a Replay the Commands that are generated are checked against an existing Event History." <!-- docs/encyclopedia/workflow/workflow-execution/workflow-execution.mdx:71 --> Running a recorded history through a local replayer against your Worker source tree replays the Workflow Execution "to replicate errors" <!-- docs/develop/go/best-practices/testing-suite.mdx:595 --> — how you reproduce a non-determinism error under a debugger and, via the bulk replayer, pin a CI regression test.
+A Replay is "the method by which a Workflow Execution resumes making progress. During a Replay the Commands that are generated are checked against an existing Event History." Running a recorded history through a local replayer against your Worker source tree replays the Workflow Execution "to replicate errors" — how you reproduce a non-determinism error under a debugger and, via the bulk replayer, pin a CI regression test.
 
 The **SDK replayer** is the general-purpose tool — documented for every supported SDK, it runs headless, attaches to any debugger, and drops into CI as a regression guard. The **VS Code extension** is a TypeScript-only convenience wrapper around the same replayer.
 
@@ -31,19 +31,19 @@ Out of scope:
 
 ## Step 1 — Get the Event History
 
-The replayer takes an Event History object, and every SDK client can fetch one. Fetch it in the same test that replays it. <!-- docs/develop/go/best-practices/testing-suite.mdx:589 -->
+The replayer takes an Event History object, and every SDK client can fetch one. Fetch it in the same test that replays it.
 
 | SDK | Fetch from the server |
 |---|---|
-| Go | `c.GetWorkflowHistory(ctx, id, runID, false, enums.HISTORY_EVENT_FILTER_TYPE_ALL_EVENT)` returns an iterator; accumulate `iter.Next()` into a `history.History` <!-- docs/develop/go/best-practices/testing-suite.mdx:608-619 --> |
-| Python | `client.list_workflows(<query>).map_histories()` <!-- docs/develop/python/best-practices/testing-suite.mdx:216-217 --> |
-| TypeScript | `client.workflow.getHandle(<workflow-id>).fetchHistory()`; `client.workflow.list({ query }).intoHistories()` for many <!-- docs/develop/typescript/best-practices/testing-suite.mdx:549-550, 566-569 --> |
-| Java | `service.blockingStub().getWorkflowExecutionHistory(<request>)`, wrapped as `new WorkflowExecutionHistory(response.getHistory(), <workflow-id>)` <!-- docs/develop/java/best-practices/testing-suite.mdx:741-748 --> |
-| .NET | `client.ListWorkflowHistoriesAsync(<query>)` <!-- docs/develop/dotnet/best-practices/testing-suite.mdx:301 --> |
-| Ruby | `client.list_workflows(<query>)` <!-- docs/develop/ruby/best-practices/testing-suite.mdx:259 --> |
-| PHP | `$replayer->replayFromServer(workflowType: ..., execution: ...)` fetches and replays in one call <!-- docs/develop/php/best-practices/testing-suite.mdx:223-226 --> |
+| Go | `c.GetWorkflowHistory(ctx, id, runID, false, enums.HISTORY_EVENT_FILTER_TYPE_ALL_EVENT)` returns an iterator; accumulate `iter.Next()` into a `history.History` |
+| Python | `client.list_workflows(<query>).map_histories()` |
+| TypeScript | `client.workflow.getHandle(<workflow-id>).fetchHistory()`; `client.workflow.list({ query }).intoHistories()` for many |
+| Java | `service.blockingStub().getWorkflowExecutionHistory(<request>)`, wrapped as `new WorkflowExecutionHistory(response.getHistory(), <workflow-id>)` |
+| .NET | `client.ListWorkflowHistoriesAsync(<query>)` |
+| Ruby | `client.list_workflows(<query>)` |
+| PHP | `$replayer->replayFromServer(workflowType: ..., execution: ...)` fetches and replays in one call |
 
-The list-based fetches require Advanced Visibility on the server. <!-- docs/develop/python/best-practices/testing-suite.mdx:212 -->
+The list-based fetches require Advanced Visibility on the server.
 
 Export a JSON file instead when the workspace has no client access to the Namespace, the history is being committed as a CI fixture, or the run has aged out of retention:
 
@@ -54,9 +54,9 @@ temporal workflow show \
     --output json > history.json
 ```
 
-`--output` accepts `text, json, jsonl, none` (default `text`); replay requires `json`. <!-- docs/cli/command-reference/workflow.mdx:903, 429-430 --> `--run-id` is not required. <!-- docs/cli/command-reference/workflow.mdx:445 --><!-- VERIFY: the flag table does not state what omitting `--run-id` targets. -->
+`--output` accepts `text, json, jsonl, none` (default `text`); replay requires `json`. `--run-id` is not required.
 
-If the run id is unknown, find it via `temporal workflow describe --workflow-id YourWorkflowId` (see [workflow-stuck.md](workflow-stuck.md)) or the Web UI. <!-- docs/develop/typescript/best-practices/testing-suite.mdx:531 -->
+If the run id is unknown, find it via `temporal workflow describe --workflow-id YourWorkflowId` (see [workflow-stuck.md](workflow-stuck.md)) or the Web UI.
 
 For Cloud or any non-default target, add the usual connection flags (`--address`, `--namespace`, and either `--api-key` or the mTLS `--tls-*` flags). See [authentication.md](authentication.md).
 
@@ -74,7 +74,7 @@ replayer.RegisterWorkflow(YourWorkflow)
 err := replayer.ReplayWorkflowHistory(nil, hist)
 ```
 
-<!-- docs/develop/go/best-practices/testing-suite.mdx:639-641 --> Use `worker.WorkflowReplayer` to "replay an existing Workflow Execution from its Event History to replicate errors." <!-- docs/develop/go/best-practices/testing-suite.mdx:595 --> "If a noticeably different code path was followed or some code caused a deadlock, it will be returned in the error code." <!-- docs/develop/go/best-practices/testing-suite.mdx:646 -->
+ Use `worker.WorkflowReplayer` to "replay an existing Workflow Execution from its Event History to replicate errors." "If a noticeably different code path was followed or some code caused a deadlock, it will be returned in the error code."
 
 To step through the Workflow function, attach Delve or an IDE debugger to the test process that calls `ReplayWorkflowHistory`, with `TEMPORAL_DEBUG=true` (see below).
 
@@ -85,7 +85,7 @@ replayer = Replayer(workflows=[YourWorkflow])
 await replayer.replay_workflows(histories)
 ```
 
-<!-- docs/develop/python/best-practices/testing-suite.mdx:218-221 --> `replay_workflows` takes the iterator from step 1; if any replay fails, it raises. <!-- docs/develop/python/best-practices/testing-suite.mdx:210, 213 --> Set `fail_fast` to `false` to replay every history before reporting. <!-- docs/develop/python/best-practices/testing-suite.mdx:232 --> From a file, the single-history form is `replayer.replay_workflow(WorkflowHistory.from_json(history_json_str))`. <!-- docs/develop/python/best-practices/testing-suite.mdx:226-229 --> Histories fetched from the server or exported can be protobuf-encoded (`bytes`) while the `Replayer` works with decoded histories (like a `dict`); a `dict`-vs-`bytes` `TypeError` during replay means the history needs decoding first. <!-- docs/develop/python/best-practices/testing-suite.mdx:239-241 -->
+ `replay_workflows` takes the iterator from step 1; if any replay fails, it raises. Set `fail_fast` to `false` to replay every history before reporting. From a file, the single-history form is `replayer.replay_workflow(WorkflowHistory.from_json(history_json_str))`. Histories fetched from the server or exported can be protobuf-encoded (`bytes`) while the `Replayer` works with decoded histories (like a `dict`); a `dict`-vs-`bytes` `TypeError` during replay means the history needs decoding first.
 
 ### TypeScript
 
@@ -97,9 +97,9 @@ await Worker.runReplayHistory(
 );
 ```
 
-<!-- docs/develop/typescript/best-practices/testing-suite.mdx:533-541 --> For bulk replay, use `Worker.runReplayHistories`. <!-- docs/develop/typescript/best-practices/testing-suite.mdx:570 -->
+ For bulk replay, use `Worker.runReplayHistories`.
 
-Two error classes are documented: "When an Event History is replayed and non-determinism is detected (that is, the Workflow code is incompatible with the History), `DeterminismViolationError` is thrown. If replay fails for any other reason, `ReplayError` is thrown." <!-- docs/develop/typescript/best-practices/testing-suite.mdx:528-529 -->
+Two error classes are documented: "When an Event History is replayed and non-determinism is detected (that is, the Workflow code is incompatible with the History), `DeterminismViolationError` is thrown. If replay fails for any other reason, `ReplayError` is thrown."
 
 ### Java
 
@@ -108,7 +108,7 @@ File file = new File("history.json");
 WorkflowReplayer.replayWorkflowExecution(file, MyWorkflow.class);
 ```
 
-<!-- docs/develop/java/best-practices/testing-suite.mdx:759-760 --> Use `WorkflowReplayer` from the `temporal-testing` package. <!-- docs/develop/java/best-practices/testing-suite.mdx:722 --> For bulk replay, `WorkflowReplayer.replayWorkflowExecutions`. <!-- docs/develop/java/best-practices/testing-suite.mdx:752-753 --> "In both examples, if Event History is non-deterministic, an error is thrown. You can choose to wait until all histories have been replayed with `replayWorkflowExecutions` by setting the `failFast` argument to `false`." <!-- docs/develop/java/best-practices/testing-suite.mdx:763-764 -->
+ Use `WorkflowReplayer` from the `temporal-testing` package. For bulk replay, `WorkflowReplayer.replayWorkflowExecutions`. "In both examples, if Event History is non-deterministic, an error is thrown. You can choose to wait until all histories have been replayed with `replayWorkflowExecutions` by setting the `failFast` argument to `false`."
 
 ### .NET
 
@@ -119,7 +119,7 @@ await replayer.ReplayWorkflowAsync(
     WorkflowHistory.FromJson("my-workflow-id", historyJson));
 ```
 
-<!-- docs/develop/dotnet/best-practices/testing-suite.mdx:280-282 --> For bulk replay, iterate `replayer.ReplayWorkflowsAsync(...)` and check each `result.ReplayFailure`. <!-- docs/develop/dotnet/best-practices/testing-suite.mdx:302-306 -->
+ For bulk replay, iterate `replayer.ReplayWorkflowsAsync(...)` and check each `result.ReplayFailure`.
 
 ### Ruby
 
@@ -128,38 +128,38 @@ replayer = Temporalio::Worker::WorkflowReplayer.new(workflows: [MyWorkflow])
 replayer.replay_workflow(history)
 ```
 
-<!-- docs/develop/ruby/best-practices/testing-suite.mdx:242-245 --> For bulk replay, pass `client.list_workflows(...)` to `replayer.replay_workflows(...)`; set `raise_on_replay_failure: true`, or inspect each `result.replay_failure`. <!-- docs/develop/ruby/best-practices/testing-suite.mdx:259-262 -->
+ For bulk replay, pass `client.list_workflows(...)` to `replayer.replay_workflows(...)`; set `raise_on_replay_failure: true`, or inspect each `result.replay_failure`.
 
 ### PHP
 
-The replayer is `\Temporal\Testing\Replay\WorkflowReplayer`. <!-- docs/develop/php/best-practices/testing-suite.mdx:202 --> Replay from a running server with `replayFromServer(...)`, <!-- docs/develop/php/best-practices/testing-suite.mdx:223 --> from an exported JSON file with `replayFromJSON(...)`, <!-- docs/develop/php/best-practices/testing-suite.mdx:236 --> or from an in-memory history with `replayHistory($history)`. <!-- docs/develop/php/best-practices/testing-suite.mdx:250 --> A non-deterministic replay throws `\Temporal\Testing\Replay\Exception\ReplayerException`. <!-- docs/develop/php/best-practices/testing-suite.mdx:227 -->
+The replayer is `\Temporal\Testing\Replay\WorkflowReplayer`. Replay from a running server with `replayFromServer(...)`, from an exported JSON file with `replayFromJSON(...)`, or from an in-memory history with `replayHistory($history)`. A non-deterministic replay throws `\Temporal\Testing\Replay\Exception\ReplayerException`.
 
 ## TEMPORAL_DEBUG: suppress the deadlock detector while stepping
 
 Two SDKs explicitly document a debug-mode env var. Without it, pausing on a breakpoint for more than a second can cause the Worker's deadlock detector to fail the Workflow Task *during your debugging session*:
 
-- **Go.** "The Temporal Go SDK includes deadlock detection which fails a Workflow Task in case the code blocks over a second without relinquishing execution control. Because of this you can often encounter a `PanicError: Potential deadlock detected` while stepping through Workflow Definitions during debugging. To alleviate this issue, you can set the `TEMPORAL_DEBUG` environment variable to `true` before debugging your Workflow Definition." <!-- docs/develop/go/best-practices/debugging.mdx:28-31, 315-318 -->
-- **Java.** "The Temporal Java SDK includes deadlock detection which fails a Workflow Task in case the code blocks over a second without relinquishing execution control. Because of this you can often encounter the `PotentialDeadlockException` Exception while stepping through Workflow code during debugging. To alleviate this issue, you can set the `TEMPORAL_DEBUG` environment variable to true before debugging your Workflow code." <!-- docs/develop/java/best-practices/debugging.mdx:28-31 -->
+- **Go.** "The Temporal Go SDK includes deadlock detection which fails a Workflow Task in case the code blocks over a second without relinquishing execution control. Because of this you can often encounter a `PanicError: Potential deadlock detected` while stepping through Workflow Definitions during debugging. To alleviate this issue, you can set the `TEMPORAL_DEBUG` environment variable to `true` before debugging your Workflow Definition."
+- **Java.** "The Temporal Java SDK includes deadlock detection which fails a Workflow Task in case the code blocks over a second without relinquishing execution control. Because of this you can often encounter the `PotentialDeadlockException` Exception while stepping through Workflow code during debugging. To alleviate this issue, you can set the `TEMPORAL_DEBUG` environment variable to true before debugging your Workflow code."
 
-Both pages add the same warning: "Make sure to set `TEMPORAL_DEBUG` to true only during debugging." <!-- docs/develop/go/best-practices/debugging.mdx:35, 322 --><!-- docs/develop/java/best-practices/debugging.mdx:31 -->
+Both pages add the same warning: "Make sure to set `TEMPORAL_DEBUG` to true only during debugging."
 
-Python and TypeScript debugging pages do not document a `TEMPORAL_DEBUG` env var in the sources consulted. <!-- docs/develop/python/best-practices/debugging.mdx --><!-- docs/develop/typescript/best-practices/debugging.mdx --><!-- VERIFY: whether the Python and TypeScript SDKs honor a `TEMPORAL_DEBUG` env var is not stated on their debugging pages. If your debugger sessions are being killed by a deadlock detector in those SDKs, check the SDK's source for an equivalent flag. -->
+Python and TypeScript debugging pages do not document a `TEMPORAL_DEBUG` env var in the sources consulted.
 
 ## Interpreting a replay that diverges
 
 The documented behavior when replay detects non-determinism:
 
-- **TypeScript**: throws `DeterminismViolationError`; any other replay failure throws `ReplayError`. <!-- docs/develop/typescript/best-practices/testing-suite.mdx:528-529 -->
-- **Go**: the replayer returns an error from `ReplayWorkflowHistory`; the docs describe the condition as "cause the Workflow to fail with a nondeterminism error" without pinning a public type name. <!-- docs/develop/go/workflows/versioning.mdx:70 --><!-- VERIFY: exact Go error type is not spelled out in the docs snapshot. -->
-- **Java**: `WorkflowReplayer.replayWorkflowExecution` throws; the versioning doc describes the condition as "This would cause the Workflow to fail with a nondeterminism error." <!-- docs/develop/java/workflows/versioning.mdx:71 --><!-- VERIFY: exact Java exception class is not stated in the docs snapshot. -->
-- **Python**: `Replayer.replay_workflow` raises; if any replay fails, the code raises an exception. <!-- docs/develop/python/best-practices/testing-suite.mdx:213 -->
+- **TypeScript**: throws `DeterminismViolationError`; any other replay failure throws `ReplayError`.
+- **Go**: the replayer returns an error from `ReplayWorkflowHistory`; the docs describe the condition as "cause the Workflow to fail with a nondeterminism error" without pinning a public type name.
+- **Java**: `WorkflowReplayer.replayWorkflowExecution` throws; the versioning doc describes the condition as "This would cause the Workflow to fail with a nondeterminism error."
+- **Python**: `Replayer.replay_workflow` raises; if any replay fails, the code raises an exception.
 
 The error is raised where the SDK detected the mismatch — typically inside *the Worker machinery*, not on the Workflow line that emitted the bad Command. A debugger halts at the same place. To locate the offending Workflow line, compare:
 
 - The last Command the code was about to emit (the frame just below the SDK entry in the stack), and
 - The next non-bookkeeping Event in the recorded history (see [non-determinism.md §Identifying ND from the Event History](non-determinism.md#identifying-nd-from-the-event-history)).
 
-The divergence is the mismatch between those two. The encyclopedia frames this as: "If a generated Command doesn't match what it needs to in the existing Event History, then the Workflow Execution returns a non-deterministic error." <!-- docs/encyclopedia/workflow/workflow-definition.mdx:231 -->
+The divergence is the mismatch between those two. The encyclopedia frames this as: "If a generated Command doesn't match what it needs to in the existing Event History, then the Workflow Execution returns a non-deterministic error."
 
 For remediation paths (Worker Versioning, per-SDK patching, reset past the divergence), return to [non-determinism.md §Remediation](non-determinism.md#remediation-worker-versioning-preferred).
 
@@ -173,10 +173,10 @@ A local-replay success on the *current* source with production still failing is 
 
 Temporal publishes a VS Code extension that wraps the TypeScript SDK's replayer in the VS Code debugger UI — one-click "open history → set breakpoints → step through." For Workflows authored in any other SDK, skip it and use the SDK replayer above under your IDE's native debugger; the observability is the same (a stack trace at the point the SDK detected divergence) and the replayer APIs are first-party and doc-backed.
 
-Claims in this section come from the extension's marketplace listing; the Temporal docs themselves do not document the extension. <!-- https://marketplace.visualstudio.com/items?itemName=temporal-technologies.temporalio, consulted 2026-04-21 --><!-- VERIFY: local /Users/joe/sap/documentation/docs/ was Grep'd for "vscode" and "VS Code" with zero hits on 2026-04-21. -->
+Claims in this section come from the extension's marketplace listing; the Temporal docs themselves do not document the extension.
 
-- **Install:** search the VS Code Marketplace for "Temporal" and install the extension published by **Temporal Technologies Inc.** (`temporal-technologies.temporalio`). As of the listing consulted, it debugs **TypeScript workflows only**. <!-- marketplace -->
-- **Configure:** the replayer is driven by a TypeScript entrypoint that calls `startDebugReplayer` with a `workflowsPath`; the extension reads the path from the `temporal.replayerEntrypoint` setting (default `src/debug-replayer.ts`). <!-- marketplace --><!-- VERIFY: copy the exact `startDebugReplayer` import path and option-object shape from the extension README at the version you install. -->
-- **Run:** **Temporal: Open Panel** from the Command Palette → enter a Workflow ID (fetched from the configured server, default `localhost:7233`) or pick a history JSON file → **Start** → set breakpoints in Workflow source or on history events, then step through. For Cloud, supply the Cloud gRPC endpoint plus the credentials in [authentication.md](authentication.md) and [certificates.md](certificates.md). <!-- marketplace -->
+- **Install:** search the VS Code Marketplace for "Temporal" and install the extension published by **Temporal Technologies Inc.** (`temporal-technologies.temporalio`). As of the listing consulted, it debugs **TypeScript workflows only**.
+- **Configure:** the replayer is driven by a TypeScript entrypoint that calls `startDebugReplayer` with a `workflowsPath`; the extension reads the path from the `temporal.replayerEntrypoint` setting (default `src/debug-replayer.ts`).
+- **Run:** **Temporal: Open Panel** from the Command Palette → enter a Workflow ID (fetched from the configured server, default `localhost:7233`) or pick a history JSON file → **Start** → set breakpoints in Workflow source or on history events, then step through. For Cloud, supply the Cloud gRPC endpoint plus the credentials in [authentication.md](authentication.md) and [certificates.md](certificates.md).
 
-For anything the marketplace page does not spell out (a supported-SDK matrix beyond TypeScript, the full command list, `launch.json` recipes, OS requirements, mTLS-vs-API-key support), consult the extension's README for the version you installed — the citations here are a point-in-time snapshot. <!-- VERIFY: these are not documented on the marketplace page at the snapshot date. -->
+For anything the marketplace page does not spell out (a supported-SDK matrix beyond TypeScript, the full command list, `launch.json` recipes, OS requirements, mTLS-vs-API-key support), consult the extension's README for the version you installed — the citations here are a point-in-time snapshot.
