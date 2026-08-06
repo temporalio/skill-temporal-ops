@@ -1,22 +1,23 @@
 # Temporal Ops Skill
 
-A skill for operating and diagnosing Temporal environments — namespace administration, capacity management, IAM, certificate rotation, workflow health queries, batch operations, plus bottom-up diagnosis of stuck workflows, non-determinism errors, connectivity problems, certificate expirations, worker health issues, and rate limits.
+A skill for operating and diagnosing [Temporal](https://temporal.io/) environments — namespace administration, capacity management, IAM, certificate rotation, workflow health queries, batch operations, plus bottom-up diagnosis of stuck workflows, non-determinism errors, connectivity problems, certificate expirations, worker health issues, and rate limits.
 
 Applies to both **Temporal Cloud** (`tcld` commands) and **self-hosted** (`temporal operator` commands) deployments. Data-plane operations (`temporal workflow`, `temporal batch`, `temporal schedule`) work on both.
 
-> [!WARNING]
-> This skill is not yet released. It is being shared internally to gather feedback before a public release.
-> Please send feedback — positive or negative — to the [#topic-ai channel](https://temporalio.slack.com/archives/C0818FQPYKY) on the Temporal Slack.
+> We would love to hear your feedback - positive or negative - over in the [Community Slack](https://t.mp/slack), in the [#topic-ai channel](https://temporalio.slack.com/archives/C0818FQPYKY). Bug reports and corrections are also welcome as [GitHub issues](https://github.com/temporalio/skill-temporal-ops/issues).
 
 ## Installation
 
-While this skill is unreleased, install it by cloning the repo directly:
+### Via `npx skills` — supports all major coding agents
 
-```bash
-mkdir -p ~/.claude/skills && git clone https://github.com/temporalio/skill-temporal-ops ~/.claude/skills/temporal-ops
-```
+1. `npx skills add temporalio/skill-temporal-ops`
+2. Follow prompts
 
-Adjust the installation directory based on your coding agent. Plugin-marketplace and `npx skills` installation will be documented here once the skill is released.
+### Via manually cloning the skill repo
+
+1. `mkdir -p ~/.claude/skills && git clone https://github.com/temporalio/skill-temporal-ops ~/.claude/skills/temporal-ops`
+
+Appropriately adjust the installation directory based on your coding agent.
 
 ## Before you point an agent at production
 
@@ -52,6 +53,10 @@ Since you have to set up CLI authentication anyway, it is worth deciding *which*
 
 ## What this skill does NOT cover
 
-- **Writing workflows/activities** — use `skill-temporal-developer`
-- **Worker performance tuning, scaling, capacity planning** — use `skill-temporal-workertuning`
-- **SDK-specific ergonomics** — use `skill-temporal-developer`
+- **Writing workflows/activities** — use [skill-temporal-developer](https://github.com/temporalio/skill-temporal-developer)
+- **Worker performance tuning, scaling, capacity planning** — use [skill-temporal-workertuning](https://github.com/temporalio/skill-temporal-workertuning)
+- **SDK-specific ergonomics** — use [skill-temporal-developer](https://github.com/temporalio/skill-temporal-developer)
+
+## License
+
+[MIT](LICENSE)
