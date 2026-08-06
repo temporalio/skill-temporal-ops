@@ -1,6 +1,6 @@
 # Cloud SAML and SCIM
 
-SAML enables single sign-on (SSO) by allowing your identity provider to authenticate users into Temporal Cloud. SCIM automatically creates, updates, and removes users and groups in Temporal Cloud based on changes in your identity provider. <!-- docs/cloud/manage-access/index.mdx -->
+SAML enables single sign-on (SSO) by allowing your identity provider to authenticate users into Temporal Cloud. SCIM automatically creates, updates, and removes users and groups in Temporal Cloud based on changes in your identity provider.
 
 Temporal-side SAML/SCIM enablement is performed by Temporal Support (internal IAM/cloud-iam), not via `tcld`.
 
@@ -8,9 +8,9 @@ Temporal-side SAML/SCIM enablement is performed by Temporal Support (internal IA
 
 ## SAML SSO
 
-SAML 2.0 integration allows you to authenticate users of your Temporal Cloud account using your organization's IdP. This enforces corporate identity policies such as multi-factor authentication (MFA) and password complexity. <!-- docs/cloud/manage-access/saml.mdx -->
+SAML 2.0 integration allows you to authenticate users of your Temporal Cloud account using your organization's IdP. This enforces corporate identity policies such as multi-factor authentication (MFA) and password complexity.
 
-SAML is included in the Business, Enterprise, and Mission Critical plans. <!-- docs/cloud/manage-access/saml.mdx -->
+SAML is included in the Business, Enterprise, and Mission Critical plans.
 
 ### Configuration overview
 
@@ -99,20 +99,19 @@ When SAML-only is enabled, **only** SAML login is allowed — it blocks email+pa
 
 ## SCIM user provisioning
 
-SCIM lets you integrate your identity provider with Temporal Cloud to automate user provisioning and access. Changes in the IdP are reflected in Temporal Cloud: <!-- docs/cloud/manage-access/scim.mdx -->
+SCIM lets you integrate your identity provider with Temporal Cloud to automate user provisioning and access. Changes in the IdP are reflected in Temporal Cloud:
 
 - User creation / onboarding
 - User deletion / offboarding
 - User membership in groups
 
-SCIM requires SAML. Pricing: <!-- docs/evaluate/temporal-cloud/pricing.mdx:374-375 -->
+SCIM requires SAML. Pricing:
 
 - **Business:** SCIM is a paid add-on (+$500/mo)
 - **Enterprise / Mission Critical:** SCIM included
 
 ### Supported IdP vendors
 
-<!-- docs/cloud/manage-access/scim.mdx -->
 - Okta
 - Microsoft Entra ID (Azure AD)
 - Google Workspace
@@ -136,7 +135,7 @@ SCIM requires SAML. Pricing: <!-- docs/evaluate/temporal-cloud/pricing.mdx:374-3
 | **SCIM-managed users** | IdP-owned; offboard in the IdP. Once **user lifecycle management** is disabled, Cloud UI/API can no longer create/delete users | IdP only | Roles still assigned in Cloud (directly or via synced groups) |
 | **SCIM-synced groups** | IdP creates/updates/deletes groups | IdP only | Assign roles in Cloud **after** sync (UI / `tcld` / Terraform). IdP does **not** map Temporal roles |
 
-Whether users can be added or removed from the Cloud UI/API is governed by the account-level **user lifecycle management** setting: while enabled, you can still invite and remove users outside of SCIM; once disabled, user create/delete is IdP-only. Account Roles can always be changed from the Cloud interface. <!-- docs/cloud/manage-access/scim.mdx:59-62 -->
+Whether users can be added or removed from the Cloud UI/API is governed by the account-level **user lifecycle management** setting: while enabled, you can still invite and remove users outside of SCIM; once disabled, user create/delete is IdP-only. Account Roles can always be changed from the Cloud interface.
 
 ### Okta onboarding flow
 
@@ -155,7 +154,7 @@ Whether users can be added or removed from the Cloud UI/API is governed by the a
 
 ## Access model context
 
-Access to Temporal Cloud is governed by role-based access control (RBAC). Each access principal has one account-level role and optionally one or more Namespace-level permissions. <!-- docs/cloud/manage-access/index.mdx -->
+Access to Temporal Cloud is governed by role-based access control (RBAC). Each access principal has one account-level role and optionally one or more Namespace-level permissions.
 
 Access principals:
 

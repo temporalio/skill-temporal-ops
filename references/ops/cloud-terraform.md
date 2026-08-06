@@ -1,8 +1,8 @@
 # Cloud Terraform Provider
 
-The Terraform Temporal Cloud provider allows you to use Terraform to manage resources for Temporal Cloud. It uses the Cloud Ops API. <!-- docs/cloud/terraform-provider.mdx:17-18 -->
+The Terraform Temporal Cloud provider allows you to use Terraform to manage resources for Temporal Cloud. It uses the Cloud Ops API.
 
-Once a resource is managed by Terraform, you should only use Terraform to manage that resource. <!-- docs/cloud/terraform-provider.mdx:23 -->
+Once a resource is managed by Terraform, you should only use Terraform to manage that resource.
 
 Source of truth for resource/data-source schemas: [Terraform Registry](https://registry.terraform.io/providers/temporalio/temporalcloud/latest/docs). Public docs at docs.temporal.io can lag the provider.
 
@@ -10,26 +10,24 @@ Source of truth for resource/data-source schemas: [Terraform Registry](https://r
 
 ## Prerequisites
 
-- Terraform CLI <!-- docs/cloud/terraform-provider.mdx:45 -->
-- An API Key for authentication <!-- docs/cloud/terraform-provider.mdx:46 -->
+- Terraform CLI
+- An API Key for authentication
 
 ---
 
 ## Setup
 
-Set the `TEMPORAL_CLOUD_API_KEY` environment variable: <!-- docs/cloud/terraform-provider.mdx:71 -->
+Set the `TEMPORAL_CLOUD_API_KEY` environment variable:
 
 ```bash
 export TEMPORAL_CLOUD_API_KEY=<your-secret-key>
 ```
-<!-- docs/cloud/terraform-provider.mdx:70-71 -->
 
 Or pass it directly in the provider block:
 
 ```hcl
 provider "temporalcloud" { api_key = "my-temporalcloud-api-key" }
 ```
-<!-- docs/cloud/terraform-provider.mdx:101 -->
 
 Required provider configuration:
 
@@ -47,7 +45,6 @@ provider "temporalcloud" {
   # TEMPORAL_CLOUD_ALLOW_INSECURE
 }
 ```
-<!-- docs/cloud/terraform-provider.mdx:119-131; registry provider schema -->
 
 ---
 
@@ -77,9 +74,9 @@ Sections below cover the most common ops workflows.
 
 ## Namespace management
 
-Resource: `temporalcloud_namespace` <!-- docs/cloud/terraform-provider.mdx:132 -->
+Resource: `temporalcloud_namespace`
 
-Required identity: Account Owner, Global Admin, or Developer Account Role. <!-- docs/cloud/terraform-provider.mdx:110-111 -->
+Required identity: Account Owner, Global Admin, or Developer Account Role.
 
 ### Create
 
@@ -91,9 +88,8 @@ resource "temporalcloud_namespace" "namespace" {
   retention_days     = 14
 }
 ```
-<!-- docs/cloud/terraform-provider.mdx:132-137 -->
 
-Key fields: `name`, `regions`, `retention_days`. Auth: at least one of `accepted_client_ca` (mTLS) or `api_key_auth = true`. Both may be enabled. <!-- registry namespace schema; provider create validation -->
+Key fields: `name`, `regions`, `retention_days`. Auth: at least one of `accepted_client_ca` (mTLS) or `api_key_auth = true`. Both may be enabled.
 
 ```hcl
 resource "temporalcloud_namespace" "api_key_ns" {
@@ -106,33 +102,32 @@ resource "temporalcloud_namespace" "api_key_ns" {
 
 ### Update
 
-Terraform automatically recognizes changes in `.tf` files and applies them. For example, changing `retention_days` triggers an update. <!-- docs/cloud/terraform-provider.mdx:195-198 -->
+Terraform automatically recognizes changes in `.tf` files and applies them. For example, changing `retention_days` triggers an update.
 
 ### Delete
 
-Remove the `temporalcloud_namespace` resource and all dependent resource configurations from your Terraform files and run `terraform apply`. <!-- docs/cloud/terraform-provider.mdx:239-241 -->
+Remove the `temporalcloud_namespace` resource and all dependent resource configurations from your Terraform files and run `terraform apply`.
 
 Deletion safeguards:
 
-- Terraform meta-argument: `prevent_destroy` <!-- docs/cloud/terraform-provider.mdx:250-253 -->
-- Cloud-side: `namespace_lifecycle.enable_delete_protection` (must set to `false` before destroy) <!-- registry namespace schema -->
+- Terraform meta-argument: `prevent_destroy`
+- Cloud-side: `namespace_lifecycle.enable_delete_protection` (must set to `false` before destroy)
 
 ### Import
 
 ```bash
 terraform import temporalcloud_namespace.terraform namespaceid.acctid
 ```
-<!-- docs/cloud/terraform-provider.mdx:271 -->
 
-The Namespace ID is in the format `namespaceid.acctid`, available at the top of the Namespace page in the Cloud UI. <!-- docs/cloud/terraform-provider.mdx:268 -->
+The Namespace ID is in the format `namespaceid.acctid`, available at the top of the Namespace page in the Cloud UI.
 
 ---
 
 ## Nexus Endpoint management
 
-Resource: `temporalcloud_nexus_endpoint` <!-- docs/cloud/terraform-provider.mdx:344 -->
+Resource: `temporalcloud_nexus_endpoint`
 
-Required identity: Developer role (or higher) and Namespace Admin permission on the Endpoint's target Namespace. <!-- docs/cloud/terraform-provider.mdx:288-289 -->
+Required identity: Developer role (or higher) and Namespace Admin permission on the Endpoint's target Namespace.
 
 ### Create
 
@@ -149,9 +144,8 @@ resource "temporalcloud_nexus_endpoint" "nexus_endpoint" {
   ]
 }
 ```
-<!-- docs/cloud/terraform-provider.mdx:344-364 (simplified) -->
 
-Key fields: `name`, `description`, `worker_target` (namespace_id, task_queue), `allowed_caller_namespaces`. <!-- docs/cloud/terraform-provider.mdx:344-364 -->
+Key fields: `name`, `description`, `worker_target` (namespace_id, task_queue), `allowed_caller_namespaces`.
 
 ### Import
 
@@ -160,21 +154,20 @@ Address must be `TYPE.NAME` matching your resource block:
 ```bash
 terraform import temporalcloud_nexus_endpoint.nexus_endpoint <your-nexus-endpoint-ID>
 ```
-<!-- registry nexus_endpoint Import; docs.temporal.io form omitting .NAME is invalid -->
 
 ---
 
 ## User management
 
-Resource: `temporalcloud_user` <!-- docs/cloud/terraform-provider.mdx:591 -->
+Resource: `temporalcloud_user`
 
 ### Limitations
 
-- Terraform cannot create, update, or delete the Account Owner role. You can import an Account Owner, but not manage the role itself. <!-- docs/cloud/terraform-provider.mdx:550-551; registry: owner import-only -->
-- Namespace access must be managed from the User resource, not from the Namespace resource. <!-- docs/cloud/terraform-provider.mdx:553-554 -->
-- Account Owners and Global Admins automatically gain access to all Namespaces; you cannot specify Namespace access for these roles. <!-- docs/cloud/terraform-provider.mdx:555-556 -->
-- Manage a specific user in one and only one `.tf` file to avoid overwriting permissions. <!-- docs/cloud/terraform-provider.mdx:557-558 -->
-- To import a user, you need the User ID (currently not available in the Cloud UI). Fetch it with `tcld user list` or `data.temporalcloud_users`. <!-- docs/cloud/terraform-provider.mdx:559-560; registry users data source -->
+- Terraform cannot create, update, or delete the Account Owner role. You can import an Account Owner, but not manage the role itself.
+- Namespace access must be managed from the User resource, not from the Namespace resource.
+- Account Owners and Global Admins automatically gain access to all Namespaces; you cannot specify Namespace access for these roles.
+- Manage a specific user in one and only one `.tf` file to avoid overwriting permissions.
+- To import a user, you need the User ID (currently not available in the Cloud UI). Fetch it with `tcld user list` or `data.temporalcloud_users`.
 
 ### Create
 
@@ -194,38 +187,36 @@ resource "temporalcloud_user" "namespace_admin" {
   }]
 }
 ```
-<!-- docs/cloud/terraform-provider.mdx:591-605 -->
 
-`account_access` is case-insensitive. Allowed values: `owner` (import only), `admin`, `developer`, `read`, `financeadmin`, `none` (SCIM-managed). <!-- registry user schema -->
+`account_access` is case-insensitive. Allowed values: `owner` (import only), `admin`, `developer`, `read`, `financeadmin`, `none` (SCIM-managed).
 
 ### Import
 
 ```bash
 terraform import temporalcloud_user.user 72360058153949edb2f1d47019c1e85f
 ```
-<!-- docs/cloud/terraform-provider.mdx:698 -->
 
 ---
 
 ## Service Account management
 
-Resource: `temporalcloud_service_account` <!-- docs/cloud/terraform-provider.mdx:751 -->
+Resource: `temporalcloud_service_account`
 
-Service Accounts use a `name` instead of `email`. <!-- docs/cloud/terraform-provider.mdx:708-710 -->
+Service Accounts use a `name` instead of `email`.
 
 ### Limitations (not identical to users)
 
-- No Account Owner role for Service Accounts. `account_access` values: `admin`, `developer`, `read`, `financeadmin`, `metricsread`. <!-- registry service_account schema -->
-- Namespace access is managed on the Service Account resource (not the Namespace resource), same as users. <!-- docs/cloud/terraform-provider.mdx:553-554 -->
-- Global Admins (`account_access = "admin"`) automatically gain access to all Namespaces; do not set `namespace_accesses` for them. <!-- registry service_account schema -->
-- Optional `namespace_scoped_access`: binds the SA to a single namespace (namespace assignment immutable after create; permission is mutable). Cannot combine with `account_access` / `namespace_accesses`. <!-- registry service_account schema -->
+- No Account Owner role for Service Accounts. `account_access` values: `admin`, `developer`, `read`, `financeadmin`, `metricsread`.
+- Namespace access is managed on the Service Account resource (not the Namespace resource), same as users.
+- Global Admins (`account_access = "admin"`) automatically gain access to all Namespaces; do not set `namespace_accesses` for them.
+- Optional `namespace_scoped_access`: binds the SA to a single namespace (namespace assignment immutable after create; permission is mutable). Cannot combine with `account_access` / `namespace_accesses`.
 - Manage a specific Service Account in one and only one `.tf` file.
 
 ---
 
 ## API Key management
 
-Resource: `temporalcloud_apikey` <!-- docs/cloud/terraform-provider.mdx:756 -->
+Resource: `temporalcloud_apikey`
 
 ### Create
 
@@ -238,7 +229,6 @@ resource "temporalcloud_apikey" "global_apikey" {
   disabled     = false
 }
 ```
-<!-- docs/cloud/terraform-provider.mdx:756-762 -->
 
 To access the API Key token, create an output:
 
@@ -248,22 +238,20 @@ output "apikey_token" {
   sensitive = true
 }
 ```
-<!-- docs/cloud/terraform-provider.mdx:773-776 -->
 
 Retrieve the token:
 
 ```bash
 terraform output -json apikey_token
 ```
-<!-- docs/cloud/terraform-provider.mdx:813 -->
 
 ### Update
 
-You can update `display_name`, `description`, and `disabled` in place. Changing `owner_id`, `owner_type`, or `expiry_time` forces resource replacement. Updating does not rotate the token. <!-- provider schema PlanModifiers -->
+You can update `display_name`, `description`, and `disabled` in place. Changing `owner_id`, `owner_type`, or `expiry_time` forces resource replacement. Updating does not rotate the token.
 
 ### Import
 
-API keys **cannot** be imported into Terraform. Once created, the API Key secret is not stored and cannot be retrieved. Create a new API Key using Terraform directly instead. <!-- docs/cloud/terraform-provider.mdx:842-845; no ImportState on apikey resource -->
+API keys **cannot** be imported into Terraform. Once created, the API Key secret is not stored and cannot be retrieved. Create a new API Key using Terraform directly instead.
 
 ---
 
@@ -289,11 +277,10 @@ output "regions" {
   value = data.temporalcloud_regions.regions.regions
 }
 ```
-<!-- docs/cloud/terraform-provider.mdx:861-866 -->
 
 ### Namespaces
 
-The `temporalcloud_namespaces` data source provides access to available Namespaces in the account. <!-- docs/cloud/terraform-provider.mdx:848-849 -->
+The `temporalcloud_namespaces` data source provides access to available Namespaces in the account.
 
 ### Users
 
@@ -303,5 +290,5 @@ The `temporalcloud_namespaces` data source provides access to available Namespac
 
 ## Resources
 
-- Terraform Registry: [registry.terraform.io/providers/temporalio/temporalcloud/latest](https://registry.terraform.io/providers/temporalio/temporalcloud/latest) <!-- docs/cloud/terraform-provider.mdx:29 -->
-- GitHub repository: [github.com/temporalio/terraform-provider-temporalcloud](https://github.com/temporalio/terraform-provider-temporalcloud/tree/main) <!-- docs/cloud/terraform-provider.mdx:33 -->
+- Terraform Registry: [registry.terraform.io/providers/temporalio/temporalcloud/latest](https://registry.terraform.io/providers/temporalio/temporalcloud/latest)
+- GitHub repository: [github.com/temporalio/terraform-provider-temporalcloud](https://github.com/temporalio/terraform-provider-temporalcloud/tree/main)

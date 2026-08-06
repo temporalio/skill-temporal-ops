@@ -1,66 +1,66 @@
 # Cloud Audit Logs
 
-Audit Logs provide forensic access information for operations in the Temporal Cloud control plane. They answer "who, when, and what" questions about Temporal Cloud resources. <!-- docs/cloud/audit-logs.mdx:22-24 -->
+Audit Logs provide forensic access information for operations in the Temporal Cloud control plane. They answer "who, when, and what" questions about Temporal Cloud resources.
 
-Required role: Account Owner or Global Administrator to view Audit Logs via UI, use the API, or configure an Audit Log Integration. <!-- docs/cloud/audit-logs.mdx:27 -->
+Required role: Account Owner or Global Administrator to view Audit Logs via UI, use the API, or configure an Audit Log Integration.
 
-**Audit Logs do NOT capture data plane events** (Workflow Start, Workflow Terminate, Schedule Create, etc.). For closed Workflow Histories, use the Export feature instead. <!-- docs/cloud/audit-logs.mdx:30-33 -->
+**Audit Logs do NOT capture data plane events** (Workflow Start, Workflow Terminate, Schedule Create, etc.). For closed Workflow Histories, use the Export feature instead.
 
 ---
 
 ## Supported events
 
 ### Account
-- `ChangeAccountPlanType`: Change Account Plan Type <!-- docs/cloud/audit-logs.mdx:39 -->
-- `UpdateAccountAPI`: Configure Audit Logs, Configure Observability Endpoint <!-- docs/cloud/audit-logs.mdx:40 -->
+- `ChangeAccountPlanType`: Change Account Plan Type
+- `UpdateAccountAPI`: Configure Audit Logs, Configure Observability Endpoint
 
 ### API Keys
-- `CreateAPIKey`: Create API Key <!-- docs/cloud/audit-logs.mdx:42 -->
-- `DeleteAPIKey`: Delete API Key <!-- docs/cloud/audit-logs.mdx:43 -->
-- `UpdateAPIKey`: Update API Key <!-- docs/cloud/audit-logs.mdx:44 -->
+- `CreateAPIKey`: Create API Key
+- `DeleteAPIKey`: Delete API Key
+- `UpdateAPIKey`: Update API Key
 
 ### Connectivity Rules
-- `CreateConnectivityRule`: Create Connectivity Rule <!-- docs/cloud/audit-logs.mdx:46 -->
-- `DeleteConnectivityRule`: Delete Connectivity Rule <!-- docs/cloud/audit-logs.mdx:47 -->
+- `CreateConnectivityRule`: Create Connectivity Rule
+- `DeleteConnectivityRule`: Delete Connectivity Rule
 
 ### Namespace
-- `CreateNamespaceAPI`: Create Namespace <!-- docs/cloud/audit-logs.mdx:49 -->
-- `DeleteNamespaceAPI`: Delete Namespace <!-- docs/cloud/audit-logs.mdx:50 -->
-- `FailoverNamespacesAPI`: Failover (for High Availability Namespaces) <!-- docs/cloud/audit-logs.mdx:51 -->
-- `RenameCustomSearchAttributeAPI`: Rename Custom Search Attribute <!-- docs/cloud/audit-logs.mdx:52 -->
-- `UpdateNamespaceAPI`: Retention period changes, replica edits, authentication method updates, custom search attribute updates, connectivity rule bindings <!-- docs/cloud/audit-logs.mdx:53 -->
+- `CreateNamespaceAPI`: Create Namespace
+- `DeleteNamespaceAPI`: Delete Namespace
+- `FailoverNamespacesAPI`: Failover (for High Availability Namespaces)
+- `RenameCustomSearchAttributeAPI`: Rename Custom Search Attribute
+- `UpdateNamespaceAPI`: Retention period changes, replica edits, authentication method updates, custom search attribute updates, connectivity rule bindings
 
 ### Namespace Export
-- `CreateNamespaceExportSink`: Create Namespace Export Sink <!-- docs/cloud/audit-logs.mdx:55 -->
-- `DeleteNamespaceExportSink`: Delete Namespace Export Sink <!-- docs/cloud/audit-logs.mdx:56 -->
-- `UpdateNamespaceExportSink`: Update Namespace Export Sink <!-- docs/cloud/audit-logs.mdx:57 -->
-- `ValidateNamespaceExportSink`: Validate Namespace Export Sink <!-- docs/cloud/audit-logs.mdx:58 -->
+- `CreateNamespaceExportSink`: Create Namespace Export Sink
+- `DeleteNamespaceExportSink`: Delete Namespace Export Sink
+- `UpdateNamespaceExportSink`: Update Namespace Export Sink
+- `ValidateNamespaceExportSink`: Validate Namespace Export Sink
 
 ### Nexus Endpoint
-- `CreateNexusEndpoint`: Create Nexus Endpoint <!-- docs/cloud/audit-logs.mdx:60 -->
-- `DeleteNexusEndpoint`: Delete Nexus Endpoint <!-- docs/cloud/audit-logs.mdx:61 -->
-- `UpdateNexusEndpoint`: Update Nexus Endpoint <!-- docs/cloud/audit-logs.mdx:62 -->
+- `CreateNexusEndpoint`: Create Nexus Endpoint
+- `DeleteNexusEndpoint`: Delete Nexus Endpoint
+- `UpdateNexusEndpoint`: Update Nexus Endpoint
 
 ### Service Accounts
-- `CreateServiceAccount`: Create Service Account <!-- docs/cloud/audit-logs.mdx:64 -->
-- `CreateServiceAccountAPIKey`: Create Service Account API Key <!-- docs/cloud/audit-logs.mdx:65 -->
-- `DeleteServiceAccount`: Delete Service Account <!-- docs/cloud/audit-logs.mdx:66 -->
-- `UpdateServiceAccount`: Update Service Account <!-- docs/cloud/audit-logs.mdx:67 -->
+- `CreateServiceAccount`: Create Service Account
+- `CreateServiceAccountAPIKey`: Create Service Account API Key
+- `DeleteServiceAccount`: Delete Service Account
+- `UpdateServiceAccount`: Update Service Account
 
 ### User
-- `CreateUserAPI`: Create Users <!-- docs/cloud/audit-logs.mdx:69 -->
-- `DeleteUserAPI`: Delete Users <!-- docs/cloud/audit-logs.mdx:70 -->
-- `InviteUsersAPI`: Invite Users <!-- docs/cloud/audit-logs.mdx:71 -->
-- `SetUserNamespaceAccessAPI`: Set User Namespace Access <!-- docs/cloud/audit-logs.mdx:72 -->
-- `UpdateIdentityNamespacePermissionsAPI`: Update Identity Namespace Permissions <!-- docs/cloud/audit-logs.mdx:73 -->
-- `UpdateUserAPI`: Update User Account-level Roles <!-- docs/cloud/audit-logs.mdx:74 -->
-- `UpdateUserNamespacePermissionsAPI`: Update User Namespace Permissions <!-- docs/cloud/audit-logs.mdx:75 -->
+- `CreateUserAPI`: Create Users
+- `DeleteUserAPI`: Delete Users
+- `InviteUsersAPI`: Invite Users
+- `SetUserNamespaceAccessAPI`: Set User Namespace Access
+- `UpdateIdentityNamespacePermissionsAPI`: Update Identity Namespace Permissions
+- `UpdateUserAPI`: Update User Account-level Roles
+- `UpdateUserNamespacePermissionsAPI`: Update User Namespace Permissions
 
 ### User Groups
-- `CreateUserGroup`: Create User Group <!-- docs/cloud/audit-logs.mdx:77 -->
-- `DeleteUserGroup`: Delete User Group <!-- docs/cloud/audit-logs.mdx:78 -->
-- `SetUserGroupNamespaceAccess`: Set User Group Namespace Access <!-- docs/cloud/audit-logs.mdx:79 -->
-- `UpdateUserGroup`: Update User Group <!-- docs/cloud/audit-logs.mdx:80 -->
+- `CreateUserGroup`: Create User Group
+- `DeleteUserGroup`: Delete User Group
+- `SetUserGroupNamespaceAccess`: Set User Group Namespace Access
+- `UpdateUserGroup`: Update User Group
 
 ---
 
@@ -80,11 +80,10 @@ Required role: Account Owner or Global Administrator to view Audit Logs via UI, 
   "version":            // Version of the log entry
 }
 ```
-<!-- docs/cloud/audit-logs.mdx:92-104 -->
 
-**Deprecation notice:** The `request_id` field is deprecated and is planned for removal on or after November 1 2026. Use `async_operation_id` instead. <!-- docs/cloud/audit-logs.mdx:84-87 -->
+**Deprecation notice:** The `request_id` field is deprecated and is planned for removal on or after November 1 2026. Use `async_operation_id` instead.
 
-The `x_forwarded_for` field uses the `X-Forwarded-For` format: a comma-separated list of IP addresses, evaluated from last to first until meeting the first untrusted IP address. <!-- docs/cloud/audit-logs.mdx:109-111 -->
+The `x_forwarded_for` field uses the `X-Forwarded-For` format: a comma-separated list of IP addresses, evaluated from last to first until meeting the first untrusted IP address.
 
 ---
 
@@ -95,15 +94,15 @@ The `x_forwarded_for` field uses the `X-Forwarded-For` format: a comma-separated
 1. Select **Settings**.
 2. On the **Settings** page, select **Audit Logs**.
 
-Up to 1000 events can be downloaded from the Audit Log UI to a local file. <!-- docs/cloud/audit-logs.mdx:197-200 -->
+Up to 1000 events can be downloaded from the Audit Log UI to a local file.
 
 ### Via the API
 
-Audit Logs can be accessed using the Cloud Ops API. Use the API to build dashboards for viewing Audit Logs outside of Temporal Cloud. If your goal is to export logs continuously, use an Audit Log sink instead. <!-- docs/cloud/audit-logs.mdx:204-207 -->
+Audit Logs can be accessed using the Cloud Ops API. Use the API to build dashboards for viewing Audit Logs outside of Temporal Cloud. If your goal is to export logs continuously, use an Audit Log sink instead.
 
-Audit Logs are accessible for the past 30 days using the API. <!-- docs/cloud/audit-logs.mdx:209 -->
+Audit Logs are accessible for the past 30 days using the API.
 
-API filter parameters: <!-- docs/cloud/audit-logs.mdx:212-215 -->
+API filter parameters:
 
 | Parameter | Description |
 |---|---|
@@ -116,32 +115,32 @@ API filter parameters: <!-- docs/cloud/audit-logs.mdx:212-215 -->
 
 ## Audit Log sink configuration
 
-Audit Logs can be sent to AWS Kinesis or GCP Pub/Sub. <!-- docs/cloud/audit-logs.mdx:161-164 -->
+Audit Logs can be sent to AWS Kinesis or GCP Pub/Sub.
 
 ### AWS Kinesis
 
-Prerequisites: an AWS account and Kinesis Data Streams. <!-- docs/cloud/audit-logs-aws.mdx:26 -->
+Prerequisites: an AWS account and Kinesis Data Streams.
 
-An [AWS CloudFormation template](https://temporal-auditlogs-config.s3.us-west-2.amazonaws.com/cloudformation/iam-role-for-temporal-audit-logs.yaml) is available to create an IAM role with access to a Kinesis stream. <!-- docs/cloud/audit-logs-aws.mdx:31 -->
+An [AWS CloudFormation template](https://temporal-auditlogs-config.s3.us-west-2.amazonaws.com/cloudformation/iam-role-for-temporal-audit-logs.yaml) is available to create an IAM role with access to a Kinesis stream.
 
-Kinesis has a rate limit of 1,000 messages per second. <!-- docs/cloud/audit-logs-aws.mdx:33 -->
+Kinesis has a rate limit of 1,000 messages per second.
 
-Setup via Cloud UI: <!-- docs/cloud/audit-logs-aws.mdx:38-46 -->
+Setup via Cloud UI:
 
 1. Select **Settings** > **Audit Logs** > **Setup**.
 2. Choose your **Access method**: **Auto** (configure CloudFormation from the Cloud UI) or **Manual** (download a template).
 3. Enter the **Kinesis ARN**, **Role name**, and **AWS region**.
 4. Follow the Auto or Manual steps to complete CloudFormation stack creation.
 
-Use the **Verify** button to confirm Temporal can write to the stream. <!-- docs/cloud/audit-logs-aws.mdx:64 -->
+Use the **Verify** button to confirm Temporal can write to the stream.
 
-First logs appear within 10 minutes after configuring the sink. <!-- docs/cloud/audit-logs-aws.mdx:72 -->
+First logs appear within 10 minutes after configuring the sink.
 
 ### GCP Pub/Sub
 
-For manual setup: create a Pub/Sub topic and a service account in the same GCP project. <!-- docs/cloud/audit-logs-gcp.mdx:36-40 -->
+For manual setup: create a Pub/Sub topic and a service account in the same GCP project.
 
-Setup via Cloud UI: <!-- docs/cloud/audit-logs-gcp.mdx:43-55 -->
+Setup via Cloud UI:
 
 1. Select **Settings** > **Audit Logs** > **Setup**.
 2. Select **Pub/Sub**.
@@ -150,47 +149,47 @@ Setup via Cloud UI: <!-- docs/cloud/audit-logs-gcp.mdx:43-55 -->
 5. Use the **Verify** button to confirm Temporal can write to the topic.
 6. Click **Create**.
 
-Audit Logs appear in Pub/Sub within 10 minutes. <!-- docs/cloud/audit-logs-gcp.mdx:56 -->
+Audit Logs appear in Pub/Sub within 10 minutes.
 
-If using Terraform for deployment, the manual prerequisites (topic and service account creation) can be skipped. <!-- docs/cloud/audit-logs-gcp.mdx:30-33 -->
+If using Terraform for deployment, the manual prerequisites (topic and service account creation) can be skipped.
 
 ---
 
 ## Managing sinks via tcld
 
-Sinks can also be managed with `tcld account audit-log` (alias `al`), under two provider subgroups: `kinesis` (alias `k`) and `pubsub` (alias `ps`). <!-- docs/cloud/tcld/account.mdx:170-179 -->
+Sinks can also be managed with `tcld account audit-log` (alias `al`), under two provider subgroups: `kinesis` (alias `k`) and `pubsub` (alias `ps`).
 
 Both subgroups expose the same subcommands:
 
 | Subcommand | Alias | Purpose |
 |---|---|---|
-| `create` | `c` | Create a sink (created enabled) <!-- docs/cloud/tcld/account.mdx:192 --> |
-| `validate` | `v` | Validate sink config without creating it <!-- docs/cloud/tcld/account.mdx:220 --> |
-| `update` | `u` | Update sink fields or toggle enabled <!-- docs/cloud/tcld/account.mdx:248 --> |
-| `get` | `g` | Get a sink by name <!-- docs/cloud/tcld/account.mdx:286 --> |
-| `delete` | `d` | Delete a sink by name <!-- docs/cloud/tcld/account.mdx:296 --> |
-| `list` | `l` | List sinks <!-- docs/cloud/tcld/account.mdx:312 --> |
+| `create` | `c` | Create a sink (created enabled) |
+| `validate` | `v` | Validate sink config without creating it |
+| `update` | `u` | Update sink fields or toggle enabled |
+| `get` | `g` | Get a sink by name |
+| `delete` | `d` | Delete a sink by name |
+| `list` | `l` | List sinks |
 
 ### Kinesis create/validate flags
 
 | Flag | Alias | Required |
 |---|---|---|
-| `--sink-name` | | Yes <!-- docs/cloud/tcld/account.mdx:198 --> |
-| `--role-name` | `--rn` | Yes <!-- docs/cloud/tcld/account.mdx:202 --> |
-| `--destination-uri` | `--du` | Yes <!-- docs/cloud/tcld/account.mdx:208 --> |
-| `--region` | `--re` | Yes <!-- docs/cloud/tcld/account.mdx:214 --> |
+| `--sink-name` | | Yes |
+| `--role-name` | `--rn` | Yes |
+| `--destination-uri` | `--du` | Yes |
+| `--region` | `--re` | Yes |
 
 ### Pub/Sub create/validate flags
 
 | Flag | Alias | Required |
 |---|---|---|
-| `--sink-name` | | Yes <!-- docs/cloud/tcld/account.mdx:345 --> |
-| `--service-account-email` | `--sae` | Yes <!-- docs/cloud/tcld/account.mdx:349 --> |
-| `--topic-name` | `--tn` | Yes <!-- docs/cloud/tcld/account.mdx:355 --> |
+| `--sink-name` | | Yes |
+| `--service-account-email` | `--sae` | Yes |
+| `--topic-name` | `--tn` | Yes |
 
-`update` additionally takes `--enabled` (toggle `true`/`false`) and `--resource-version` / `-v`; provider flags are optional on update. <!-- docs/cloud/tcld/account.mdx:258-262 -->
+`update` additionally takes `--enabled` (toggle `true`/`false`) and `--resource-version` / `-v`; provider flags are optional on update.
 
-`get`, `delete`, and `list` are shared across both subgroups. `get` and `delete` identify the sink with `--sink-name` (`delete` also accepts `--resource-version` / `-v`); `list` accepts `--page-size` and `--page-token`. <!-- docs/cloud/tcld/account.mdx:286-322 -->
+`get`, `delete`, and `list` are shared across both subgroups. `get` and `delete` identify the sink with `--sink-name` (`delete` also accepts `--resource-version` / `-v`); `list` accepts `--page-size` and `--page-token`.
 
 ---
 
@@ -198,15 +197,15 @@ Both subgroups expose the same subcommands:
 
 ### Sink status
 
-The Audit Logs page of the Cloud UI shows the current status: <!-- docs/cloud/audit-logs.mdx:168-171 -->
+The Audit Logs page of the Cloud UI shows the current status:
 
 - If an error is detected, a summary appears below the page title.
 - If functioning normally, an **On** badge appears next to the page heading.
 
-Temporal retains Audit Log information for up to 30 days. To retrieve logs up to the past 30 days, file a request. <!-- docs/cloud/audit-logs.mdx:176 -->
+Temporal retains Audit Log information for up to 30 days. To retrieve logs up to the past 30 days, file a request.
 
-If you experience an issue with a sink, Temporal can provide missing audit information via a support ticket. <!-- docs/cloud/audit-logs.mdx:179-180 -->
+If you experience an issue with a sink, Temporal can provide missing audit information via a support ticket.
 
 ### Deleting a sink
 
-In the Cloud UI: **Settings** > **Audit Logs** > **Edit** > **Delete** at the bottom of the page. After confirmation, the sink is removed and logs stop flowing to the stream. <!-- docs/cloud/audit-logs.mdx:186-191 -->
+In the Cloud UI: **Settings** > **Audit Logs** > **Edit** > **Delete** at the bottom of the page. After confirmation, the sink is removed and logs stop flowing to the stream.

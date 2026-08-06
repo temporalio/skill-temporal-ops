@@ -21,7 +21,7 @@ This file is a table of contents, not a recipe book: each layer gives one check 
 1. **Run diagnostics from the failing environment.** A pod in a production VPC and a laptop on a home network do not share DNS, egress paths, or CA bundles. Always reproduce from where the problem occurs. (Skill convention.)
 2. **Start at the lowest layer that could plausibly be broken.** For a fresh cert-rotation incident, start at layer 3. For a "workflow stuck" report where the client still works, start at layer 6.
 3. **Move up only after the current layer is proven healthy.** "Healthy" means the check in that layer returned the signal described — not that the command didn't crash.
-4. **If a layer fails, layers above it are unknown.** An `UNAUTHENTICATED` <!-- grpc: UNAUTHENTICATED --> reported by a client whose TLS handshake is actually failing will not be fixed by rotating API keys — see the wrapped-cause trap in [authentication.md → UNAUTHENTICATED vs PERMISSION_DENIED](authentication.md#unauthenticated-vs-permission_denied).
+4. **If a layer fails, layers above it are unknown.** An `UNAUTHENTICATED` reported by a client whose TLS handshake is actually failing will not be fixed by rotating API keys — see the wrapped-cause trap in [authentication.md → UNAUTHENTICATED vs PERMISSION_DENIED](authentication.md#unauthenticated-vs-permission_denied).
 5. **Do not skip layers.** Skill convention, not a Temporal contract — but every bug-report-chased-at-the-wrong-layer in this skill's scope would have been caught by it.
 
 ## Layer 1: DNS / network path
@@ -31,15 +31,15 @@ This file is a table of contents, not a recipe book: each layer gives one check 
 **Minimal check:**
 
 ```bash
-nslookup <namespace>.<account>.tmprl.cloud   # man: nslookup(1)
-dig +short <namespace>.<account>.tmprl.cloud # man: dig(1)
+nslookup <namespace>.<account>.tmprl.cloud
+dig +short <namespace>.<account>.tmprl.cloud
 ```
 
 **Healthy signal:** an A record (self-hosted) or a CNAME chain through `<region>.region.tmprl.cloud` ending in A records (Cloud). See [connectivity.md → DNS](connectivity.md#dns) for the exact shapes per namespace type.
 
 **Failure signatures** (each routes to [connectivity.md](connectivity.md) for remediation):
 
-- `no such host` wrapped in a gRPC `UNAVAILABLE` <!-- grpc: UNAVAILABLE --> — resolver returned NXDOMAIN or the resolver is unreachable. See [connectivity.md → DNS](connectivity.md#dns).
+- `no such host` wrapped in a gRPC `UNAVAILABLE` — resolver returned NXDOMAIN or the resolver is unreachable. See [connectivity.md → DNS](connectivity.md#dns).
 - Namespace hostname format wrong (missing `.<account>` suffix, typo) — the endpoint table in [connectivity.md → Endpoint formats](connectivity.md#endpoint-formats) shows the valid patterns.
 - Returns a private IP unexpectedly, or a public IP when PrivateLink is supposed to be in use — split-horizon / missing private hosted zone. See [connectivity.md → PrivateLink and PSC](connectivity.md#privatelink-and-psc).
 
@@ -52,7 +52,7 @@ dig +short <namespace>.<account>.tmprl.cloud # man: dig(1)
 **Minimal check:**
 
 ```bash
-nc -zvw10 <host> 7233   # man: nc(1)
+nc -zvw10 <host> 7233
 ```
 
 The Cloud Namespace gRPC endpoint is on TCP/7233 (see [connectivity.md → Connection refused](connectivity.md#connection-refused), which cites the Namespace Endpoint port). On BSD `nc`, `-z` scans without sending data, `-v` is verbose, `-w` sets the idle timeout.
@@ -76,7 +76,6 @@ The Cloud Namespace gRPC endpoint is on TCP/7233 (see [connectivity.md → Conne
 
 ```bash
 openssl s_client -connect <host>:7233 -servername <host> </dev/null
-# man: openssl(1)
 ```
 
 For the mTLS variant with `-cert`/`-key`, see [certificates.md → OpenSSL recipes](certificates.md#openssl-recipes).
@@ -93,7 +92,7 @@ For the mTLS variant with `-cert`/`-key`, see [certificates.md → OpenSSL recip
 
 See also [certificates.md → TLS / cert error reference](certificates.md#tls--cert-error-reference) for the full error-string table.
 
-**What failure here means above:** depending on the SDK / client, the gRPC client will surface this as `UNAVAILABLE` <!-- grpc: UNAVAILABLE --> with a wrapped `tls:` / `x509:` cause, or — confusingly — as `UNAUTHENTICATED` <!-- grpc: UNAUTHENTICATED -->. Do not debug layer 4 until TLS is clean. The wrapped-cause trap is documented in [authentication.md → UNAUTHENTICATED vs PERMISSION_DENIED](authentication.md#unauthenticated-vs-permission_denied).
+**What failure here means above:** depending on the SDK / client, the gRPC client will surface this as `UNAVAILABLE` with a wrapped `tls:` / `x509:` cause, or — confusingly — as `UNAUTHENTICATED`. Do not debug layer 4 until TLS is clean. The wrapped-cause trap is documented in [authentication.md → UNAUTHENTICATED vs PERMISSION_DENIED](authentication.md#unauthenticated-vs-permission_denied).
 
 ## Layer 4: Authentication and authorization
 
@@ -116,9 +115,9 @@ The full form, including flag citations and the mTLS variant, is in [authenticat
 
 **Failure signatures:**
 
-- `UNAUTHENTICATED` <!-- grpc: UNAUTHENTICATED --> — credentials rejected (missing, typo, disabled, deleted, expired key; untrusted mTLS cert; wrong endpoint family). [authentication.md → API-key authentication](authentication.md#api-key-authentication) and [authentication.md → mTLS authentication after TLS completes](authentication.md#mtls-authentication-after-tls-completes).
-- `PERMISSION_DENIED` <!-- grpc: PERMISSION_DENIED --> — credentials valid but the identity lacks account-role / namespace-permission / cert-filter-derived identity for the action. [authentication.md → Cloud role and permission model](authentication.md#cloud-role-and-permission-model).
-- `INVALID_ARGUMENT` <!-- grpc: INVALID_ARGUMENT --> with a "namespace not found" suffix — namespace string does not exist in this account, or the Namespace Endpoint form is wrong. See [runtime-errors.md → `INVALID_ARGUMENT`](runtime-errors.md#invalid_argument) and verify against the endpoint table in [connectivity.md → Endpoint formats](connectivity.md#endpoint-formats).
+- `UNAUTHENTICATED` — credentials rejected (missing, typo, disabled, deleted, expired key; untrusted mTLS cert; wrong endpoint family). [authentication.md → API-key authentication](authentication.md#api-key-authentication) and [authentication.md → mTLS authentication after TLS completes](authentication.md#mtls-authentication-after-tls-completes).
+- `PERMISSION_DENIED` — credentials valid but the identity lacks account-role / namespace-permission / cert-filter-derived identity for the action. [authentication.md → Cloud role and permission model](authentication.md#cloud-role-and-permission-model).
+- `INVALID_ARGUMENT` with a "namespace not found" suffix — namespace string does not exist in this account, or the Namespace Endpoint form is wrong. See [runtime-errors.md → `INVALID_ARGUMENT`](runtime-errors.md#invalid_argument) and verify against the endpoint table in [connectivity.md → Endpoint formats](connectivity.md#endpoint-formats).
 
 **What failure here means above:** every gRPC call from this principal fails the same way. No point inspecting task queues or workflows.
 
@@ -129,20 +128,20 @@ The full form, including flag citations and the mTLS variant, is in [authenticat
 **Minimal check:**
 
 ```bash
-temporal operator cluster health   # docs/cli/operator.mdx:56, 78-80
+temporal operator cluster health
 ```
 
-Supply whatever `--address`, `--namespace`, and auth flags you established at layer 4. The command calls `grpc.health.v1.Health/Check`. <!-- docs/cli/operator.mdx:74-80 -->
+Supply whatever `--address`, `--namespace`, and auth flags you established at layer 4. The command calls `grpc.health.v1.Health/Check`.
 
-**Self-hosted:** use `temporal operator cluster health` directly. **Cloud:** use `temporal workflow list --limit 1` as the frontend-reachability smoke test instead — `cluster health` is scoped to self-hosted in the docs. <!-- docs/troubleshooting/deadline-exceeded-error.mdx:29-56 -->
+**Self-hosted:** use `temporal operator cluster health` directly. **Cloud:** use `temporal workflow list --limit 1` as the frontend-reachability smoke test instead — `cluster health` is scoped to self-hosted in the docs.
 
-**Healthy signal:** `SERVING` (self-hosted) or a successful list response (Cloud). The Temporal troubleshooting guide uses `cluster health` as the first "is the frontend up?" probe on self-hosted. <!-- docs/troubleshooting/deadline-exceeded-error.mdx:29-56 -->
+**Healthy signal:** `SERVING` (self-hosted) or a successful list response (Cloud). The Temporal troubleshooting guide uses `cluster health` as the first "is the frontend up?" probe on self-hosted.
 
 **Failure signatures:**
 
 - `NOT_SERVING` or an unhealthy status — the frontend is up but reports itself unhealthy. On self-hosted, the troubleshooting guide points at `grpc-health-probe` to test Frontend, Matching, and History individually; on Cloud, open a ticket. See [runtime-errors.md → Deadline exceeded](runtime-errors.md#deadline-exceeded) for the self-hosted vs. Cloud routing.
-- Long timeouts or `DEADLINE_EXCEEDED` <!-- grpc: DEADLINE_EXCEEDED --> with no specific cause — overload or upstream saturation. A `resource_exhausted` condition can surface as a deadline — see [runtime-errors.md → Deadline exceeded](runtime-errors.md#deadline-exceeded) and [rate-limits.md → Identifying which limit was hit](rate-limits.md#identifying-which-limit-was-hit).
-- `RESOURCE_EXHAUSTED` <!-- grpc: RESOURCE_EXHAUSTED --> at the frontend — rate limit or capacity. [rate-limits.md → What RESOURCE_EXHAUSTED means and what it does not](rate-limits.md#what-resource_exhausted-means-and-what-it-does-not).
+- Long timeouts or `DEADLINE_EXCEEDED` with no specific cause — overload or upstream saturation. A `resource_exhausted` condition can surface as a deadline — see [runtime-errors.md → Deadline exceeded](runtime-errors.md#deadline-exceeded) and [rate-limits.md → Identifying which limit was hit](rate-limits.md#identifying-which-limit-was-hit).
+- `RESOURCE_EXHAUSTED` at the frontend — rate limit or capacity. [rate-limits.md → What RESOURCE_EXHAUSTED means and what it does not](rate-limits.md#what-resource_exhausted-means-and-what-it-does-not).
 
 **What failure here means above:** task-queue and workflow operations will succeed intermittently or not at all. Check this layer before blaming workers or workflow code.
 
@@ -192,7 +191,7 @@ For the full inspection flow — describe output shape, status interpretation, p
 - `ActivityTaskScheduled` with no matching retry / terminal event after describe — loop back to layer 6; the task was never picked up. [workflow-stuck.md → Pending activities](workflow-stuck.md#pending-activities).
 - Pending Activity with climbing attempts and `last_failure` populated — the Activity is running and failing; fix the Activity or its retry policy. Same section.
 - Workflow `Running` with `historyLength` flat and no pending sections — a timer-based wait, covered in [workflow-stuck.md → Timer-based waits](workflow-stuck.md#timer-based-waits).
-- Ambiguous `DEADLINE_EXCEEDED` <!-- grpc: DEADLINE_EXCEEDED --> or `Workflow is busy` lock contention on signals/updates/queries — [runtime-errors.md → Deadline exceeded](runtime-errors.md#deadline-exceeded) and [runtime-errors.md → Workflow lock contention (BusyWorkflow)](runtime-errors.md#workflow-lock-contention-busyworkflow).
+- Ambiguous `DEADLINE_EXCEEDED` or `Workflow is busy` lock contention on signals/updates/queries — [runtime-errors.md → Deadline exceeded](runtime-errors.md#deadline-exceeded) and [runtime-errors.md → Workflow lock contention (BusyWorkflow)](runtime-errors.md#workflow-lock-contention-busyworkflow).
 
 ## Quick per-layer commands
 
@@ -200,11 +199,11 @@ Each command below is the minimal check for its layer. Full invocations with all
 
 | Layer | Command | Healthy signal | Owner |
 |---|---|---|---|
-| 1. DNS | `nslookup <host>` <!-- man: nslookup(1) --> | A record or CNAME chain returned | [connectivity.md → DNS](connectivity.md#dns) |
-| 2. TCP | `nc -zvw10 <host> 7233` <!-- man: nc(1) --> | `succeeded!` | [connectivity.md → Connection refused](connectivity.md#connection-refused) |
-| 3. TLS | `openssl s_client -connect <host>:7233 -servername <host>` <!-- man: openssl(1) --> | `Verify return code: 0 (ok)` | [certificates.md → Handshake failure](certificates.md#handshake-failure) |
+| 1. DNS | `nslookup <host>` | A record or CNAME chain returned | [connectivity.md → DNS](connectivity.md#dns) |
+| 2. TCP | `nc -zvw10 <host> 7233` | `succeeded!` | [connectivity.md → Connection refused](connectivity.md#connection-refused) |
+| 3. TLS | `openssl s_client -connect <host>:7233 -servername <host>` | `Verify return code: 0 (ok)` | [certificates.md → Handshake failure](certificates.md#handshake-failure) |
 | 4. Auth | `temporal workflow list --limit 1 …` | list returns (possibly empty) | [authentication.md → Discriminating with a CLI smoke test](authentication.md#discriminating-with-a-cli-smoke-test) |
-| 5. Frontend | Self-hosted: `temporal operator cluster health`; Cloud: `temporal workflow list --limit 1` <!-- docs/cli/operator.mdx:78-80 --> | `SERVING` (self-hosted) or successful response (Cloud) | [runtime-errors.md → Deadline exceeded](runtime-errors.md#deadline-exceeded) |
+| 5. Frontend | Self-hosted: `temporal operator cluster health`; Cloud: `temporal workflow list --limit 1` | `SERVING` (self-hosted) or successful response (Cloud) | [runtime-errors.md → Deadline exceeded](runtime-errors.md#deadline-exceeded) |
 | 6. Workers | `temporal task-queue describe --task-queue <q>` | pollers listed with recent `LastAccessTime` | [worker-health.md → Inspecting a Task Queue with `temporal task-queue describe`](worker-health.md#inspecting-a-task-queue-with-temporal-task-queue-describe) |
 | 7. Workflow | `temporal workflow describe --workflow-id <id>` | status `Running` with a legitimate pending reason | [workflow-stuck.md → The primary inspection command: `temporal workflow describe`](workflow-stuck.md#the-primary-inspection-command-temporal-workflow-describe) |
 

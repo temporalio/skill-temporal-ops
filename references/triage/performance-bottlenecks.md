@@ -1,6 +1,6 @@
 # Performance Bottlenecks
 
-Diagnose performance bottlenecks in Temporal Workers and Clients using SDK metrics. This reference covers key latency metrics, root causes, and diagnostic steps. <!-- docs/troubleshooting/performance-bottlenecks.mdx:19-21 -->
+Diagnose performance bottlenecks in Temporal Workers and Clients using SDK metrics. This reference covers key latency metrics, root causes, and diagnostic steps.
 
 ---
 
@@ -8,16 +8,16 @@ Diagnose performance bottlenecks in Temporal Workers and Clients using SDK metri
 
 ### `temporal_workflow_task_schedule_to_start_latency` spike
 
-Time between when a Workflow Task is scheduled (enqueued) and when it is picked up by a Worker. P95 higher than one second is a concern. <!-- docs/troubleshooting/performance-bottlenecks.mdx:32-34 -->
+Time between when a Workflow Task is scheduled (enqueued) and when it is picked up by a Worker. P95 higher than one second is a concern.
 
-Potential causes: <!-- docs/troubleshooting/performance-bottlenecks.mdx:36-39 -->
+Potential causes:
 
 - **Insufficient Worker capacity:** Not enough Workers or overloaded Workers cannot pick up Tasks quickly enough.
 - **Worker configuration issues:** Too few pollers or Task slots.
 - **High Workflow lock latency:** Many updates to a single execution cause lock contention. Reduce the rate of Signals.
 - **Network latency:** Workers in a different region from the Temporal cluster, or large payload sizes.
 
-Diagnostic steps: <!-- docs/troubleshooting/performance-bottlenecks.mdx:42-46 -->
+Diagnostic steps:
 
 1. Check Worker CPU and memory usage.
 2. Review Worker configuration (number of pollers, Task slots, etc.).
@@ -26,16 +26,16 @@ Diagnostic steps: <!-- docs/troubleshooting/performance-bottlenecks.mdx:42-46 --
 
 ### `temporal_activity_schedule_to_start_latency` spike
 
-Time between when an Activity Task is scheduled and when it is picked up by a Worker. P95 higher than one second is a concern. <!-- docs/troubleshooting/performance-bottlenecks.mdx:49-51 -->
+Time between when an Activity Task is scheduled and when it is picked up by a Worker. P95 higher than one second is a concern.
 
-Potential causes: <!-- docs/troubleshooting/performance-bottlenecks.mdx:53-57 -->
+Potential causes:
 
 - **Insufficient Worker capacity.**
 - **Worker configuration issues:** Too few pollers or Task slots.
 - **Task Queue configuration:** `TaskQueueActivitiesPerSecond` set too low.
 - **Network latency.**
 
-Diagnostic steps: <!-- docs/troubleshooting/performance-bottlenecks.mdx:59-64 -->
+Diagnostic steps:
 
 1. Check Worker CPU and memory usage.
 2. Review Worker configuration.
@@ -44,9 +44,9 @@ Diagnostic steps: <!-- docs/troubleshooting/performance-bottlenecks.mdx:59-64 --
 
 ### `temporal_workflow_endtoend_latency` spike
 
-Total Workflow Execution time from Schedule to closure for a single Workflow Run. Normal ranges depend on the use case. <!-- docs/troubleshooting/performance-bottlenecks.mdx:68 -->
+Total Workflow Execution time from Schedule to closure for a single Workflow Run. Normal ranges depend on the use case.
 
-Potential causes: <!-- docs/troubleshooting/performance-bottlenecks.mdx:70-75 -->
+Potential causes:
 
 - **Complex Workflows:** Many Activities or slow Activity execution.
 - **Workflow and Activity retries:** Frequent failures with retry delays.
@@ -54,7 +54,7 @@ Potential causes: <!-- docs/troubleshooting/performance-bottlenecks.mdx:70-75 --
 - **External dependencies:** Slow databases, APIs, or services.
 - **Network latency.**
 
-Diagnostic steps: <!-- docs/troubleshooting/performance-bottlenecks.mdx:78-82 -->
+Diagnostic steps:
 
 1. Review Workflow and Activity designs for efficiency.
 2. Monitor Worker capacity (CPU, memory).
@@ -63,9 +63,9 @@ Diagnostic steps: <!-- docs/troubleshooting/performance-bottlenecks.mdx:78-82 --
 
 ### High `temporal_workflow_task_execution_latency`
 
-Time taken by a Worker to execute a Workflow Task. The SDK raises a "Deadlock detected during Workflow run" error or TMPRL1101 when a Workflow Task takes more than one or two seconds. <!-- docs/troubleshooting/performance-bottlenecks.mdx:86-87 -->
+Time taken by a Worker to execute a Workflow Task. The SDK raises a "Deadlock detected during Workflow run" error or TMPRL1101 when a Workflow Task takes more than one or two seconds.
 
-Potential causes: <!-- docs/troubleshooting/performance-bottlenecks.mdx:89-95 -->
+Potential causes:
 
 - **CPU-intensive work in Workflow Task.**
 - **Slow Local Activities** (execution time included in the Workflow Task).
@@ -74,7 +74,7 @@ Potential causes: <!-- docs/troubleshooting/performance-bottlenecks.mdx:89-95 --
 - **Infinite loops or blocking calls in Workflow code.**
 - **Slow data conversion:** Custom Data Converter taking too long.
 
-Diagnostic steps: <!-- docs/troubleshooting/performance-bottlenecks.mdx:98-103 -->
+Diagnostic steps:
 
 1. Monitor Worker CPU and memory utilization.
 2. Ensure Workers have adequate resources and scaling.
@@ -84,9 +84,9 @@ Diagnostic steps: <!-- docs/troubleshooting/performance-bottlenecks.mdx:98-103 -
 
 ### High `workflow_task_replay_latency`
 
-Time to replay a Workflow Task by re-executing the Workflow code from the beginning using the recorded Event History. High if it exceeds a few milliseconds. <!-- docs/troubleshooting/performance-bottlenecks.mdx:107-109 -->
+Time to replay a Workflow Task by re-executing the Workflow code from the beginning using the recorded Event History. High if it exceeds a few milliseconds.
 
-Potential causes: <!-- docs/troubleshooting/performance-bottlenecks.mdx:111-117 -->
+Potential causes:
 
 - **Large Event Histories.**
 - **Slow Data Converters** (especially encryption or external services).
@@ -95,7 +95,7 @@ Potential causes: <!-- docs/troubleshooting/performance-bottlenecks.mdx:111-117 
 - **Frequent cache evictions** (memory constraints or frequent restarts).
 - **Worker resource constraints.**
 
-Diagnostic steps: <!-- docs/troubleshooting/performance-bottlenecks.mdx:120-126 -->
+Diagnostic steps:
 
 1. Monitor `temporal_workflow_task_replay_latency`.
 2. Analyze Workflow History size; consider Continue-As-New for long-running Workflows.
@@ -106,16 +106,16 @@ Diagnostic steps: <!-- docs/troubleshooting/performance-bottlenecks.mdx:120-126 
 
 ### `temporal_activity_execution_latency` spike
 
-Time from when a Worker starts processing an Activity Task until it reports completion or failure. <!-- docs/troubleshooting/performance-bottlenecks.mdx:130 -->
+Time from when a Worker starts processing an Activity Task until it reports completion or failure.
 
-Potential causes: <!-- docs/troubleshooting/performance-bottlenecks.mdx:132-136 -->
+Potential causes:
 
 - **Activity implementation:** Time-consuming operations or slow external API calls.
 - **External dependencies:** Shared external resources causing contention.
 - **Worker resource constraints.**
 - **Network latency** between Workers and external services.
 
-Diagnostic steps: <!-- docs/troubleshooting/performance-bottlenecks.mdx:139-143 -->
+Diagnostic steps:
 
 1. Monitor `activity_execution_latency` (filter by Activity type and Task Queue).
 2. Optimize Activity implementation.
@@ -128,29 +128,29 @@ Diagnostic steps: <!-- docs/troubleshooting/performance-bottlenecks.mdx:139-143 
 
 ### `temporal_worker_task_slots_available{worker_type="WorkflowWorker"}` at zero
 
-Available slots for executing Workflow Tasks on a Worker. <!-- docs/troubleshooting/performance-bottlenecks.mdx:147 -->
+Available slots for executing Workflow Tasks on a Worker.
 
-Potential causes: <!-- docs/troubleshooting/performance-bottlenecks.mdx:149-152 -->
+Potential causes:
 
 - **High Workflow Task load** exceeding concurrent capacity.
 - **Worker configuration:** `MaxConcurrentWorkflowTaskExecutionSize` set too low.
 - **High `temporal_workflow_task_execution_latency`** and `workflow_task_replay_latency`.
 
-Resolution: <!-- docs/troubleshooting/performance-bottlenecks.mdx:155-157 -->
+Resolution:
 
 1. Monitor Worker CPU and Memory while increasing `(Max)ConcurrentWorkflowTaskExecutionSize`.
 2. Scale Workers vertically (CPU, Memory) and horizontally (more instances).
 
 ### `temporal_worker_task_slots_available{worker_type="ActivityWorker"}` at zero
 
-Available slots for executing Activity Tasks on a Worker. <!-- docs/troubleshooting/performance-bottlenecks.mdx:161 -->
+Available slots for executing Activity Tasks on a Worker.
 
-Potential causes: <!-- docs/troubleshooting/performance-bottlenecks.mdx:163-167 -->
+Potential causes:
 
 - **Blocked Activities and Zombie Activities:** Activities blocked on downstream services or infinite loops. Zombie Activities occur when an Activity times out (`StartToClose` or `HeartbeatTimeout`) but continues running, occupying slots as retries occur.
 - **Resource utilization:** High CPU or memory causing Activities to block.
 
-Resolution: <!-- docs/troubleshooting/performance-bottlenecks.mdx:170-173 -->
+Resolution:
 
 1. Monitor Worker CPU and Memory while increasing `(Max)ConcurrentActivityExecutionSize`.
 2. Add client-side timeout to downstream API clients.
@@ -162,15 +162,15 @@ Resolution: <!-- docs/troubleshooting/performance-bottlenecks.mdx:170-173 -->
 
 ### High `temporal_long_request_failure`
 
-Counts failed RPC long poll requests for `PollWorkflowTaskQueue`, `PollActivityTaskQueue`, and `GetWorkflowExecutionHistory`. <!-- docs/troubleshooting/performance-bottlenecks.mdx:183 -->
+Counts failed RPC long poll requests for `PollWorkflowTaskQueue`, `PollActivityTaskQueue`, and `GetWorkflowExecutionHistory`.
 
-Potential causes: <!-- docs/troubleshooting/performance-bottlenecks.mdx:185-187 -->
+Potential causes:
 
 - **Network issues** between Client and Server.
 - **Rate limiting** (`ResourceExhausted` status code).
 - **Server errors.**
 
-Diagnostic steps: <!-- docs/troubleshooting/performance-bottlenecks.mdx:189-193 -->
+Diagnostic steps:
 
 1. Check the `operation` and `status`/`code` tag.
 2. For `ResourceExhausted`, review rate limits.
@@ -178,9 +178,9 @@ Diagnostic steps: <!-- docs/troubleshooting/performance-bottlenecks.mdx:189-193 
 
 ### High `temporal_request_failure_total`
 
-Counts total failed RPC requests. <!-- docs/troubleshooting/performance-bottlenecks.mdx:197 -->
+Counts total failed RPC requests.
 
-Potential causes: <!-- docs/troubleshooting/performance-bottlenecks.mdx:199-205 -->
+Potential causes:
 
 - **Network issues.**
 - **Client errors** (misconfiguration, resource exhaustion).
@@ -189,7 +189,7 @@ Potential causes: <!-- docs/troubleshooting/performance-bottlenecks.mdx:199-205 
 - **Request size limit** (blob size limit of 2 MB).
 - **Server errors.**
 
-Diagnostic steps: <!-- docs/troubleshooting/performance-bottlenecks.mdx:207-211 -->
+Diagnostic steps:
 
 1. Check the `status`/`code` tag.
 2. Check the `operation` tag.
@@ -198,9 +198,9 @@ Diagnostic steps: <!-- docs/troubleshooting/performance-bottlenecks.mdx:207-211 
 
 ### High `temporal_request_latency`
 
-Latency of gRPC requests made by the Temporal Client. <!-- docs/troubleshooting/performance-bottlenecks.mdx:216 -->
+Latency of gRPC requests made by the Temporal Client.
 
-Potential causes: <!-- docs/troubleshooting/performance-bottlenecks.mdx:218-223 -->
+Potential causes:
 
 - **Network latency** (distance, conditions).
 - **Network transfer time** (large payloads).
@@ -208,7 +208,7 @@ Potential causes: <!-- docs/troubleshooting/performance-bottlenecks.mdx:218-223 
 - **Client configuration** (thread pool sizes, memory constraints).
 - **Server load.**
 
-Diagnostic steps: <!-- docs/troubleshooting/performance-bottlenecks.mdx:226-231 -->
+Diagnostic steps:
 
 1. Monitor `temporal_request_latency` for spike timing and location.
 2. Check the network connection.
@@ -222,17 +222,17 @@ Diagnostic steps: <!-- docs/troubleshooting/performance-bottlenecks.mdx:226-231 
 
 ### `temporal_sticky_cache_size`
 
-Number of Workflow executions cached in a Worker's memory. Sticky cache keeps Workflow state in memory, reducing the need to replay from Event History. <!-- docs/troubleshooting/performance-bottlenecks.mdx:261-264 -->
+Number of Workflow executions cached in a Worker's memory. Sticky cache keeps Workflow state in memory, reducing the need to replay from Event History.
 
-Monitor alongside Worker memory usage. A sudden increase correlates with increased memory consumption. <!-- docs/troubleshooting/performance-bottlenecks.mdx:274-275 -->
+Monitor alongside Worker memory usage. A sudden increase correlates with increased memory consumption.
 
 ### `temporal_sticky_cache_hit_total` and `temporal_sticky_cache_miss_total`
 
-A "hit" means the Worker found the Workflow in its cache; a "miss" means the Worker must fetch the Event History and replay. High hit rate with low miss rate indicates efficient scheduling. <!-- docs/troubleshooting/performance-bottlenecks.mdx:282-292 -->
+A "hit" means the Worker found the Workflow in its cache; a "miss" means the Worker must fetch the Event History and replay. High hit rate with low miss rate indicates efficient scheduling.
 
 ### `temporal_sticky_cache_total_forced_eviction_total`
 
-Counts Workflow Executions forcibly evicted from the sticky cache (cache was full). A high eviction rate may indicate the cache size is too small; increase `WorkflowCacheSize` if resources allow. <!-- docs/troubleshooting/performance-bottlenecks.mdx:296-305 -->
+Counts Workflow Executions forcibly evicted from the sticky cache (cache was full). A high eviction rate may indicate the cache size is too small; increase `WorkflowCacheSize` if resources allow.
 
 ---
 

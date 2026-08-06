@@ -1,8 +1,8 @@
 # Cloud Ops API
 
-The Cloud Ops API provides programmatic management of Temporal Cloud control plane resources, including Namespaces, Users, Service Accounts, API Keys, and others. <!-- docs/cloud/operation-api.mdx --> The Temporal Cloud Terraform Provider, `tcld` CLI, and Web UI all use the Cloud Ops API. <!-- docs/cloud/operation-api.mdx -->
+The Cloud Ops API provides programmatic management of Temporal Cloud control plane resources, including Namespaces, Users, Service Accounts, API Keys, and others. The Temporal Cloud Terraform Provider, `tcld` CLI, and Web UI all use the Cloud Ops API.
 
-**Stage:** Public Preview. <!-- docs/cloud/operation-api.mdx -->
+**Stage:** Public Preview.
 
 ---
 
@@ -10,23 +10,23 @@ The Cloud Ops API provides programmatic management of Temporal Cloud control pla
 
 | Interface | URL | Notes |
 |---|---|---|
-| HTTP | `https://saas-api.tmprl.cloud` | Control-plane HTTP API <!-- docs/cloud/operation-api.mdx --> |
-| gRPC | `saas-api.tmprl.cloud:443` | Port 443 for gRPC connections <!-- docs/cloud/operation-api.mdx --> |
+| HTTP | `https://saas-api.tmprl.cloud` | Control-plane HTTP API |
+| gRPC | `saas-api.tmprl.cloud:443` | Port 443 for gRPC connections |
 
 PrivateLink / Private Service Connect: configure private DNS for `saas-api.tmprl.cloud` (and `web.saas-api.tmprl.cloud` for the Web UI).
 
-- HTTP API docs: [saas-api.tmprl.cloud/docs/httpapi.html](https://saas-api.tmprl.cloud/docs/httpapi.html#description/introduction) <!-- docs/cloud/operation-api.mdx -->
-- gRPC API source: [github.com/temporalio/cloud-api](https://github.com/temporalio/cloud-api/tree/main) <!-- docs/cloud/operation-api.mdx -->
-- gRPC docs on Buf: [buf.build/temporalio/cloud-api](https://buf.build/temporalio/cloud-api/docs/main:temporal.api.cloud.cloudservice.v1#temporal.api.cloud.cloudservice.v1.CloudService) <!-- docs/cloud/operation-api.mdx -->
+- HTTP API docs: [saas-api.tmprl.cloud/docs/httpapi.html](https://saas-api.tmprl.cloud/docs/httpapi.html#description/introduction)
+- gRPC API source: [github.com/temporalio/cloud-api](https://github.com/temporalio/cloud-api/tree/main)
+- gRPC docs on Buf: [buf.build/temporalio/cloud-api](https://buf.build/temporalio/cloud-api/docs/main:temporal.api.cloud.cloudservice.v1#temporal.api.cloud.cloudservice.v1.CloudService)
 
-The HTTP API supports the same operations as the gRPC API, but is usable via standard HTTP methods. It does **not** allow interaction with individual Workflows or Activities via HTTP. <!-- docs/cloud/operation-api.mdx -->
+The HTTP API supports the same operations as the gRPC API, but is usable via standard HTTP methods. It does **not** allow interaction with individual Workflows or Activities via HTTP.
 
 ---
 
 ## Prerequisites
 
-- A Temporal Cloud User or Service Account <!-- docs/cloud/operation-api.mdx -->
-- API Key for authentication (owned by that User or Service Account) <!-- docs/cloud/operation-api.mdx -->
+- A Temporal Cloud User or Service Account
+- API Key for authentication (owned by that User or Service Account)
 
 Required roles/permissions vary by RPC (Account Owner, Global Admin, Developer, Finance Admin, Namespace roles, or Custom Roles). Do not assume Account Admin for every operation.
 
@@ -93,7 +93,7 @@ For operation specifics, refer to `cloudservice/v1/request_response.proto` for g
 
 ## Use cases
 
-Common reasons to use the Cloud Ops API: <!-- docs/cloud/operation-api.mdx -->
+Common reasons to use the Cloud Ops API:
 
 - Provision Namespaces per environment or tenant via pipelines.
 - Bootstrap new projects by creating users, assigning roles, and creating Namespaces via custom scripts.
@@ -106,25 +106,25 @@ Common reasons to use the Cloud Ops API: <!-- docs/cloud/operation-api.mdx -->
 
 | Scope | Limit |
 |---|---|
-| Account-level total | 160 RPS <!-- docs/cloud/operation-api.mdx --> |
-| Per user | 40 RPS <!-- docs/cloud/operation-api.mdx --> |
-| Per service account | 80 RPS <!-- docs/cloud/operation-api.mdx --> |
-| Concurrent long-running mutating ops | 10 (default; subset of create/update/delete RPCs) <!-- docs/cloud/operation-api.mdx --> |
+| Account-level total | 160 RPS |
+| Per user | 40 RPS |
+| Per service account | 80 RPS |
+| Concurrent long-running mutating ops | 10 (default; subset of create/update/delete RPCs) |
 
-Rate limits are enforced across all Temporal Cloud control plane operations (tcld, UI, Cloud Ops API). <!-- docs/cloud/operation-api.mdx -->
+Rate limits are enforced across all Temporal Cloud control plane operations (tcld, UI, Cloud Ops API).
 
-Multiple clients used by the same identity (user or service account) share the same rate limit. <!-- docs/cloud/operation-api.mdx -->
+Multiple clients used by the same identity (user or service account) share the same rate limit.
 
-Authentication method (SSO, API keys) does not affect rate limiting. <!-- docs/cloud/operation-api.mdx -->
+Authentication method (SSO, API keys) does not affect rate limiting.
 
 ### Requesting limit increases
 
-If your use case requires higher rate limits, submit a support ticket. Provide your current usage patterns, the specific limits you need increased, and a description of your use case. <!-- docs/cloud/operation-api.mdx -->
+If your use case requires higher rate limits, submit a support ticket. Provide your current usage patterns, the specific limits you need increased, and a description of your use case.
 
 ---
 
 ## Connection setup
 
-- gRPC: `saas-api.tmprl.cloud:443`. <!-- docs/cloud/operation-api.mdx -->
+- gRPC: `saas-api.tmprl.cloud:443`.
 - HTTP: `https://saas-api.tmprl.cloud`.
 - Establish a secure connection. See the [Cloud Ops API client setup in Go](https://github.com/temporalio/cloud-samples-go/blob/main/client/api/client.go).

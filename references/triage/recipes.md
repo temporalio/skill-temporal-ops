@@ -81,7 +81,7 @@ Confidence checkpoints follow the skill convention in [runtime-errors.md](runtim
 
 ## Cert expired, workers offline
 
-**Page text:** "Workers across the fleet disconnected overnight. Logs repeat `x509: certificate has expired or is not yet valid`." <!-- go: crypto/x509 -->
+**Page text:** "Workers across the fleet disconnected overnight. Logs repeat `x509: certificate has expired or is not yet valid`."
 
 **Goal:** rotate to a valid cert without cutting live traffic; remove the expired trust material only after the new path is verified.
 
@@ -96,7 +96,7 @@ Confidence checkpoints follow the skill convention in [runtime-errors.md](runtim
        -tls1_2 </dev/null
    ```
 
-   `Verify return code: 10 (certificate has expired)` or client-side `x509: certificate has expired or is not yet valid` <!-- go: crypto/x509 --> confirms the layer-3 diagnosis; full interpretation in the [Handshake failure table](certificates.md#handshake-failure). Rule out clock skew first (`date -u`) per [certificates.md → Expired or not-yet-valid](certificates.md#expired-or-not-yet-valid).
+   `Verify return code: 10 (certificate has expired)` or client-side `x509: certificate has expired or is not yet valid` confirms the layer-3 diagnosis; full interpretation in the [Handshake failure table](certificates.md#handshake-failure). Rule out clock skew first (`date -u`) per [certificates.md → Expired or not-yet-valid](certificates.md#expired-or-not-yet-valid).
 
 2. **Identify whether the CA or only the leaf expired.** Commands from [certificates.md → openssl recipes → Inspect a local cert](certificates.md#openssl-recipes):
 
@@ -115,7 +115,7 @@ Confidence checkpoints follow the skill convention in [runtime-errors.md](runtim
        --validity-period 364d \
        --ca-certificate-file ca.pem --ca-key-file ca.key \
        --certificate-file new-certs/client.pem --key-file new-certs/client.key
-   # Command and modifiers: <!-- docs/cloud/tcld/generate-certificates.mdx:96-187 -->
+   # Command and modifiers:
    ```
 
    Distribute `new-certs/client.pem` and `new-certs/client.key` to workers via the existing secret-distribution path. Restart workers. Skip to step 6.
@@ -128,7 +128,7 @@ Confidence checkpoints follow the skill convention in [runtime-errors.md](runtim
        --organization <org> \
        --validity-period 1y \
        --ca-certificate-file new-ca/ca.pem --ca-key-file new-ca/ca.key
-   # Command and modifiers: <!-- docs/cloud/tcld/generate-certificates.mdx:24-94 -->
+   # Command and modifiers:
 
    # Add the new CA to the Namespace *before* removing the old one.
    # Full flag set in certificates.md → Accepted client CA set.
@@ -168,20 +168,20 @@ Confidence checkpoints follow the skill convention in [runtime-errors.md](runtim
 
    ```bash
    tcld namespace accepted-client-ca list --namespace <namespace>.<account>
-   # Command: <!-- docs/cloud/tcld/namespace.mdx:869 -->
+   # Command:
 
    tcld namespace accepted-client-ca remove \
        --namespace <namespace>.<account> \
        --fp <old-ca-fingerprint>
-   # Command:                             <!-- docs/cloud/tcld/namespace.mdx:894 -->
-   # --ca-certificate-fingerprint / --fp: <!-- docs/cloud/tcld/namespace.mdx:985-993 -->
+   # Command:
+   # --ca-certificate-fingerprint / --fp:
    ```
 
    Get the fingerprint with `openssl x509 -in old-ca.pem -noout -fingerprint` (see [certificates.md → openssl recipes](certificates.md#openssl-recipes)).
 
 8. **Post-incident.** Cloud sends "Certificate Expiring in 15 days" notifications per [certificates.md → Rotation and expiry notifications](certificates.md#rotation-and-expiry-notifications); verify recipients are current and add an internal `openssl x509 -enddate` cron against the certs in use.
 
-**Confidence:** high once step 1 prints an expiry matching the incident, step 5 returns `OK`, and step 6 shows fresh pollers. If pollers are still stale after redeploy, peel the wrapped cause: `UNAVAILABLE` <!-- grpc: UNAVAILABLE --> with a `tls:` cause is still layer 3; `UNAUTHENTICATED` <!-- grpc: UNAUTHENTICATED --> after a clean handshake is a post-TLS rejection (certificate filter or role) — route to [authentication.md → mTLS authentication after TLS completes](authentication.md#mtls-authentication-after-tls-completes).
+**Confidence:** high once step 1 prints an expiry matching the incident, step 5 returns `OK`, and step 6 shows fresh pollers. If pollers are still stale after redeploy, peel the wrapped cause: `UNAVAILABLE` with a `tls:` cause is still layer 3; `UNAUTHENTICATED` after a clean handshake is a post-TLS rejection (certificate filter or role) — route to [authentication.md → mTLS authentication after TLS completes](authentication.md#mtls-authentication-after-tls-completes).
 
 ## Task-queue backlog mystery
 
@@ -214,9 +214,9 @@ Confidence checkpoints follow the skill convention in [runtime-errors.md](runtim
 
    | Worker log shape | Route |
    |---|---|
-   | gRPC `UNAUTHENTICATED` <!-- grpc: UNAUTHENTICATED --> / `PERMISSION_DENIED` <!-- grpc: PERMISSION_DENIED --> | [authentication.md](authentication.md) |
-   | gRPC `RESOURCE_EXHAUSTED` <!-- grpc: RESOURCE_EXHAUSTED --> | [rate-limits.md → Identifying which limit was hit](rate-limits.md#identifying-which-limit-was-hit) |
-   | `x509:` <!-- go: crypto/x509 --> / `tls:` <!-- go: crypto/tls --> | [certificates.md](certificates.md) |
+   | gRPC `UNAUTHENTICATED` / `PERMISSION_DENIED` | [authentication.md](authentication.md) |
+   | gRPC `RESOURCE_EXHAUSTED` | [rate-limits.md → Identifying which limit was hit](rate-limits.md#identifying-which-limit-was-hit) |
+   | `x509:` / `tls:` | [certificates.md](certificates.md) |
    | Repeating `WorkflowTaskFailed` on one Workflow | Poison task — see step 5 |
 
 5. **Check for a poison task.** If the same Workflow keeps failing its WFT, read its history per [workflow-stuck.md → Pending Workflow Task and WorkflowTaskFailed loops](workflow-stuck.md#pending-workflow-task-and-workflowtaskfailed-loops). If the cause is Nondeterminism, escalate to the non-determinism recipe below.
