@@ -76,6 +76,7 @@ Two timing facts the triage logic depends on:
 3. **Application-level address caching.** A caller that resolved the hostname to an IP at startup and reused it won't follow a CNAME swap. Pass the hostname to the client config, never a pre-resolved IP.
 4. **GCP Private Service Connect.** PSC has no DNS-based automatic failover — workers must be manually repointed to the new region's PSC endpoint. See [PrivateLink / PSC stopped working](#symptom-privatelink--psc-stopped-working-after-failover).
 5. **Private DNS override covers only one region.** Same section.
+6. **Serverless Workers (AWS Lambda / GCP Cloud Run).** The Worker Controller Instance keeps invoking Workers in the compute provider's originally configured region because compute-provider configuration is region-scoped and the WCI has no failover-detection mechanism. This is a distinct failure mode from long-lived Worker DNS caching — see [`serverless-ha.md`](serverless-ha.md).
 
 **Fix:** clear/await the offending cache, restart wedged workers, or repoint PSC workers per the discriminator that matched.
 

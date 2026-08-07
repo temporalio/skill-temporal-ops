@@ -65,7 +65,7 @@ Interpreting results:
 
 ## Endpoint formats
 
-Using the wrong endpoint family is one of the most common causes of "cannot connect" reports. 
+Using the wrong endpoint family is one of the most common causes of "cannot connect" reports.
 
 | Purpose | Endpoint pattern | Port | Source |
 |---|---|---|---|
@@ -134,7 +134,7 @@ nc -zvw10 vpce-0123456789abcdef-abc.us-east-1.vpce.amazonaws.com 7233
 
 ## Quick diagnostic scripts
 
-Run from the failing environment (the pod, container, or host where the problem reproduces). These scripts chain the layer-1/2 checks with a final `temporal` call to confirm the whole stack end-to-end. 
+Run from the failing environment (the pod, container, or host where the problem reproduces). These scripts chain the layer-1/2 checks with a final `temporal` call to confirm the whole stack end-to-end.
 
 ### mTLS variant
 
