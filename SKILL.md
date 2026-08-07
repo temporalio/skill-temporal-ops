@@ -121,6 +121,7 @@ Find the row that matches the user's intent. The reference file contains the com
 |---|---|---|
 | Create, get, list, delete a Cloud namespace | Cloud namespace admin | [cloud-namespace-admin.md](references/ops/cloud-namespace-admin.md) |
 | Add/remove region, failover, HA config | Cloud namespace admin | [cloud-namespace-admin.md](references/ops/cloud-namespace-admin.md) |
+| Understand what `disablePassivePollerForwarding` stops (and does not stop) | HA forwarding | [ha-forwarding.md](references/ops/ha-forwarding.md) |
 | Set retention, tags, codec-server, connectivity rules | Cloud namespace admin | [cloud-namespace-admin.md](references/ops/cloud-namespace-admin.md) |
 | Add or rename Cloud search attributes | Cloud namespace admin | [cloud-namespace-admin.md](references/ops/cloud-namespace-admin.md) |
 | Check current APS / capacity mode | Cloud capacity | [cloud-capacity.md](references/ops/cloud-capacity.md) |
@@ -256,6 +257,7 @@ If the layer above the fix is still failing, return to step 4 and continue walki
 ### Operations
 
 - [cloud-namespace-admin.md](references/ops/cloud-namespace-admin.md) — Cloud namespace lifecycle via `tcld`: create, get, list, delete, failover, add-region, retention, tags, codec-server, HA config, connectivity rules, search attributes, accepted-client-ca, certificate filters, export.
+- [ha-forwarding.md](references/ops/ha-forwarding.md) — Semantics of the `disablePassivePollerForwarding` Namespace setting: what it stops (Worker polls at a passive replica), what it does not (the verbatim Workflow / Standalone Activity / Standalone Nexus Operation APIs that keep forwarding), the `temporal cloud namespace ha update --passive-poller-forwarding` CLI and Cloud Ops API JSON paths, and the Same-region-replica exception.
 - [cloud-capacity.md](references/ops/cloud-capacity.md) — Capacity modes (On-Demand / Provisioned), APS/RPS/OPS definitions, TRUs, `tcld namespace capacity update`, default limits, throttling, APS management best practices.
 - [cloud-iam.md](references/ops/cloud-iam.md) — API key lifecycle (`tcld apikey`), users (`tcld user`), user groups (`tcld user-group`), service accounts, account operations (`tcld account`), roles, namespace permissions.
 - [cloud-certs.md](references/ops/cloud-certs.md) — mTLS cert management: generating certs with `tcld generate-certificates`, uploading CAs, certificate filters, cert rotation, switching mTLS ↔ API keys.
