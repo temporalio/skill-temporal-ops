@@ -43,11 +43,17 @@ temporal operator search-attribute list --namespace="your_ns"    # SQL
 
 **Namespace metrics**: total open/closed workflows, total storage, current retention policy, peak APS
 
+**Schedules inventory** (run per namespace):
+```
+temporal schedule list --namespace YourNamespace
+```
+
 **mTLS certificates** for S2S Proxy: `openssl verify -CAfile ca.pem client-cert.pem`
 
 **Cloud namespaces**: create empty target namespaces, apply custom search attributes, adjust rate limits
 
-**Submit CSV mapping** to Temporal:
+**Submit to Temporal via support ticket** — attach every artifact collected above: mTLS certificate (base64-encoded pem), cluster configuration JSON per cluster, custom search-attribute output per cluster/namespace, namespace metrics, schedules inventory (`temporal schedule list` output per namespace), and the cluster/namespace mapping CSV shown below.
+
 ```
 cluster_name, cloud_region, source_namespace, cloud_namespace
 cluster1,     us-east-1,    default,          use1.nnnnn
