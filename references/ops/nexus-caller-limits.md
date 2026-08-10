@@ -1,6 +1,6 @@
 # Nexus Caller-Namespace Limits (Temporal Cloud)
 
-Operator reference for the default 1,000-caller-Namespace ceiling on each Nexus Endpoint's Access Policy in Temporal Cloud: what the limit is, how to inspect the current allowlist, how to add/remove/set entries via `temporal cloud nexus` and `tcld nexus`, and how to raise the ceiling.
+Operator reference for the default 1,000-caller-Namespace ceiling on each Nexus Endpoint's Access Policy in Temporal Cloud: what the limit is, how to inspect the current allowlist, how to add/remove/set entries via `tcld nexus`, and how to raise the ceiling.
 
 Scope: **Temporal Cloud only.** Self-hosted deployments do not have a Cloud-managed Access Policy — self-hosted authorization goes through a custom Authorizer plugin instead.
 
@@ -25,16 +25,6 @@ The Access Policy is the allowlist of caller Namespaces permitted to use the End
 
 Read-only. Safe to run without confirmation.
 
-**Temporal CLI (`temporal cloud nexus`):**
-
-```bash
-temporal cloud nexus endpoint allowed-namespace list --name <endpoint-name>
-```
-
-Required flag: `--name`.
-
-**tcld:**
-
 ```bash
 tcld nexus endpoint allowed-namespace list --name <endpoint-name>
 ```
@@ -44,10 +34,8 @@ Required flag: `--name` (alias `-n`).
 To see the Endpoint's full configuration (target Namespace, target Task Queue, description, allowlist):
 
 ```bash
-temporal cloud nexus endpoint get --name <endpoint-name>
+tcld nexus endpoint get --name <endpoint-name>
 ```
-
-Requires either `--name` or `--id` (exactly one).
 
 ---
 
@@ -57,19 +45,6 @@ The subcommand group is `allowed-namespace` (with a `d`). The `--allow-namespace
 
 ### Add caller Namespaces
 
-`temporal cloud nexus`:
-
-```bash
-temporal cloud nexus endpoint allowed-namespace add \
-    --name <endpoint-name> \
-    --namespace <caller-ns-1> \
-    --namespace <caller-ns-2>
-```
-
-Required flags: `--name` and `--namespace`. `--namespace` accepts a string[] and can be specified multiple times. Namespaces already on the list are silently ignored.
-
-tcld:
-
 ```bash
 tcld nexus endpoint allowed-namespace add \
     --name <endpoint-name> \
@@ -77,21 +52,9 @@ tcld nexus endpoint allowed-namespace add \
     --namespace <caller-ns-2>
 ```
 
-Aliases: `--name` → `-n`, `--namespace` → `-ns`.
+Required flags: `--name` and `--namespace`. `--namespace` is repeatable. Namespaces already on the list are silently ignored. Aliases: `--name` → `-n`, `--namespace` → `-ns`.
 
 ### Remove caller Namespaces
-
-`temporal cloud nexus`:
-
-```bash
-temporal cloud nexus endpoint allowed-namespace remove \
-    --name <endpoint-name> \
-    --namespace <caller-ns>
-```
-
-Namespaces not currently allowed are silently ignored.
-
-tcld:
 
 ```bash
 tcld nexus endpoint allowed-namespace remove \
@@ -99,22 +62,11 @@ tcld nexus endpoint allowed-namespace remove \
     --namespace <caller-ns>
 ```
 
+Namespaces not currently allowed are silently ignored.
+
 ### Replace the full allowlist
 
 Use `set` when you want to declare the exact list rather than diff-apply. This is the byte-precise form and replaces the previous allowlist entirely.
-
-`temporal cloud nexus`:
-
-```bash
-temporal cloud nexus endpoint allowed-namespace set \
-    --name <endpoint-name> \
-    --namespace <caller-ns-1> \
-    --namespace <caller-ns-2>
-```
-
-**Set replaces the full list of allowed namespaces**, dropping any entry not supplied in this call.  Treat `set` as a destructive operation: run `allowed-namespace list` first to capture the current state, diff against your intended list, and confirm with the user before running.
-
-tcld:
 
 ```bash
 tcld nexus endpoint allowed-namespace set \
@@ -123,24 +75,13 @@ tcld nexus endpoint allowed-namespace set \
     --namespace <caller-ns-2>
 ```
 
+**Set replaces the full list of allowed namespaces**, dropping any entry not supplied in this call.  Treat `set` as a destructive operation: run `allowed-namespace list` first to capture the current state, diff against your intended list, and confirm with the user before running.
+
 ### Seed the allowlist at Endpoint create
 
 `--allow-namespace` (singular, no `d`) is a repeatable flag on `endpoint create` that seeds the initial allowlist. It is not a subcommand.
 
-`temporal cloud nexus`:
-
-```bash
-temporal cloud nexus endpoint create \
-    --name <endpoint-name> \
-    --target-namespace <handler-ns.account> \
-    --target-task-queue <task-queue> \
-    --allow-namespace <caller-ns-1> \
-    --allow-namespace <caller-ns-2>
-```
-
-`--target-namespace` and `--target-task-queue` are required at create time. `--allow-namespace` is optional and repeatable.
-
-tcld (subcommand is `(EXPERIMENTAL)` in the auto-generated reference):
+`tcld nexus endpoint create` is marked experimental.
 
 ```bash
 tcld nexus endpoint create \
@@ -151,7 +92,7 @@ tcld nexus endpoint create \
     --allow-namespace <caller-ns-2>
 ```
 
-Aliases: `--name` → `-n`, `--target-namespace` → `-tns`, `--target-task-queue` → `-ttq`, `--allow-namespace` → `-ans`.
+`--target-namespace` and `--target-task-queue` are required at create time. `--allow-namespace` is optional and repeatable. Aliases: `--name` → `-n`, `--target-namespace` → `-tns`, `--target-task-queue` → `-ttq`, `--allow-namespace` → `-ans`.
 
 ---
 
@@ -194,5 +135,4 @@ Do not propose sharding-by-Endpoint or other workaround architectures — the do
 - [Nexus limits index](https://docs.temporal.io/cloud/nexus/limits)
 - [Nexus Security — Runtime access controls](https://docs.temporal.io/nexus/security#runtime-access-controls)
 - [Nexus Registry — Configure runtime access controls](https://docs.temporal.io/nexus/registry#configure-runtime-access-controls)
-- [`temporal cloud nexus` CLI reference](https://docs.temporal.io/cloud/temporal-cli/cloud/nexus)
 - [`tcld nexus` CLI reference](https://docs.temporal.io/cloud/tcld/nexus)

@@ -66,7 +66,7 @@ import (
 )
 ```
 
-Go samples: [github.com/temporalio/cloud-samples-go](https://github.com/temporalio/cloud-samples-go)
+Go samples: [github.com/temporalio/cloud-samples-go](https://github.com/temporalio/cloud-samples-go)  
 Cloud Ops API client setup: [client/api/client.go](https://github.com/temporalio/cloud-samples-go/blob/main/client/api/client.go)
 
 ---
