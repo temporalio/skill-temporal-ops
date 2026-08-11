@@ -15,6 +15,7 @@ Out of scope here:
 - [Start here: establish ground truth](#start-here-establish-ground-truth)
 - [How Cloud HA routing works (minimum needed for triage)](#how-cloud-ha-routing-works-minimum-needed-for-triage)
 - [Symptom: clients did not follow the failover](#symptom-clients-did-not-follow-the-failover)
+- [Symptom: Serverless Workers kept running in the old region after failover](#symptom-serverless-workers-kept-running-in-the-old-region-after-failover)
 - [Symptom: PrivateLink / PSC stopped working after failover](#symptom-privatelink--psc-stopped-working-after-failover)
 - [Symptom: failover was requested but never happened](#symptom-failover-was-requested-but-never-happened)
 - [Symptom: Workflows are rejected during handover](#symptom-workflows-are-rejected-during-handover)
@@ -76,7 +77,7 @@ Two timing facts the triage logic depends on:
 3. **Application-level address caching.** A caller that resolved the hostname to an IP at startup and reused it won't follow a CNAME swap. Pass the hostname to the client config, never a pre-resolved IP.
 4. **GCP Private Service Connect.** PSC has no DNS-based automatic failover — workers must be manually repointed to the new region's PSC endpoint. See [PrivateLink / PSC stopped working](#symptom-privatelink--psc-stopped-working-after-failover).
 5. **Private DNS override covers only one region.** Same section.
-6. **Serverless Workers (AWS Lambda / GCP Cloud Run).** The Worker Controller Instance keeps invoking Workers in the compute provider's originally configured region because compute-provider configuration is region-scoped and the WCI has no failover-detection mechanism. This is a distinct failure mode from long-lived Worker DNS caching — see [`serverless-ha.md`](serverless-ha.md).
+6. **Serverless Workers (AWS Lambda).** The Worker Controller Instance keeps invoking Workers in the compute provider's originally configured region because compute-provider configuration is region-scoped and the WCI has no failover-detection mechanism. This is a distinct failure mode from long-lived Worker DNS caching — see [Serverless Workers kept running in the old region](#symptom-serverless-workers-kept-running-in-the-old-region-after-failover).
 
 **Fix:** clear/await the offending cache, restart wedged workers, or repoint PSC workers per the discriminator that matched.
 
@@ -88,6 +89,20 @@ dig +short <namespace>.<account>.tmprl.cloud
 ```
 
 Then re-run the operation that was failing.
+
+## Symptom: Serverless Workers kept running in the old region after failover
+
+**Symptom:** the Namespace failed over successfully, but Serverless Workers (AWS Lambda, Public Preview) are still being invoked in the old region. Silent while that region is healthy; degraded throughput, latency, or a stall once it is not.
+
+Nothing in your infrastructure polls, so there is no DNS to re-resolve. The Worker Controller Instance invokes the compute provider configured on a Worker Deployment Version, that configuration is scoped to a single region (for example, a Lambda ARN), and the WCI has no mechanism to detect a failover or redirect invocations into the new active region.  Applies to Multi-region and Multi-cloud Replication alike. See `/cloud/high-availability#serverless-workers` and the High Availability row of `/serverless-workers#constraints`.
+
+**Discriminate:** confirm the new active region (`tcld namespace get --namespace <namespace_id>.<account_id>` plus the `FailoverNamespace` audit entry) and compare it against the Lambda ARN on the Version serving the affected Task Queue. Long-lived Workers on other Task Queues recover on their own, so a mixed fleet recovers partially — which reads like a regional outage rather than a configuration constraint.
+
+**Fix:** `tcld namespace failover` moves the Namespace only, and tcld has no compute-provider surface. Remediation is to repoint the existing Worker Deployment Version's compute provider at a function in the new active region — an in-place update, not a new Version. Hand it to `skill-temporal-serverless`; it changes where production Workers are invoked, so propose it before running.
+
+**Prevent:** publish the function in every region the Namespace can fail over to, so the repoint is a single command instead of a provisioning exercise under time pressure.
+
+**Verify:** the affected Task Queue drains, and invocations land on the new region's function in the provider's logs.
 
 ## Symptom: PrivateLink / PSC stopped working after failover
 
