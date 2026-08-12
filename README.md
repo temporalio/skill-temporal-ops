@@ -4,6 +4,8 @@ A skill for operating and diagnosing [Temporal](https://temporal.io/) environmen
 
 Applies to both **Temporal Cloud** (`tcld` commands) and **self-hosted** (`temporal operator` commands) deployments. Data-plane operations (`temporal workflow`, `temporal batch`, `temporal schedule`) work on both.
 
+> [!WARNING]
+> This Skill is currently in Public Preview, and will continue to evolve and improve.
 > We would love to hear your feedback - positive or negative - over in the [Community Slack](https://t.mp/slack), in the [#topic-ai channel](https://temporalio.slack.com/archives/C0818FQPYKY). Bug reports and corrections are also welcome as [GitHub issues](https://github.com/temporalio/skill-temporal-ops/issues).
 
 ## Installation
