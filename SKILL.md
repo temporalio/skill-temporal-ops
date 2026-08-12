@@ -135,6 +135,7 @@ Find the row that matches the user's intent. The reference file contains the com
 | Set up PrivateLink / PSC, manage connectivity rules | Cloud connectivity | [cloud-connectivity.md](references/ops/cloud-connectivity.md) |
 | Self-hosted cluster health, describe, namespace CRUD | Self-hosted admin | [self-hosted-admin.md](references/ops/self-hosted-admin.md) |
 | Self-hosted search attributes, Nexus endpoints | Self-hosted admin | [self-hosted-admin.md](references/ops/self-hosted-admin.md) |
+| Check or manage a Cloud Nexus Endpoint's caller-Namespace allowlist; the 1,000-caller default | Cloud namespace admin | [cloud-namespace-admin.md#tcld-nexus-endpoint-allowed-namespace](references/ops/cloud-namespace-admin.md#tcld-nexus-endpoint-allowed-namespace) |
 | Find stuck/hung/unhealthy workflows via list queries | Workflow health | [workflow-health.md](references/ops/workflow-health.md) |
 | Task queue poller status, workflow counts | Workflow health | [workflow-health.md](references/ops/workflow-health.md) |
 | Cancel, terminate, or reset workflows | Workflow recovery | [workflow-stuck.md#recovery-commands](references/triage/workflow-stuck.md#recovery-commands) |
@@ -256,7 +257,7 @@ If the layer above the fix is still failing, return to step 4 and continue walki
 
 ### Operations
 
-- [cloud-namespace-admin.md](references/ops/cloud-namespace-admin.md) — Cloud namespace lifecycle via `tcld`: create, get, list, delete, failover, add-region, retention, tags, codec-server, HA config, connectivity rules, search attributes, accepted-client-ca, certificate filters, export.
+- [cloud-namespace-admin.md](references/ops/cloud-namespace-admin.md) — Cloud namespace lifecycle via `tcld`: create, get, list, delete, failover, add-region, retention, tags, codec-server, HA config, connectivity rules, search attributes, accepted-client-ca, certificate filters, export, and the `tcld nexus endpoint allowed-namespace` caller allowlist (1,000-caller Access Policy ceiling).
 - [cloud-capacity.md](references/ops/cloud-capacity.md) — Capacity modes (On-Demand / Provisioned), APS/RPS/OPS definitions, TRUs, `tcld namespace capacity update`, default limits, throttling, APS management best practices.
 - [cloud-iam.md](references/ops/cloud-iam.md) — API key lifecycle (`tcld apikey`), users (`tcld user`), user groups (`tcld user-group`), service accounts, account operations (`tcld account`), roles, namespace permissions.
 - [cloud-certs.md](references/ops/cloud-certs.md) — mTLS cert management: generating certs with `tcld generate-certificates`, uploading CAs, certificate filters, cert rotation, switching mTLS ↔ API keys.
