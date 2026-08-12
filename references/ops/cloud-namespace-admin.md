@@ -592,8 +592,10 @@ Namespace. The allowlist is empty at create time unless seeded with
 not a subcommand).
 
 `set` replaces the full list, so any entry you don't pass is dropped — revoking
-those callers at their next Nexus Operation. Run `list` first, diff against the
-list you intend, and prefer `add` when the goal is to grant. Terraform manages the
+those callers at their next Nexus Operation. Never run it on your own initiative.
+Run `list` first, name the exact entries it would drop, and ask the user directly;
+run it only once they have approved, and only against that Endpoint. Prefer `add`
+when the goal is to grant. Terraform manages the
 same field as `allowed_caller_namespaces`, so a `set` against a
 Terraform-provisioned Endpoint will be reverted on the next apply — see
 [cloud-terraform.md](cloud-terraform.md).
