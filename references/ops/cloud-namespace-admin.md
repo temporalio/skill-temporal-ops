@@ -29,6 +29,8 @@ If `--namespace` is omitted, the environment variable `$TEMPORAL_CLOUD_NAMESPACE
 - Max tags per namespace: 10
 - Tag key/value length: 1-63 characters
 - Soft limit of 1000 unique tag keys per account
+- Max caller Namespaces per Nexus Endpoint Access Policy: 1,000 (support ticket to raise)
+- Max Nexus Endpoints per account: 100 (support ticket to raise)
 
 ---
 
@@ -556,6 +558,45 @@ no filters, **any** client cert that chains to a configured CA is accepted
 , so it silently widens access
 instead of removing it. Neither direction is what "clear the filters" sounds like;
 state which one you mean when you propose it.
+
+---
+
+## tcld nexus endpoint allowed-namespace
+
+Manages a Nexus Endpoint's Access Policy — the allowlist of caller Namespaces
+permitted to use the Endpoint at runtime. Cloud-only: self-hosted authorization
+goes through a custom Authorizer plugin instead. For Endpoint CRUD itself, see
+[self-hosted-admin.md § Nexus Endpoint Commands](self-hosted-admin.md#nexus-endpoint-commands),
+which maps each `temporal operator nexus` verb to its `tcld nexus` equivalent.
+
+| Subcommand | Purpose |
+|---|---|
+| `list` | Show the current allowlist |
+| `add` | Add caller Namespaces; entries already present are ignored |
+| `remove` | Remove caller Namespaces; entries not present are ignored |
+| `set` | Replace the entire allowlist |
+
+All subcommands take `--name` / `-n` (the Endpoint) and, except `list`,
+`--namespace` / `-ns`, which is repeatable:
+
+```bash
+tcld nexus endpoint allowed-namespace add \
+    --name <endpoint-name> \
+    --namespace <caller-ns-1> \
+    --namespace <caller-ns-2>
+```
+
+**No callers are allowed by default**, not even from the Endpoint's own target
+Namespace. The allowlist is empty at create time unless seeded with
+`--allow-namespace` (singular, a repeatable flag on `tcld nexus endpoint create`,
+not a subcommand).
+
+`set` replaces the full list, so any entry you don't pass is dropped — revoking
+those callers at their next Nexus Operation. Run `list` first, diff against the
+list you intend, and prefer `add` when the goal is to grant. Terraform manages the
+same field as `allowed_caller_namespaces`, so a `set` against a
+Terraform-provisioned Endpoint will be reverted on the next apply — see
+[cloud-terraform.md](cloud-terraform.md).
 
 ---
 
