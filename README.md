@@ -6,6 +6,7 @@ Applies to both **Temporal Cloud** (`tcld` commands) and **self-hosted** (`tempo
 
 > [!WARNING]
 > This Skill is currently in Public Preview, and will continue to evolve and improve.
+> It runs `temporal` and `tcld` commands against whatever environment your CLIs are authenticated to, and some of those commands have no undo. Before pointing an agent at production, scope the credential you give it — see [**AGENT-PERMISSIONS.md**](AGENT-PERMISSIONS.md).
 > We would love to hear your feedback - positive or negative - over in the [Community Slack](https://t.mp/slack), in the [#topic-ai channel](https://temporalio.slack.com/archives/C0818FQPYKY). Bug reports and corrections are also welcome as [GitHub issues](https://github.com/temporalio/skill-temporal-ops/issues).
 
 ## Installation
