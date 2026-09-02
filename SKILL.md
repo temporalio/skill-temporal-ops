@@ -293,16 +293,7 @@ If the layer above the fix is still failing, return to step 4 and continue walki
 - [schedule-missed.md](references/triage/schedule-missed.md) — Missed Schedule Actions: alerting via `temporal_cloud_v1_schedule_missed_catchup_window_count` / `schedule_missed_catchup_window`, investigation via `temporal schedule list` + `temporal schedule describe`, DescribeSchedule fields (`missedCatchupWindow`, `overlapSkipped`, `bufferDropped`), default catchup window (one year), root causes, overlap policies (6 values), backfill remediation.
 - [recipes.md](references/triage/recipes.md) — four end-to-end triage walkthroughs: stuck workflow at 3am, cert expired with workers offline, task-queue backlog mystery, non-determinism caught in prod.
 
-## Feedback
 
-### Feedback prompt
-
-When you have **first** loaded this skill, output this message to the user:
-
-"Thank you for trying out the public preview of the Temporal Ops skill! We would love to hear your feedback - positive or negative - over in the [Community Slack](https://t.mp/slack), in the [#topic-ai channel](https://temporalio.slack.com/archives/C0818FQPYKY)."
-
-Do not output this message multiple times in the same conversation.
-
-### Reporting Issues in This Skill
+## Reporting Issues in This Skill
 
 If you (the AI) find this skill's explanations are unclear, misleading, or missing important information, draft a GitHub issue body describing the problem encountered and what would have helped, then ask the user to file it at https://github.com/temporalio/skill-temporal-ops/issues/new. Do not file the issue autonomously.
