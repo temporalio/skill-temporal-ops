@@ -206,6 +206,8 @@ After a mutating operation (create, update, delete, rotate), confirm the new sta
 - Confirm the output matches the user's intent
 - Report the result
 
+For an API key create, enable, disable, or delete, a finished operation means only that Temporal Cloud recorded the change. Also confirm the Namespace endpoint has applied it — see [cloud-iam.md → Key changes take effect asynchronously](references/ops/cloud-iam.md#key-changes-take-effect-asynchronously).
+
 ### Diagnosis path
 
 #### Step 1: Identify the symptom
@@ -259,7 +261,7 @@ If the layer above the fix is still failing, return to step 4 and continue walki
 
 - [cloud-namespace-admin.md](references/ops/cloud-namespace-admin.md) — Cloud namespace lifecycle via `tcld`: create, get, list, delete, failover, add-region, retention, tags, codec-server, HA config, connectivity rules, search attributes, accepted-client-ca, certificate filters, export, and the `tcld nexus endpoint allowed-namespace` caller allowlist (1,000-caller Access Policy ceiling).
 - [cloud-capacity.md](references/ops/cloud-capacity.md) — Capacity modes (On-Demand / Provisioned), APS/RPS/OPS definitions, TRUs, `tcld namespace capacity update`, default limits, throttling, APS management best practices.
-- [cloud-iam.md](references/ops/cloud-iam.md) — API key lifecycle (`tcld apikey`), users (`tcld user`), user groups (`tcld user-group`), service accounts, account operations (`tcld account`), roles, namespace permissions.
+- [cloud-iam.md](references/ops/cloud-iam.md) — API key lifecycle (`tcld apikey`), when key changes reach the Namespace endpoint, users (`tcld user`), user groups (`tcld user-group`), service accounts, account operations (`tcld account`), roles, namespace permissions.
 - [cloud-certs.md](references/ops/cloud-certs.md) — mTLS cert management: generating certs with `tcld generate-certificates`, uploading CAs, certificate filters, cert rotation, switching mTLS ↔ API keys.
 - [cloud-connectivity.md](references/ops/cloud-connectivity.md) — Private connectivity (AWS PrivateLink / GCP PSC), connectivity rules: setup, rule parameters, tcld commands, attaching rules to namespaces.
 - [cloud-migration.md](references/ops/cloud-migration.md) — Migration paths: automated self-hosted→Cloud (S2S proxy, `tcld migration` commands, 5 phases), manual self-hosted→Cloud (client changes, workflow strategies), within-Cloud region-to-region (HA add-region/failover).
