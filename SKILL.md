@@ -126,6 +126,7 @@ Find the row that matches the user's intent. The reference file contains the com
 | Check current APS / capacity mode | Cloud capacity | [cloud-capacity.md](references/ops/cloud-capacity.md) |
 | Switch On-Demand ↔ Provisioned, set TRUs | Cloud capacity | [cloud-capacity.md](references/ops/cloud-capacity.md) |
 | Understand APS / RPS / OPS limits and throttling | Cloud capacity | [cloud-capacity.md](references/ops/cloud-capacity.md) |
+| TRU count metric (`temporal_cloud_v1_provisioned_capacity_tru_count`), TRU hourly minimum Actions, extra billed Actions from a shortfall | Cloud capacity | [cloud-capacity.md#hourly-minimum-actions](references/ops/cloud-capacity.md#hourly-minimum-actions) |
 | Create, disable, enable, delete an API key | Cloud IAM | [cloud-iam.md](references/ops/cloud-iam.md) |
 | Invite, list, remove users; set roles/permissions | Cloud IAM | [cloud-iam.md](references/ops/cloud-iam.md) |
 | Manage user groups and service accounts | Cloud IAM | [cloud-iam.md](references/ops/cloud-iam.md) |
@@ -261,7 +262,7 @@ If the layer above the fix is still failing, return to step 4 and continue walki
 ### Operations
 
 - [cloud-namespace-admin.md](references/ops/cloud-namespace-admin.md) — Cloud namespace lifecycle via `tcld`: create, get, list, delete, failover, add-region, retention, tags, codec-server, HA config, connectivity rules, search attributes, accepted-client-ca, certificate filters, export, and the `tcld nexus endpoint allowed-namespace` caller allowlist (1,000-caller Access Policy ceiling).
-- [cloud-capacity.md](references/ops/cloud-capacity.md) — Capacity modes (On-Demand / Provisioned), APS/RPS/OPS definitions, TRUs, `tcld namespace capacity update`, default limits, throttling, APS management best practices.
+- [cloud-capacity.md](references/ops/cloud-capacity.md) — Capacity modes (On-Demand / Provisioned), APS/RPS/OPS definitions, TRUs, the `temporal_cloud_v1_provisioned_capacity_tru_count` metric, TRU hourly minimum Actions and the extra-billed-Actions calculation, `tcld namespace capacity update`, default limits, throttling, APS management best practices.
 - [cloud-iam.md](references/ops/cloud-iam.md) — API key lifecycle (`tcld apikey`), when key changes reach the Namespace endpoint, users (`tcld user`), user groups (`tcld user-group`), service accounts, account operations (`tcld account`), roles, namespace permissions.
 - [cloud-certs.md](references/ops/cloud-certs.md) — mTLS cert management: generating certs with `tcld generate-certificates`, uploading CAs, certificate filters, cert rotation, switching mTLS ↔ API keys.
 - [cloud-connectivity.md](references/ops/cloud-connectivity.md) — Private connectivity (AWS PrivateLink / GCP PSC), connectivity rules: setup, rule parameters, tcld commands, attaching rules to namespaces.
