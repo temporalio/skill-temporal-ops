@@ -223,7 +223,7 @@ Confirm three things before continuing:
 
 The context the investigation needs depends on the category. At minimum:
 
-- **For any Cloud auth / connectivity issue:** auth method (API key vs mTLS), exact address, exact namespace, SDK + version. The endpoint family differs by auth method — see [connectivity.md#endpoint-formats](references/triage/connectivity.md#endpoint-formats). For private connectivity (PrivateLink / PSC), TLS server name overrides also vary by auth method — see [cloud-connectivity.md](references/ops/cloud-connectivity.md).
+- **For any Cloud auth / connectivity issue:** auth method (API key vs mTLS), exact address, exact namespace, SDK + version. The endpoint family differs by auth method — see [connectivity.md#endpoint-formats](references/triage/connectivity.md#endpoint-formats). For private connectivity (PrivateLink / PSC), TLS server name overrides also vary by auth method — see [cloud-connectivity.md](references/ops/cloud-connectivity.md). The TLS version does not vary: Temporal Cloud accepts TLS 1.2 or higher and prefers TLS 1.3 for both API key and mTLS connections.
 - **For a stuck workflow:** namespace, workflow ID, run ID, and the output of `temporal workflow describe --workflow-id <id>` (pending-operation state lives here, not in the Event History alone). Event History via `temporal workflow show` is the companion view.
 - **For a worker health issue:** worker logs (registration errors, auth errors, panics), the output of `temporal task-queue describe --task-queue <q>`, and `temporal worker describe --task-queue <q>` for per-worker details.
 - **For a non-determinism error:** the worker log line containing the error, the workflow type name, and access to the history JSON for replay.
